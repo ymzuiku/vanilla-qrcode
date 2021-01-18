@@ -31,8 +31,10 @@ VanillaQRCode('#div', {
   area: 0.6, // 解析裁切剩余比例
   square: true, // 解析保持正方形
   onResult: (code, close) => {
+    // code 结构： {data: string, center:{x:number: y: number}}
     alert(JSON.stringify(code));
-    // close();
+    // 可选，关闭摄像头
+    close();
   }
 });
 
