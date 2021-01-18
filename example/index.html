@@ -63,12 +63,14 @@
   <div id="camera"></div>
   <script src="./VanillaQRCode.js"></script>
   <script>
-    VanillaQRCode('#camera', {
-      onResult: (code, close) => {
-        alert(JSON.stringify(code));
-        // close();
-      }
-    });
+    setTimeout(() => {
+      VanillaQRCode('#camera', {
+        onResult: (code, close) => {
+          alert(JSON.stringify(code));
+          // close();
+        }
+      });
+    }, 1000)
   </script>
 </body>
 
