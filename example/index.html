@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    body {
+      background-color: #333;
+      width: 100vw;
+      height: 100vh;
+      padding: 0px;
+      margin: 0px;
+      display: grid;
+      grid-template-rows: 1fr 0px;
+      grid-template-columns: 1fr;
+      grid-template-areas: "a""b";
+    }
+
+    #camera {
+      padding: 0px;
+      margin: 0px;
+      grid-area: a;
+    }
+
+    #btns {
+      grid-area: b;
+      display: grid;
+      grid-template-columns: auto;
+    }
+
+    .btn {
+      background-color: #444;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .btn:active {
+      -webkit-user-select: none;
+      background-color: #555;
+    }
+
+    #shot {
+      border: none;
+      outline: none;
+      position: fixed;
+      left: 0px;
+      top: 0px;
+      width: 200px;
+      height: 200px;
+      z-index: 500;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- <img id="shot" /> -->
+  <div id="camera"></div>
+  <script src="./VanillaQRCode.js"></script>
+  <script>
+    VanillaQRCode('#camera', {
+      onResult: (code, close) => {
+        alert(JSON.stringify(code));
+        // close();
+      }
+    });
+  </script>
+</body>
+
+</html>
