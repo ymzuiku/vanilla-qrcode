@@ -55,7 +55,7 @@ interface Code {
   data: string;
   // 解析的坐标中心位置，方便绘制解析成功的 UI
   center: {
-    x:number;
+    x: number;
     y: number;
   }
 }
