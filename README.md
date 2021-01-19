@@ -30,6 +30,7 @@ import VanillaQRCode from 'vanilla-qrcode';
 
 // 传入一个 css 查找器，寻找一个合适大小的 Div 标签
 VanillaQRCode('#div', {
+  format: 'any' // any, barcode, qrcode, 默认为 any，any速度慢于指定类型
   size: 2, // 解析图像缩放
   area: 1, // 解析裁切剩余比例
   square: true, // 解析保持正方形

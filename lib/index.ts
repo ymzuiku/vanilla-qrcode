@@ -1,4 +1,4 @@
-import "./decode"
+import { decode } from "./decode";
 import Camera, { CameraOpt } from "./camera";
 
 interface QrCodeResult {
@@ -8,16 +8,19 @@ interface QrCodeResult {
 
 export interface QrcodeOpt extends CameraOpt {
   waitScan?: number;
-  onScan?: (imgData?: string) => any;
+  onScreenshot?: (imgData?: string) => any;
   onResult?: (result: QrCodeResult, close: Function) => any;
 }
 
-const VanillaQRCode = (ele: string | HTMLElement, { waitScan = 300, onScan, onResult, ...opt }: QrcodeOpt = {}) => {
-  const qr = new (window as any).QrcodeDecoder();
+const VanillaQRCode = (
+  ele: string | HTMLElement,
+  { format = "any", waitScan = 300, onScreenshot, onResult, ...opt }: QrcodeOpt = {}
+) => {
   const camera = Camera(ele, { size: 2, area: 1, square: true, ...opt });
   if (!camera) {
     return;
   }
+  camera.format = format;
   let close = false;
   const screenshot = () => {
     if (close) {
@@ -25,37 +28,23 @@ const VanillaQRCode = (ele: string | HTMLElement, { waitScan = 300, onScan, onRe
     }
 
     const imgData = camera.screenshot();
+
     if (!imgData) {
       requestAnimationFrame(screenshot);
       return;
     }
 
-    if (onScan) {
-      onScan(imgData);
+    if (onScreenshot) {
+      onScreenshot(imgData);
     }
 
-    qr.decodeFromImage(imgData).then((code: any) => {
-      if (code && code.data && onResult) {
-        const loc = code.location;
-        const lx = (loc && loc.topLeftCorner && Number(loc.topLeftCorner.x)) || window.innerWidth / 2;
-        const rx = (loc && loc.topLeftCorner && Number(loc.bottomRightCorner.x)) || window.innerWidth / 2;
-        const ly = (loc && loc.topLeftCorner && Number(loc.topLeftCorner.y)) || window.innerHeight / 2;
-        const ry = (loc && loc.topLeftCorner && Number(loc.bottomRightCorner.y)) || window.innerHeight / 2;
-
-        const out = {
-          data: code.data,
-          location: code.location,
-          center: {
-            x: (lx + rx) / 2,
-            y: (ly + ry) / 2,
-          },
-        };
-        onResult(out, () => {
+    decode(camera.format as any, imgData).then((code: any) => {
+      if (code && onResult) {
+        onResult(code, () => {
           close = true;
           camera.remove();
         });
       }
-
       requestAnimationFrame(screenshot);
     });
   };
@@ -63,6 +52,7 @@ const VanillaQRCode = (ele: string | HTMLElement, { waitScan = 300, onScan, onRe
   return camera;
 };
 
-VanillaQRCode.Camera = Camera;
+VanillaQRCode.RanderCamera = Camera;
+VanillaQRCode.decode = decode;
 
 export default VanillaQRCode;

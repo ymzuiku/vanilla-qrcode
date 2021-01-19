@@ -1,6 +1,17 @@
 const iOS = ["iPad", "iPhone", "iPod"].indexOf(navigator.platform) >= 0;
 const isMediaStreamAPISupported = navigator && navigator.mediaDevices && "enumerateDevices" in navigator.mediaDevices;
-let noCameraPermission = false;
+
+// export type CodeType =
+//   | "qrcode"
+//   | "code-128"
+//   | "code-2of5"
+//   | "code-39"
+//   | "code-93"
+//   | "code-13"
+//   | "code-8"
+//   | "ean-13"
+//   | "ean-8"
+//   | "codabar";
 
 export function startCapture(video: HTMLVideoElement, constraints: any, onError: Function) {
   navigator.mediaDevices
@@ -77,6 +88,7 @@ export function startCamera(video: HTMLVideoElement, onError: Function) {
 }
 
 export interface CameraOpt {
+  format?: 'any'|'qrcode'|'barcode';
   onError?: (error: string) => void;
   size?: number;
   area?: number;
@@ -90,7 +102,7 @@ const getVideoWH = (video: HTMLVideoElement) => {
 
 const VanillaCamera = (
   target: string | HTMLElement,
-  { onError = () => {}, direction, size = 1, area = 1, square }: CameraOpt = {}
+  {format, onError = () => {}, direction, size = 1, area = 1, square }: CameraOpt = {}
 ) => {
   let box: HTMLElement;
   if (typeof target === "string") {
@@ -148,6 +160,7 @@ const VanillaCamera = (
   });
 
   return {
+    format,
     video,
     canvas,
     context,

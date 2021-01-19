@@ -1,3 +1,4 @@
+import { decode } from "./decode";
 import { CameraOpt } from "./camera";
 interface QrCodeResult {
     data: string;
@@ -8,11 +9,12 @@ interface QrCodeResult {
 }
 export interface QrcodeOpt extends CameraOpt {
     waitScan?: number;
-    onScan?: (imgData?: string) => any;
+    onScreenshot?: (imgData?: string) => any;
     onResult?: (result: QrCodeResult, close: Function) => any;
 }
 declare const VanillaQRCode: {
-    (ele: string | HTMLElement, { waitScan, onScan, onResult, ...opt }?: QrcodeOpt): {
+    (ele: string | HTMLElement, { format, waitScan, onScreenshot, onResult, ...opt }?: QrcodeOpt): {
+        format: "any" | "qrcode" | "barcode" | undefined;
         video: HTMLVideoElement;
         canvas: HTMLCanvasElement;
         context: CanvasRenderingContext2D;
@@ -20,7 +22,8 @@ declare const VanillaQRCode: {
         playPause: () => void;
         screenshot: () => string | undefined;
     } | undefined;
-    Camera: (target: string | HTMLElement, { onError, direction, size, area, square }?: CameraOpt) => {
+    RanderCamera: (target: string | HTMLElement, { format, onError, direction, size, area, square }?: CameraOpt) => {
+        format: "any" | "qrcode" | "barcode" | undefined;
         video: HTMLVideoElement;
         canvas: HTMLCanvasElement;
         context: CanvasRenderingContext2D;
@@ -28,5 +31,6 @@ declare const VanillaQRCode: {
         playPause: () => void;
         screenshot: () => string | undefined;
     } | undefined;
+    decode: typeof decode;
 };
 export default VanillaQRCode;

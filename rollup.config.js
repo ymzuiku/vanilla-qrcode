@@ -83,7 +83,7 @@ watcher.on("event", (event) => {
 
 //     `);
 
-    fs.copyFileSync("./umd/index.js", "./example/VanillaQRCode.js");
+    fs.copyFileSync("./es/index.js", "./example/VanillaQRCode.js");
     console.log('add end')
     if (!haveArgv("--watch", "-w")) {
       watcher.close();

@@ -8,13 +8,13 @@
   <title>Document</title>
   <style>
     body {
-      background-color: #333;
+      background-color: #000;
       width: 100vw;
       height: 100vh;
       padding: 0px;
       margin: 0px;
       display: grid;
-      grid-template-rows: 1fr 0px;
+      grid-template-rows: 1fr 56px;
       grid-template-columns: 1fr;
       grid-template-areas: "a""b";
     }
@@ -28,10 +28,12 @@
     #btns {
       grid-area: b;
       display: grid;
-      grid-template-columns: auto;
+      grid-template-rows: 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-areas: "btn1 btn2";
     }
 
-    .btn {
+    #btns>div {
       background-color: #444;
       cursor: pointer;
       display: grid;
@@ -40,10 +42,16 @@
       font-family: Arial, Helvetica, sans-serif;
     }
 
-    .btn:active {
+    #btns>div:active {
       -webkit-user-select: none;
       background-color: #555;
     }
+
+    #btns>div[selected] {
+      -webkit-user-select: none;
+      background-color: #555;
+    }
+
 
     #shot {
       border: none;
@@ -61,14 +69,34 @@
 <body>
   <!-- <img id="shot" /> -->
   <div id="camera"></div>
-  <script src="./VanillaQRCode.js"></script>
-  <script>
-    VanillaQRCode('#camera', {
+  <div id="btns">
+    <div id="any" selected>Any</div>
+    <div id="qrcode">QRCode</div>
+    <div id="barcode">BarCode</div>
+  </div>
+  <script type="module">
+    import VanillaQRCode from './VanillaQRCode.js';
+    // import quagga from 'https://cdn.skypack.dev/quagga';
+    const camera = VanillaQRCode('#camera', {
       onResult: (code, close) => {
         alert(JSON.stringify(code));
-        // close();
       }
     });
+    const eleAny = document.getElementById('any');
+    const eleQRCode = document.getElementById('qrcode');
+    const eleBarCode = document.getElementById('barcode');
+    const setOnClick = (ele)=>{
+      ele.onclick = ()=>{
+        camera.format = ele.id;
+        eleAny.removeAttribute('selected', '');  
+        eleQRCode.removeAttribute('selected');  
+        eleBarCode.removeAttribute('selected');  
+        ele.setAttribute('selected', '');  
+      }
+    }
+    setOnClick(eleAny)
+    setOnClick(eleQRCode)
+    setOnClick(eleBarCode)
   </script>
 </body>
 
