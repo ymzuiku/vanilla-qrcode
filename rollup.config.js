@@ -33,7 +33,7 @@ function haveArgv(...args) {
   return isHave;
 }
 
-clearDir(pwd("umd"));
+clearDir(pwd("es"));
 
 const watchOptions = [
   {
@@ -41,11 +41,6 @@ const watchOptions = [
     output: [{
       file: "./es/index.js",
       format: "es",
-      name: "VanillaQRCode",
-      sourcemap: false,
-    },{
-      file: "./umd/index.js",
-      format: "umd",
       name: "VanillaQRCode",
       sourcemap: false,
     }],
