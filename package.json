@@ -1,6 +1,6 @@
 {
   "name": "vanilla-qrcode",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "main": "es/index.js",
   "module": "es/index.js",
   "keywords": [

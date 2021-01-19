@@ -15897,7 +15897,9 @@ var VanillaCamera = function (target, _a) {
         // 绘制canvas画布、获取data
         screenshot: function () {
             if (video) {
-                context.drawImage(video, ((1 - area) * w + 2) / 2, ((1 - area) * h + 2) / 2, w * area, h * area, 0, 0, canvas.width, canvas.height);
+                var a = (1 - area) * w;
+                var b = (1 - area) * h;
+                context.drawImage(video, a ? a / 2 : 0, b ? b / 2 : 0, w * area, h * area, 0, 0, canvas.width, canvas.height);
                 return canvas.toDataURL("image/png");
             }
         },
@@ -15908,7 +15910,7 @@ window.VanillaCamera = VanillaCamera;
 var VanillaQRCode = function (ele, _a) {
     if (_a === void 0) { _a = {}; }
     var _b = _a.format, format = _b === void 0 ? "any" : _b, _c = _a.waitSreenshot, waitSreenshot = _c === void 0 ? 300 : _c, onScreenshot = _a.onScreenshot, onResult = _a.onResult, opt = __rest(_a, ["format", "waitSreenshot", "onScreenshot", "onResult"]);
-    var camera = VanillaCamera(ele, __assign({ size: 2, area: 1, square: true }, opt));
+    var camera = VanillaCamera(ele, __assign({ size: 1, area: 1, square: true }, opt));
     if (!camera) {
         return;
     }

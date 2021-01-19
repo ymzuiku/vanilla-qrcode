@@ -31,6 +31,7 @@
     }
 
     #btns {
+      background: #000;
       position: fixed;
       left: 0px;
       bottom: 0px;
@@ -44,6 +45,7 @@
     }
 
     #btns>div {
+      -webkit-user-select: none;
       background-color: #444;
       cursor: pointer;
       display: grid;
@@ -53,13 +55,12 @@
     }
 
     #btns>div:active {
-      -webkit-user-select: none;
-      background-color: #555;
+      background-color: #666;
     }
 
     #btns>div[selected] {
-      -webkit-user-select: none;
       background-color: #555;
+      font-weight: 700;
     }
 
 
@@ -72,6 +73,24 @@
       width: 200px;
       height: 200px;
       z-index: 500;
+    }
+
+    * {
+      -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+      -moz-user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    .can-user-select,
+    input,
+    textarea {
+      -moz-user-select: auto;
+      -webkit-user-select: auto;
+      -ms-user-select: auto;
+      user-select: auto;
     }
   </style>
 </head>
@@ -92,7 +111,7 @@
     const ua = window.navigator.userAgent.toLowerCase();
     const isIos = /(?:iphone|ipad)/.test(ua);
     const isWechat = ua.match(/MicroMessenger/i) == 'micromessenger';
-
+    const isAndroid = () => /(?:android)/.test(ua);
 
     if (isIos && isWechat) {
       const label = "iOS 微信不支持读取摄像头, 请点击右上角，选择在 Safari 中打开";
@@ -104,7 +123,9 @@
 
 
     const camera = VanillaQRCode('#camera', {
-      size: 1.75,
+      size: 1, // 解析图像缩放
+      area: 1, // 解析裁切剩余比例
+      square: true, // 解析保持正方形
       onResult: (code, close) => {
         alert(JSON.stringify(code));
       }
@@ -118,14 +139,39 @@
     ];
 
     const setOnClick = (ele) => {
-      ele.onclick = () => {
+      const fn = () => {
         camera.format = ele.id;
         console.log(camera.format)
         list.forEach(e => e.removeAttribute('selected'))
         ele.setAttribute('selected', '');
       }
+      if (isIos || isAndroid) {
+        ele.ontouchend = fn;
+      } else {
+        ele.onclick = fn;
+      }
+
     }
     list.forEach(setOnClick)
+  </script>
+  <script>
+
+    const styleEle = document.createElement("style");
+    styleEle.textContent = nextCss;
+
+    const mateEle = document.createElement("meta");
+    mateEle.setAttribute("name", "viewport");
+    mateEle.setAttribute(
+      "content",
+      "width=device-width, initial-scale=1, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, minimal-ui, viewport-fit=cover"
+    );
+
+    document.head.append(styleEle, mateEle);
+
+    /** 阻止双指放大; */
+    document.addEventListener("gesturestart", function (event: any) {
+      event.preventDefault();
+    });
   </script>
 </body>
 

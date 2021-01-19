@@ -35,7 +35,7 @@ VanillaQRCode('#div', {
   format: 'any'
   // 默认 300ms， 摄像头开启会有黑屏时间，这个时候暂时不进行画面解析
   waitSreenshot: 300,
-  size: 2, // 解析图像缩放
+  size: 1, // 解析图像缩放
   area: 1, // 解析裁切剩余比例
   square: true, // 解析保持正方形
   onResult: (code, close) => {

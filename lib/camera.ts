@@ -173,17 +173,9 @@ const VanillaCamera = (
     // 绘制canvas画布、获取data
     screenshot: () => {
       if (video) {
-        context.drawImage(
-          video,
-          ((1 - area) * w + 2) / 2,
-          ((1 - area) * h + 2) / 2,
-          w * area,
-          h * area,
-          0,
-          0,
-          canvas.width,
-          canvas.height
-        );
+        const a = (1 - area) * w;
+        const b = (1 - area) * h;
+        context.drawImage(video, a ? a / 2 : 0, b ? b / 2 : 0, w * area, h * area, 0, 0, canvas.width, canvas.height);
         return canvas.toDataURL("image/png");
       }
     },

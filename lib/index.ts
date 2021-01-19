@@ -16,7 +16,7 @@ const VanillaQRCode = (
   ele: string | HTMLElement,
   { format = "any", waitSreenshot = 300, onScreenshot, onResult, ...opt }: QrcodeOpt = {}
 ) => {
-  const camera = Camera(ele, { size: 2, area: 1, square: true, ...opt });
+  const camera = Camera(ele, { size: 1, area: 1, square: true, ...opt });
   if (!camera) {
     return;
   }
