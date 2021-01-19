@@ -1,7 +1,7 @@
 export declare function startCapture(video: HTMLVideoElement, constraints: any, onError: Function): void;
 export declare function startCamera(video: HTMLVideoElement, onError: Function): void;
 export interface CameraOpt {
-    format?: 'any' | 'qrcode' | 'barcode';
+    format?: "any" | "qrcode" | "barcode" | "none";
     onError?: (error: string) => void;
     size?: number;
     area?: number;
@@ -9,7 +9,7 @@ export interface CameraOpt {
     direction?: "horizontal" | "vertical";
 }
 declare const VanillaCamera: (target: string | HTMLElement, { format, onError, direction, size, area, square }?: CameraOpt) => {
-    format: "any" | "qrcode" | "barcode" | undefined;
+    format: "any" | "qrcode" | "barcode" | "none" | undefined;
     video: HTMLVideoElement;
     canvas: HTMLCanvasElement;
     context: CanvasRenderingContext2D;

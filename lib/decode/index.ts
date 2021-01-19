@@ -4,14 +4,14 @@ import "./qrcode";
 const Quagga = (window as any).Quagga;
 let qr: any;
 
-function barcode(imgData:any){
+function barcode(imgData: any) {
   return new Promise((res, rej) => {
     Quagga.decodeSingle(
       {
         src: imgData,
         numOfWorkers: 0,
-        decoder : {
-          readers : ["code_128_reader"]
+        decoder: {
+          readers: ["code_128_reader"],
         },
         inputStream: {
           size: 1024,
@@ -32,7 +32,7 @@ function barcode(imgData:any){
           const ly = (line[0] && line[0].y) || window.innerHeight / 2;
           const ry = (line[1] && line[1].y) || window.innerHeight / 2;
           const out = {
-            format: 'barcode',
+            format: "barcode",
             data: v.code,
             center: {
               x: (lx + rx) / 2,
@@ -48,7 +48,7 @@ function barcode(imgData:any){
   });
 }
 
-function qrcode(imgData:any) {
+function qrcode(imgData: any) {
   if (!qr) {
     qr = new (window as any).QrcodeDecoder();
   }
@@ -63,7 +63,7 @@ function qrcode(imgData:any) {
           const ry = (loc && loc.topLeftCorner && Number(loc.bottomRightCorner.y)) || window.innerHeight / 2;
 
           const out = {
-            format: 'qrcode',
+            format: "qrcode",
             data: code.data,
             center: {
               x: (lx + rx) / 2,
@@ -81,17 +81,16 @@ function qrcode(imgData:any) {
   });
 }
 
-export async function decode(format: 'qrcode'|'barcode'|'any', imgData: any) {
-  if (format === 'any') {
-    const res = await qrcode(imgData)
+export async function decode(format: "qrcode" | "barcode" | "any" | "none", imgData: any) {
+  if (format === "any") {
+    const res = await qrcode(imgData);
     if (res) {
       return res;
     }
-    return barcode(imgData)
-  }
-  else if (format !== "qrcode") {
-    return qrcode(imgData)
+    return barcode(imgData);
+  } else if (format !== "qrcode") {
+    return qrcode(imgData);
   } else {
-    return barcode(imgData)
+    return barcode(imgData);
   }
 }

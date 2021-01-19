@@ -88,7 +88,7 @@ export function startCamera(video: HTMLVideoElement, onError: Function) {
 }
 
 export interface CameraOpt {
-  format?: 'any'|'qrcode'|'barcode';
+  format?: "any" | "qrcode" | "barcode" | "none";
   onError?: (error: string) => void;
   size?: number;
   area?: number;
@@ -102,7 +102,7 @@ const getVideoWH = (video: HTMLVideoElement) => {
 
 const VanillaCamera = (
   target: string | HTMLElement,
-  {format, onError = () => {}, direction, size = 1, area = 1, square }: CameraOpt = {}
+  { format, onError = () => {}, direction, size = 1, area = 1, square }: CameraOpt = {}
 ) => {
   let box: HTMLElement;
   if (typeof target === "string") {

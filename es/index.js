@@ -15652,7 +15652,7 @@ function barcode(imgData) {
             src: imgData,
             numOfWorkers: 0,
             decoder: {
-                readers: ["code_128_reader"]
+                readers: ["code_128_reader"],
             },
             inputStream: {
                 size: 1024,
@@ -15672,7 +15672,7 @@ function barcode(imgData) {
                 var ly = (line[0] && line[0].y) || window.innerHeight / 2;
                 var ry = (line[1] && line[1].y) || window.innerHeight / 2;
                 var out = {
-                    format: 'barcode',
+                    format: "barcode",
                     data: v.code,
                     center: {
                         x: (lx + rx) / 2,
@@ -15701,7 +15701,7 @@ function qrcode(imgData) {
                 var ly = (loc && loc.topLeftCorner && Number(loc.topLeftCorner.y)) || window.innerHeight / 2;
                 var ry = (loc && loc.topLeftCorner && Number(loc.bottomRightCorner.y)) || window.innerHeight / 2;
                 var out = {
-                    format: 'qrcode',
+                    format: "qrcode",
                     data: code.data,
                     center: {
                         x: (lx + rx) / 2,
@@ -15725,7 +15725,7 @@ function decode(format, imgData) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    if (!(format === 'any')) return [3 /*break*/, 2];
+                    if (!(format === "any")) return [3 /*break*/, 2];
                     return [4 /*yield*/, qrcode(imgData)];
                 case 1:
                     res = _a.sent();
@@ -15913,7 +15913,7 @@ window.VanillaCamera = VanillaCamera;
 
 var VanillaQRCode = function (ele, _a) {
     if (_a === void 0) { _a = {}; }
-    var _b = _a.format, format = _b === void 0 ? "any" : _b, _c = _a.waitScan, waitScan = _c === void 0 ? 300 : _c, onScreenshot = _a.onScreenshot, onResult = _a.onResult, opt = __rest(_a, ["format", "waitScan", "onScreenshot", "onResult"]);
+    var _b = _a.format, format = _b === void 0 ? "any" : _b, _c = _a.waitSreenshot, waitSreenshot = _c === void 0 ? 300 : _c, onScreenshot = _a.onScreenshot, onResult = _a.onResult, opt = __rest(_a, ["format", "waitSreenshot", "onScreenshot", "onResult"]);
     var camera = VanillaCamera(ele, __assign({ size: 2, area: 1, square: true }, opt));
     if (!camera) {
         return;
@@ -15925,7 +15925,7 @@ var VanillaQRCode = function (ele, _a) {
             return;
         }
         var imgData = camera.screenshot();
-        if (!imgData) {
+        if (!imgData || camera.format === "none") {
             requestAnimationFrame(screenshot);
             return;
         }
@@ -15942,7 +15942,7 @@ var VanillaQRCode = function (ele, _a) {
             requestAnimationFrame(screenshot);
         });
     };
-    setTimeout(screenshot, waitScan);
+    setTimeout(screenshot, waitSreenshot);
     return camera;
 };
 VanillaQRCode.RanderCamera = VanillaCamera;

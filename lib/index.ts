@@ -7,14 +7,14 @@ interface QrCodeResult {
 }
 
 export interface QrcodeOpt extends CameraOpt {
-  waitScan?: number;
+  waitSreenshot?: number;
   onScreenshot?: (imgData?: string) => any;
   onResult?: (result: QrCodeResult, close: Function) => any;
 }
 
 const VanillaQRCode = (
   ele: string | HTMLElement,
-  { format = "any", waitScan = 300, onScreenshot, onResult, ...opt }: QrcodeOpt = {}
+  { format = "any", waitSreenshot = 300, onScreenshot, onResult, ...opt }: QrcodeOpt = {}
 ) => {
   const camera = Camera(ele, { size: 2, area: 1, square: true, ...opt });
   if (!camera) {
@@ -29,7 +29,7 @@ const VanillaQRCode = (
 
     const imgData = camera.screenshot();
 
-    if (!imgData) {
+    if (!imgData || camera.format === "none") {
       requestAnimationFrame(screenshot);
       return;
     }
@@ -48,7 +48,9 @@ const VanillaQRCode = (
       requestAnimationFrame(screenshot);
     });
   };
-  setTimeout(screenshot, waitScan);
+
+  setTimeout(screenshot, waitSreenshot)
+
   return camera;
 };
 

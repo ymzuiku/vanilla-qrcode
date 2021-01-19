@@ -8,13 +8,13 @@ interface QrCodeResult {
     };
 }
 export interface QrcodeOpt extends CameraOpt {
-    waitScan?: number;
+    waitSreenshot?: number;
     onScreenshot?: (imgData?: string) => any;
     onResult?: (result: QrCodeResult, close: Function) => any;
 }
 declare const VanillaQRCode: {
-    (ele: string | HTMLElement, { format, waitScan, onScreenshot, onResult, ...opt }?: QrcodeOpt): {
-        format: "any" | "qrcode" | "barcode" | undefined;
+    (ele: string | HTMLElement, { format, waitSreenshot, onScreenshot, onResult, ...opt }?: QrcodeOpt): {
+        format: "any" | "qrcode" | "barcode" | "none" | undefined;
         video: HTMLVideoElement;
         canvas: HTMLCanvasElement;
         context: CanvasRenderingContext2D;
@@ -23,7 +23,7 @@ declare const VanillaQRCode: {
         screenshot: () => string | undefined;
     } | undefined;
     RanderCamera: (target: string | HTMLElement, { format, onError, direction, size, area, square }?: CameraOpt) => {
-        format: "any" | "qrcode" | "barcode" | undefined;
+        format: "any" | "qrcode" | "barcode" | "none" | undefined;
         video: HTMLVideoElement;
         canvas: HTMLCanvasElement;
         context: CanvasRenderingContext2D;

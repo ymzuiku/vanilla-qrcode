@@ -29,7 +29,8 @@
       grid-area: b;
       display: grid;
       grid-template-rows: 1fr;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      grid-gap: 1px;
       grid-template-areas: "btn1 btn2";
     }
 
@@ -73,6 +74,7 @@
     <div id="any" selected>Any</div>
     <div id="qrcode">QRCode</div>
     <div id="barcode">BarCode</div>
+    <div id="none">None</div>
   </div>
   <script type="module">
     import VanillaQRCode from './VanillaQRCode.js';
@@ -82,21 +84,23 @@
         alert(JSON.stringify(code));
       }
     });
-    const eleAny = document.getElementById('any');
-    const eleQRCode = document.getElementById('qrcode');
-    const eleBarCode = document.getElementById('barcode');
-    const setOnClick = (ele)=>{
-      ele.onclick = ()=>{
+
+    const list = [
+      document.getElementById('any'),
+      document.getElementById('qrcode'),
+      document.getElementById('barcode'),
+      document.getElementById('none')
+    ];
+
+    const setOnClick = (ele) => {
+      ele.onclick = () => {
         camera.format = ele.id;
-        eleAny.removeAttribute('selected', '');  
-        eleQRCode.removeAttribute('selected');  
-        eleBarCode.removeAttribute('selected');  
-        ele.setAttribute('selected', '');  
+        console.log(camera.format)
+        list.forEach(e => e.removeAttribute('selected'))
+        ele.setAttribute('selected', '');
       }
     }
-    setOnClick(eleAny)
-    setOnClick(eleQRCode)
-    setOnClick(eleBarCode)
+    list.forEach(setOnClick)
   </script>
 </body>
 
