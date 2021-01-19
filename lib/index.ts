@@ -1,11 +1,12 @@
-import VanillaCamera, { CameraOpt } from "./camera";
+// import "./decode"
+import Camera, { CameraOpt } from "./camera";
 
 interface QrCodeResult {
   data: string;
   center: { x: number; y: number };
 }
 
-interface QrcodeOpt extends CameraOpt {
+export interface QrcodeOpt extends CameraOpt {
   waitScan?: number;
   onScan?: (imgData?: string) => any;
   onResult?: (result: QrCodeResult, close: Function) => any;
@@ -13,7 +14,7 @@ interface QrcodeOpt extends CameraOpt {
 
 const VanillaQRCode = (ele: string | HTMLElement, { waitScan = 300, onScan, onResult, ...opt }: QrcodeOpt = {}) => {
   const qr = new (window as any).QrcodeDecoder();
-  const camera = VanillaCamera(ele, { size: 2, area: 1, square: true, ...opt });
+  const camera = Camera(ele, { size: 2, area: 1, square: true, ...opt });
   if (!camera) {
     return;
   }
@@ -34,7 +35,7 @@ const VanillaQRCode = (ele: string | HTMLElement, { waitScan = 300, onScan, onRe
     }
 
     qr.decodeFromImage(imgData).then((code: any) => {
-      if (code && onResult) {
+      if (code && code.data && onResult) {
         const loc = code.location;
         const lx = (loc && loc.topLeftCorner && Number(loc.topLeftCorner.x)) || window.innerWidth / 2;
         const rx = (loc && loc.topLeftCorner && Number(loc.bottomRightCorner.x)) || window.innerWidth / 2;
@@ -43,6 +44,7 @@ const VanillaQRCode = (ele: string | HTMLElement, { waitScan = 300, onScan, onRe
 
         const out = {
           data: code.data,
+          location: code.location,
           center: {
             x: (lx + rx) / 2,
             y: (ly + ry) / 2,
@@ -60,5 +62,7 @@ const VanillaQRCode = (ele: string | HTMLElement, { waitScan = 300, onScan, onRe
   setTimeout(screenshot, waitScan);
   return camera;
 };
+
+VanillaQRCode.Camera = Camera;
 
 export default VanillaQRCode;
