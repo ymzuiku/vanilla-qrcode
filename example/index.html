@@ -23,6 +23,15 @@
       padding: 0px;
       margin: 0px;
       grid-area: a;
+      color: #fff;
+      display: grid;
+    }
+
+    #camera>p {
+      padding: 15vw;
+      font-size: 16px;
+      place-self: center;
+      font-family: 'Courier New', Courier, monospace;
     }
 
     #btns {
@@ -77,8 +86,23 @@
     <div id="none">None</div>
   </div>
   <script type="module">
+
     import VanillaQRCode from './VanillaQRCode.js';
-    // import quagga from 'https://cdn.skypack.dev/quagga';
+
+    const ua = window.navigator.userAgent.toLowerCase();
+    const isIos = () => /(?:iPhone|iPad)/.test(ua);
+    const isWechat = ua.match(/MicroMessenger/i) == 'micromessenger';
+
+
+    if (isIos && isWechat) {
+      const label = "iOS 微信不支持读取摄像头, 请点击右上角，选择在 Safari 中打开";
+      alert(label)
+      const p = document.createElement('p');
+      p.textContent = label;
+      document.getElementById('camera').append(p);
+    }
+
+
     const camera = VanillaQRCode('#camera', {
       onResult: (code, close) => {
         alert(JSON.stringify(code));
