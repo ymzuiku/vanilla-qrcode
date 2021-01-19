@@ -17,7 +17,10 @@ $ yarn add vanilla-qrcode
 unpkg:
 
 ```html
-<script src="https://unpkg.com/vanilla-qrcode@1.0.0/umd/index.js"></script>
+<script type="module" >
+  import vanillaQrcode from 'https://cdn.skypack.dev/vanilla-qrcode';
+  VanillaQRCode('#div')
+</script>
 ```
 
 ## Use Camera
