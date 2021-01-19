@@ -38,17 +38,22 @@ clearDir(pwd("umd"));
 const watchOptions = [
   {
     input: "./lib/index.ts",
-    output: {
+    output: [{
+      file: "./es/index.js",
+      format: "es",
+      name: "VanillaQRCode",
+      sourcemap: false,
+    },{
       file: "./umd/index.js",
       format: "umd",
       name: "VanillaQRCode",
       sourcemap: false,
-    },
+    }],
     plugins: [
       rollupTypescript({
         useTsconfigDeclarationDir: false,
       }),
-      uglify(),
+      // uglify(),
       // uglify({
       //   mangle: {
       //     eval: true,
@@ -74,14 +79,14 @@ watcher.on("event", (event) => {
     // console.log(event);
     console.log("BUNDLE_END");
   } else if (event.code === "END") {
-    const decode = fs.readFileSync("./decode.js").toString();
-    const out = fs.readFileSync("./umd/index.js").toString();
-    fs.writeFileSync("./umd/index.js", `
-${decode}
-// decode insert
-${out}
+//     const decode = fs.readFileSync("./decode.js").toString();
+//     const out = fs.readFileSync("./umd/index.js").toString();
+//     fs.writeFileSync("./umd/index.js", `
+// ${decode}
+// // decode insert
+// ${out}
 
-    `);
+//     `);
 
     fs.copyFileSync("./umd/index.js", "./example/VanillaQRCode.js");
     console.log('add end')

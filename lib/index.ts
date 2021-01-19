@@ -1,4 +1,4 @@
-// import "./decode"
+import "./decode"
 import Camera, { CameraOpt } from "./camera";
 
 interface QrCodeResult {
