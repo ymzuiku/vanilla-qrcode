@@ -90,7 +90,7 @@
     import VanillaQRCode from './VanillaQRCode.js';
 
     const ua = window.navigator.userAgent.toLowerCase();
-    const isIos = () => /(?:iPhone|iPad)/.test(ua);
+    const isIos = /(?:iphone|ipad)/.test(ua);
     const isWechat = ua.match(/MicroMessenger/i) == 'micromessenger';
 
 

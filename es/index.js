@@ -15748,17 +15748,6 @@ function decode(format, imgData) {
 
 var iOS = ["iPad", "iPhone", "iPod"].indexOf(navigator.platform) >= 0;
 var isMediaStreamAPISupported = navigator && navigator.mediaDevices && "enumerateDevices" in navigator.mediaDevices;
-// export type CodeType =
-//   | "qrcode"
-//   | "code-128"
-//   | "code-2of5"
-//   | "code-39"
-//   | "code-93"
-//   | "code-13"
-//   | "code-8"
-//   | "ean-13"
-//   | "ean-8"
-//   | "codabar";
 function startCapture(video, constraints, onError) {
     navigator.mediaDevices
         .getUserMedia(constraints)
@@ -15766,10 +15755,15 @@ function startCapture(video, constraints, onError) {
         video.srcObject = stream;
         // video.playsInline = true;
         video.setAttribute("playsinline", "true");
-        video.controls = true;
-        setTimeout(function () {
-            video.controls = false;
-        });
+        // 如果刚开始有控制器
+        // if (video.controls) {
+        //   setTimeout(() => {
+        //     video.controls = false;
+        //     requestAnimationFrame(() => {
+        //       video.style.opacity = "1";
+        //     });
+        //   });
+        // }
     })
         .catch(function (err) {
         console.log("Error occurred ", err);
