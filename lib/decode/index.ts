@@ -88,9 +88,9 @@ export async function decode(format: "qrcode" | "barcode" | "any" | "none", imgD
       return res;
     }
     return barcode(imgData);
-  } else if (format !== "qrcode") {
-    return qrcode(imgData);
-  } else {
+  } else if (format === "barcode") {
     return barcode(imgData);
+  } else {
+    return qrcode(imgData);
   }
 }

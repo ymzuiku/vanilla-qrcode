@@ -15734,11 +15734,11 @@ function decode(format, imgData) {
                     }
                     return [2 /*return*/, barcode(imgData)];
                 case 2:
-                    if (format !== "qrcode") {
-                        return [2 /*return*/, qrcode(imgData)];
+                    if (format === "barcode") {
+                        return [2 /*return*/, barcode(imgData)];
                     }
                     else {
-                        return [2 /*return*/, barcode(imgData)];
+                        return [2 /*return*/, qrcode(imgData)];
                     }
                 case 3: return [2 /*return*/];
             }
