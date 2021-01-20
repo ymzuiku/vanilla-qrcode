@@ -12,7 +12,10 @@ const VanillaQRCode = (target: string | HTMLElement, onResult?: (result: QrCodeR
   const codeReader = new ZXing.BrowserMultiFormatReader();
 
   codeReader.listVideoInputDevices().then((videoInputDevices: any) => {
-    let selectedDeviceId = videoInputDevices[videoInputDevices.length - 1].deviceId;
+    let selectedDeviceId: any;
+    if (videoInputDevices.length > 0) {
+      selectedDeviceId = videoInputDevices[videoInputDevices.length - 1].deviceId;
+    }
 
     let box: HTMLElement;
     if (typeof target === "string") {
@@ -36,6 +39,7 @@ const VanillaQRCode = (target: string | HTMLElement, onResult?: (result: QrCodeR
     video.style.background = "#000";
     video.style.objectFit = "cover";
     video.muted = true;
+    video.autoplay = false;
     box.appendChild(video);
 
     codeReader.decodeFromVideoDevice(selectedDeviceId, video, (result: any, err: any) => {

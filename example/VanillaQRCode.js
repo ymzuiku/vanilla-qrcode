@@ -24227,7 +24227,10 @@ var ZXing = window.ZXing;
 var VanillaQRCode = function (target, onResult) {
     var codeReader = new ZXing.BrowserMultiFormatReader();
     codeReader.listVideoInputDevices().then(function (videoInputDevices) {
-        var selectedDeviceId = videoInputDevices[videoInputDevices.length - 1].deviceId;
+        var selectedDeviceId;
+        if (videoInputDevices.length > 0) {
+            selectedDeviceId = videoInputDevices[videoInputDevices.length - 1].deviceId;
+        }
         var box;
         if (typeof target === "string") {
             box = document.querySelector(target);
@@ -24250,6 +24253,7 @@ var VanillaQRCode = function (target, onResult) {
         video.style.background = "#000";
         video.style.objectFit = "cover";
         video.muted = true;
+        video.autoplay = false;
         box.appendChild(video);
         codeReader.decodeFromVideoDevice(selectedDeviceId, video, function (result, err) {
             if (result && onResult) {
