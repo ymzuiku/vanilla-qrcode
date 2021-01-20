@@ -106,7 +106,7 @@ const VanillaCamera = (
   video.style.background = "#000";
   video.style.objectFit = objectFit;
   video.muted = true;
-  box.append(video);
+  box.appendChild(video);
   video.autoplay = true;
   startCamera(video, onError);
 
@@ -140,15 +140,17 @@ const VanillaCamera = (
     }
   });
 
-  return {
+
+  const out = {
+    playing: true,
     format,
     video,
     canvas,
     context,
     remove: () => {
       video.pause();
-      video.remove();
-      canvas.remove();
+      out.playing = false;
+      box.innerText = ""
     },
     playPause: () => {
       if (video.paused) {
@@ -159,7 +161,7 @@ const VanillaCamera = (
     },
     // 绘制canvas画布、获取data
     screenshot: () => {
-      if (video) {
+      if (out.playing) {
         const a = (1 - area) * w;
         const b = (1 - area) * h;
         context.drawImage(video, a ? a / 2 : 0, b ? b / 2 : 0, w * area, h * area, 0, 0, canvas.width, canvas.height);
@@ -167,6 +169,8 @@ const VanillaCamera = (
       }
     },
   };
+
+  return out;
 };
 
 (window as any).VanillaCamera = VanillaCamera;

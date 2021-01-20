@@ -14,6 +14,7 @@ export interface QrcodeOpt extends CameraOpt {
 }
 declare const VanillaQRCode: {
     (ele: string | HTMLElement, { format, waitSreenshot, onScreenshot, onResult, ...opt }?: QrcodeOpt): {
+        playing: boolean;
         format: "any" | "qrcode" | "barcode" | "none" | undefined;
         video: HTMLVideoElement;
         canvas: HTMLCanvasElement;
@@ -23,6 +24,7 @@ declare const VanillaQRCode: {
         screenshot: () => string | undefined;
     } | undefined;
     RanderCamera: (target: string | HTMLElement, { objectFit, format, onError, direction, size, area, square }?: CameraOpt) => {
+        playing: boolean;
         format: "any" | "qrcode" | "barcode" | "none" | undefined;
         video: HTMLVideoElement;
         canvas: HTMLCanvasElement;

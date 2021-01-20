@@ -10,6 +10,7 @@ export interface CameraOpt {
     direction?: "horizontal" | "vertical";
 }
 declare const VanillaCamera: (target: string | HTMLElement, { objectFit, format, onError, direction, size, area, square }?: CameraOpt) => {
+    playing: boolean;
     format: "any" | "qrcode" | "barcode" | "none" | undefined;
     video: HTMLVideoElement;
     canvas: HTMLCanvasElement;

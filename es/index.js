@@ -15838,7 +15838,7 @@ var VanillaCamera = function (target, _a) {
     video.style.background = "#000";
     video.style.objectFit = objectFit;
     video.muted = true;
-    box.append(video);
+    box.appendChild(video);
     video.autoplay = true;
     startCamera(video, onError);
     var canvas = document.createElement("canvas");
@@ -15868,15 +15868,16 @@ var VanillaCamera = function (target, _a) {
             h = _h;
         }
     });
-    return {
+    var out = {
+        playing: true,
         format: format,
         video: video,
         canvas: canvas,
         context: context,
         remove: function () {
             video.pause();
-            video.remove();
-            canvas.remove();
+            out.playing = false;
+            box.innerText = "";
         },
         playPause: function () {
             if (video.paused) {
@@ -15888,7 +15889,7 @@ var VanillaCamera = function (target, _a) {
         },
         // 绘制canvas画布、获取data
         screenshot: function () {
-            if (video) {
+            if (out.playing) {
                 var a = (1 - area) * w;
                 var b = (1 - area) * h;
                 context.drawImage(video, a ? a / 2 : 0, b ? b / 2 : 0, w * area, h * area, 0, 0, canvas.width, canvas.height);
@@ -15896,6 +15897,7 @@ var VanillaCamera = function (target, _a) {
             }
         },
     };
+    return out;
 };
 window.VanillaCamera = VanillaCamera;
 
@@ -15907,9 +15909,8 @@ var VanillaQRCode = function (ele, _a) {
         return;
     }
     camera.format = format;
-    var close = false;
     var screenshot = function () {
-        if (close) {
+        if (!camera || !camera.playing) {
             return;
         }
         var imgData = camera.screenshot();
@@ -15922,10 +15923,7 @@ var VanillaQRCode = function (ele, _a) {
         }
         decode(camera.format, imgData).then(function (code) {
             if (code && onResult) {
-                onResult(code, function () {
-                    close = true;
-                    camera.remove();
-                });
+                onResult(code, camera.remove);
             }
             requestAnimationFrame(screenshot);
         });

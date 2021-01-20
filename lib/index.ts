@@ -22,9 +22,8 @@ const VanillaQRCode = (
     return;
   }
   camera.format = format;
-  let close = false;
   const screenshot = () => {
-    if (close) {
+    if (!camera || !camera.playing) {
       return;
     }
 
@@ -41,10 +40,7 @@ const VanillaQRCode = (
 
     decode(camera.format as any, imgData).then((code: any) => {
       if (code && onResult) {
-        onResult(code, () => {
-          close = true;
-          camera.remove();
-        });
+        onResult(code, camera.remove);
       }
       requestAnimationFrame(screenshot);
     });

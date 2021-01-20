@@ -129,7 +129,7 @@
     <div id="any" selected>Any</div>
     <div id="qrcode">QRCode</div>
     <div id="barcode">BarCode</div>
-    <div id="none">None</div>
+    <div id="close">Close</div>
   </div>
   <div id="mask">
     <img id="qrcode-mask" src="./qrcode-mask.svg" />
@@ -153,28 +153,43 @@
       document.getElementById('camera').append(p);
     }
 
-
-    const camera = VanillaQRCode('#camera', {
+    const start = ()=> {
+      return VanillaQRCode('#camera', {
       size: 1, // 解析图像缩放
       area: 1, // 解析裁切剩余比例
       square: true, // 解析保持正方形
       onResult: (code, close) => {
         alert(JSON.stringify(code));
       }
-    });
+    })
+    }
+
+    let camera = start();
 
     const list = [
       document.getElementById('any'),
       document.getElementById('qrcode'),
       document.getElementById('barcode'),
-      document.getElementById('none')
+      document.getElementById('close')
     ];
 
     const barcodeMask = document.getElementById('barcode-mask')
     const qrcodeMask = document.getElementById('qrcode-mask')
 
+    let close = false;
     const setOnClick = (ele) => {
       const fn = () => {
+        if (ele.id === 'close') {
+          if (close) {
+            camera = start();
+            close = false;
+          } else {
+            camera.remove();
+            close = true;
+          }
+          
+          return;
+        }
         if (ele.id === 'barcode') {
           barcodeMask.style.display = 'grid'
           qrcodeMask.style.display = 'none'
