@@ -72,29 +72,33 @@
       top: 0px;
       width: 200px;
       height: 200px;
-      z-index: 500;
+      z-index: 1500;
     }
 
     #mask {
+      pointer-events: none;
       position: fixed;
+      overflow: hidden;
       top: 0px;
       height: 0px;
       width: 100vw;
-      z-index: 9999;
+      z-index: 1000;
       height: calc(100vh - var(--bar-height));
       display: grid;
     }
 
     #qrcode-mask {
+      object-fit: cover;
       place-self: center;
-      width: 280px;
-      height: 280px;
+      width: 140%;
+      height: 140%;
     }
 
     #barcode-mask {
+      object-fit: cover;
       place-self: center;
-      width: 320px;
-      height: 320px;
+      width: 150%;
+      height: 150%;
     }
 
 
@@ -128,8 +132,8 @@
     <div id="none">None</div>
   </div>
   <div id="mask">
-    <img id="qrcode-mask" src="./qrcode.svg" />
-    <img id="barcode-mask" style="display:none" src="./barcode.svg" />
+    <img id="qrcode-mask" src="./qrcode-mask.svg" />
+    <img id="barcode-mask" style="display:none" src="./barcode-mask.svg" />
   </div>
 
   <script type="module">
