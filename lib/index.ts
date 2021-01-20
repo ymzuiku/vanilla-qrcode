@@ -28,8 +28,8 @@ const VanillaQRCode = (target: string | HTMLElement, onResult?: (result: QrCodeR
     box.style.flexDirection = "row";
     box.style.justifyContent = "center";
     box.style.alignItems = "center";
-    const video = document.createElement("video");
 
+    const video = document.createElement("video");
     video.width = box.clientWidth;
     video.height = box.clientHeight;
     video.controls = false;
