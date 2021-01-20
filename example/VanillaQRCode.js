@@ -15902,7 +15902,7 @@ window.VanillaCamera = VanillaCamera;
 var VanillaQRCode = function (ele, _a) {
     if (_a === void 0) { _a = {}; }
     var _b = _a.format, format = _b === void 0 ? "any" : _b, _c = _a.waitSreenshot, waitSreenshot = _c === void 0 ? 300 : _c, onScreenshot = _a.onScreenshot, onResult = _a.onResult, opt = __rest(_a, ["format", "waitSreenshot", "onScreenshot", "onResult"]);
-    var camera = VanillaCamera(ele, __assign({ size: 1, area: 1, square: true }, opt));
+    var camera = VanillaCamera(ele, __assign({ size: 0.5, area: 1, square: true }, opt));
     if (!camera) {
         return;
     }

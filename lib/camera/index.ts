@@ -116,8 +116,6 @@ const VanillaCamera = (
 
   const context = canvas.getContext("2d")!;
 
-  let x = 0;
-  let y = 0;
   let w = 100;
   let h = 100;
   let cw = 200;
@@ -132,10 +130,7 @@ const VanillaCamera = (
     if (square) {
       let min = _w;
       if (_w > _h) {
-        x = (_w - _h) / 2;
         min = _h;
-      } else {
-        y = (_h - _w) / 2;
       }
       w = min;
       h = min;

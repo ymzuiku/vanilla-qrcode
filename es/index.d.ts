@@ -22,7 +22,7 @@ declare const VanillaQRCode: {
         playPause: () => void;
         screenshot: () => string | undefined;
     } | undefined;
-    RanderCamera: (target: string | HTMLElement, { format, onError, direction, size, area, square }?: CameraOpt) => {
+    RanderCamera: (target: string | HTMLElement, { objectFit, format, onError, direction, size, area, square }?: CameraOpt) => {
         format: "any" | "qrcode" | "barcode" | "none" | undefined;
         video: HTMLVideoElement;
         canvas: HTMLCanvasElement;

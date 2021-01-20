@@ -75,6 +75,29 @@
       z-index: 500;
     }
 
+    #mask {
+      position: fixed;
+      top: 0px;
+      height: 0px;
+      width: 100vw;
+      z-index: 9999;
+      height: calc(100vh - var(--bar-height));
+      display: grid;
+    }
+
+    #qrcode-mask {
+      place-self: center;
+      width: 280px;
+      height: 280px;
+    }
+
+    #barcode-mask {
+      place-self: center;
+      width: 320px;
+      height: 320px;
+    }
+
+
     * {
       -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
       -moz-user-select: none;
@@ -104,6 +127,11 @@
     <div id="barcode">BarCode</div>
     <div id="none">None</div>
   </div>
+  <div id="mask">
+    <img id="qrcode-mask" src="./qrcode.svg" />
+    <img id="barcode-mask" style="display:none" src="./barcode.svg" />
+  </div>
+
   <script type="module">
 
     import VanillaQRCode from './VanillaQRCode.js';
@@ -138,8 +166,19 @@
       document.getElementById('none')
     ];
 
+    const barcodeMask = document.getElementById('barcode-mask')
+    const qrcodeMask = document.getElementById('qrcode-mask')
+
     const setOnClick = (ele) => {
       const fn = () => {
+        if (ele.id === 'barcode') {
+          barcodeMask.style.display = 'grid'
+          qrcodeMask.style.display = 'none'
+        } else {
+          barcodeMask.style.display = 'none'
+          qrcodeMask.style.display = 'grid'
+        }
+
         camera.format = ele.id;
         console.log(camera.format)
         list.forEach(e => e.removeAttribute('selected'))
