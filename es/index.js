@@ -3149,7 +3149,7 @@
       tryPlayVideo(videoElement) {
           return __awaiter(this, void 0, void 0, function* () {
               if (this.isVideoPlaying(videoElement)) {
-                  console.warn('Trying to play video that is already playing.');
+                //   console.warn('Trying to play video that is already playing.');
                   return;
               }
               try {
@@ -23903,50 +23903,25 @@
 
 var ZXing = window.ZXing;
 
-// function drawPoint(draw: HTMLElement, iw: number, ih: number, points: { x: number; y: number }[]) {
-//   if (!points || !points.length) {
-//     return;
-//   }
-//   let str = "";
-//   points.forEach((pos, i) => {
-//     if (i === 0) {
-//       str += `M${pos.x/2},${pos.y/2} `;
-//     } else {
-//       str += `L${pos.x},${pos.y} `;
-//     }
-//   });
-//   const svg = `
-//   <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 ${iw/2} ${ih}" fill="none" style="stroke:#68f;stroke-width:2" version="1.1">
-//     <path d="${str}" />
-//   </svg>`;
-//   draw.innerHTML = svg;
-// }
+var codeReader = new ZXing.BrowserMultiFormatReader();
 var VanillaQRCode = function (target, onResult) {
-    var codeReader = new ZXing.BrowserMultiFormatReader();
     codeReader.listVideoInputDevices().then(function (videoInputDevices) {
         var selectedDeviceId;
         if (videoInputDevices.length > 0) {
             selectedDeviceId = videoInputDevices[videoInputDevices.length - 1].deviceId;
         }
-        var box;
+        var video;
         if (typeof target === "string") {
-            box = document.querySelector(target);
+            video = document.querySelector(target);
         }
         else {
-            box = target;
+            video = target;
         }
-        if (!document.contains(box)) {
+        if (!document.contains(video)) {
             return;
         }
-        box.style.overflow = "hidden";
-        box.style.display = "flex";
-        box.style.flexDirection = "row";
-        box.style.justifyContent = "center";
-        box.style.alignItems = "center";
-        box.style.position = "retavite";
-        var video = document.createElement("video");
-        var iw = box.clientWidth;
-        var ih = box.clientHeight;
+        var iw = video.clientWidth;
+        var ih = video.clientHeight;
         video.width = iw;
         video.height = ih;
         video.controls = false;
@@ -23954,39 +23929,23 @@ var VanillaQRCode = function (target, onResult) {
         video.style.objectFit = "cover";
         video.muted = true;
         video.autoplay = false;
-        box.appendChild(video);
-        // let draw: HTMLElement;
-        // if (!hiddenLine) {
-        //   draw = document.createElement("div");
-        //   draw.style.position = "absolute";
-        //   draw.style.zIndex = "9000";
-        //   draw.style.width = iw + "px";
-        //   draw.style.height = ih + "px";
-        //   draw.style.pointerEvents = "none";
-        //   box.appendChild(draw);
-        // }
         var lastText = "";
         codeReader.decodeFromVideoDevice(selectedDeviceId, video, function (result, err) {
             if (result) {
                 console.log(result);
-                // if (draw) {
-                //   drawPoint(draw, iw, ih, result.resultPoints);
-                // }
                 if (onResult) {
                     if (result.format == 11) {
-                        onResult(result, function () {
-                            codeReader.reset();
-                        });
+                        onResult(result, codeReader.reset);
                     }
                     else if (result.text === lastText) {
-                        onResult(result, function () {
-                            codeReader.reset();
-                        });
+                        onResult(result, codeReader.reset);
                     }
                     lastText = result.text;
                 }
             }
-            else if (err && !(err instanceof ZXing.NotFoundException)) ;
+            else if (err && !(err instanceof ZXing.NotFoundException)) {
+                console.error(err);
+            }
         });
     });
     return codeReader;

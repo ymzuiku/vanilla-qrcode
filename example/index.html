@@ -114,7 +114,7 @@
 
 <body>
   <!-- <img id="shot" /> -->
-  <div id="camera"></div>
+  <video id="camera"></video>
   <div id="btns">
     <div id="close">Close</div>
   </div>
@@ -148,15 +148,15 @@
       })
     }
 
-    let camera = start();
+    let reader = start();
     let close = false;
     const closeEl = document.getElementById('close')
     closeEl.onclick = () => {
       if (close) {
-        camera = start();
+        reader = start();
         close = false;
       } else {
-        camera.close();
+        reader.reset();
         close = true;
       }
     }
