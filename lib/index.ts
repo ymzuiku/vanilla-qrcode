@@ -34,6 +34,7 @@ const VanillaQRCode = (target: string | HTMLElement, onResult?: (result: QrCodeR
     video.height = box.clientHeight;
     video.controls = false;
     video.style.background = "#000";
+    video.style.objectFit = "cover";
     video.muted = true;
     box.appendChild(video);
 

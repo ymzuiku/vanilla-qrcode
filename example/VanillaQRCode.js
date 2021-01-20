@@ -24248,6 +24248,7 @@ var VanillaQRCode = function (target, onResult) {
         video.height = box.clientHeight;
         video.controls = false;
         video.style.background = "#000";
+        video.style.objectFit = "cover";
         video.muted = true;
         box.appendChild(video);
         codeReader.decodeFromVideoDevice(selectedDeviceId, video, function (result, err) {
