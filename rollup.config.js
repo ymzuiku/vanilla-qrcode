@@ -60,6 +60,7 @@ const watchOptions = [
 ];
 const watcher = rollup.watch(watchOptions);
 
+let n = 0;
 // event.code can be one of:
 //   START        — the watcher is (re)starting
 //   BUNDLE_START — building an individual bundle
@@ -72,7 +73,8 @@ watcher.on("event", (event) => {
     console.log(event);
   } else if (event.code === "BUNDLE_END") {
     // console.log(event);
-    console.log("BUNDLE_END");
+    n++;
+    console.log("BUNDLE_END", n);
   } else if (event.code === "END") {
 //     const decode = fs.readFileSync("./decode.js").toString();
 //     const out = fs.readFileSync("./umd/index.js").toString();

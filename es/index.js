@@ -75,29 +75,19 @@
           super(message);
           this.message = message;
       }
-      getKind() {
-          const ex = this.constructor;
-          return ex.kind;
-      }
   }
-  /**
-   * It's typed as string so it can be extended and overriden.
-   */
-  Exception.kind = 'Exception';
 
   /**
    * Custom Error class of type Exception.
    */
   class ArgumentException extends Exception {
   }
-  ArgumentException.kind = 'ArgumentException';
 
   /**
    * Custom Error class of type Exception.
    */
   class IllegalArgumentException extends Exception {
   }
-  IllegalArgumentException.kind = 'IllegalArgumentException';
 
   /*
    * Copyright 2009 ZXing authors
@@ -232,7 +222,6 @@
           return new ChecksumException();
       }
   }
-  ChecksumException.kind = 'ChecksumException';
 
   /*
    * Copyright 2009 ZXing authors
@@ -292,11 +281,99 @@
   }
 
   /**
+   * Ponyfill for Java's Integer class.
+   */
+  class Integer {
+      static numberOfTrailingZeros(i) {
+          let y;
+          if (i === 0)
+              return 32;
+          let n = 31;
+          y = i << 16;
+          if (y !== 0) {
+              n -= 16;
+              i = y;
+          }
+          y = i << 8;
+          if (y !== 0) {
+              n -= 8;
+              i = y;
+          }
+          y = i << 4;
+          if (y !== 0) {
+              n -= 4;
+              i = y;
+          }
+          y = i << 2;
+          if (y !== 0) {
+              n -= 2;
+              i = y;
+          }
+          return n - ((i << 1) >>> 31);
+      }
+      static numberOfLeadingZeros(i) {
+          // HD, Figure 5-6
+          if (i === 0) {
+              return 32;
+          }
+          let n = 1;
+          if (i >>> 16 === 0) {
+              n += 16;
+              i <<= 16;
+          }
+          if (i >>> 24 === 0) {
+              n += 8;
+              i <<= 8;
+          }
+          if (i >>> 28 === 0) {
+              n += 4;
+              i <<= 4;
+          }
+          if (i >>> 30 === 0) {
+              n += 2;
+              i <<= 2;
+          }
+          n -= i >>> 31;
+          return n;
+      }
+      static toHexString(i) {
+          return i.toString(16);
+      }
+      static toBinaryString(intNumber) {
+          return String(parseInt(String(intNumber), 2));
+      }
+      // Returns the number of one-bits in the two's complement binary representation of the specified int value. This function is sometimes referred to as the population count.
+      // Returns:
+      // the number of one-bits in the two's complement binary representation of the specified int value.
+      static bitCount(i) {
+          // HD, Figure 5-2
+          i = i - ((i >>> 1) & 0x55555555);
+          i = (i & 0x33333333) + ((i >>> 2) & 0x33333333);
+          i = (i + (i >>> 4)) & 0x0f0f0f0f;
+          i = i + (i >>> 8);
+          i = i + (i >>> 16);
+          return i & 0x3f;
+      }
+      static truncDivision(dividend, divisor) {
+          return Math.trunc(dividend / divisor);
+      }
+      /**
+       * Converts A string to an integer.
+       * @param s A string to convert into a number.
+       * @param radix A value between 2 and 36 that specifies the base of the number in numString. If this argument is not supplied, strings with a prefix of '0x' are considered hexadecimal. All other strings are considered decimal.
+       */
+      static parseInt(num, radix = undefined) {
+          return parseInt(num, radix);
+      }
+  }
+  Integer.MIN_VALUE_32_BITS = -2147483648;
+  Integer.MAX_VALUE = Number.MAX_SAFE_INTEGER;
+
+  /**
    * Custom Error class of type Exception.
    */
   class IndexOutOfBoundsException extends Exception {
   }
-  IndexOutOfBoundsException.kind = 'IndexOutOfBoundsException';
 
   /**
    * Custom Error class of type Exception.
@@ -308,7 +385,6 @@
           this.message = message;
       }
   }
-  ArrayIndexOutOfBoundsException.kind = 'ArrayIndexOutOfBoundsException';
 
   class Arrays {
       /**
@@ -465,95 +541,6 @@
           return a - b;
       }
   }
-
-  /**
-   * Ponyfill for Java's Integer class.
-   */
-  class Integer {
-      static numberOfTrailingZeros(i) {
-          let y;
-          if (i === 0)
-              return 32;
-          let n = 31;
-          y = i << 16;
-          if (y !== 0) {
-              n -= 16;
-              i = y;
-          }
-          y = i << 8;
-          if (y !== 0) {
-              n -= 8;
-              i = y;
-          }
-          y = i << 4;
-          if (y !== 0) {
-              n -= 4;
-              i = y;
-          }
-          y = i << 2;
-          if (y !== 0) {
-              n -= 2;
-              i = y;
-          }
-          return n - ((i << 1) >>> 31);
-      }
-      static numberOfLeadingZeros(i) {
-          // HD, Figure 5-6
-          if (i === 0) {
-              return 32;
-          }
-          let n = 1;
-          if (i >>> 16 === 0) {
-              n += 16;
-              i <<= 16;
-          }
-          if (i >>> 24 === 0) {
-              n += 8;
-              i <<= 8;
-          }
-          if (i >>> 28 === 0) {
-              n += 4;
-              i <<= 4;
-          }
-          if (i >>> 30 === 0) {
-              n += 2;
-              i <<= 2;
-          }
-          n -= i >>> 31;
-          return n;
-      }
-      static toHexString(i) {
-          return i.toString(16);
-      }
-      static toBinaryString(intNumber) {
-          return String(parseInt(String(intNumber), 2));
-      }
-      // Returns the number of one-bits in the two's complement binary representation of the specified int value. This function is sometimes referred to as the population count.
-      // Returns:
-      // the number of one-bits in the two's complement binary representation of the specified int value.
-      static bitCount(i) {
-          // HD, Figure 5-2
-          i = i - ((i >>> 1) & 0x55555555);
-          i = (i & 0x33333333) + ((i >>> 2) & 0x33333333);
-          i = (i + (i >>> 4)) & 0x0f0f0f0f;
-          i = i + (i >>> 8);
-          i = i + (i >>> 16);
-          return i & 0x3f;
-      }
-      static truncDivision(dividend, divisor) {
-          return Math.trunc(dividend / divisor);
-      }
-      /**
-       * Converts A string to an integer.
-       * @param s A string to convert into a number.
-       * @param radix A value between 2 and 36 that specifies the base of the number in numString. If this argument is not supplied, strings with a prefix of '0x' are considered hexadecimal. All other strings are considered decimal.
-       */
-      static parseInt(num, radix = undefined) {
-          return parseInt(num, radix);
-      }
-  }
-  Integer.MIN_VALUE_32_BITS = -2147483648;
-  Integer.MAX_VALUE = Number.MAX_SAFE_INTEGER;
 
   /*
    * Copyright 2007 ZXing authors
@@ -790,7 +777,7 @@
               throw new IllegalArgumentException('Num bits must be between 0 and 32');
           }
           this.ensureCapacity(this.size + numBits);
-          // const appendBit = this.appendBit;
+          const appendBit = this.appendBit;
           for (let numBitsLeft = numBits; numBitsLeft > 0; numBitsLeft--) {
               this.appendBit(((value >> (numBitsLeft - 1)) & 0x01) === 1);
           }
@@ -798,7 +785,7 @@
       appendBitArray(other) {
           const otherSize = other.size;
           this.ensureCapacity(this.size + otherSize);
-          // const appendBit = this.appendBit;
+          const appendBit = this.appendBit;
           for (let i = 0; i < otherSize; i++) {
               this.appendBit(other.get(i));
           }
@@ -1016,7 +1003,6 @@
           return new FormatException();
       }
   }
-  FormatException.kind = 'FormatException';
 
   /*
    * Copyright 2008 ZXing authors
@@ -1189,7 +1175,6 @@
    */
   class UnsupportedOperationException extends Exception {
   }
-  UnsupportedOperationException.kind = 'UnsupportedOperationException';
 
   /**
    * Responsible for en/decoding strings.
@@ -1591,12 +1576,6 @@
           }
           return this;
       }
-      appendChars(str, offset, len) {
-          for (let i = offset; offset < offset + len; i++) {
-              this.append(str[i]);
-          }
-          return this;
-      }
       length() {
           return this.value.length;
       }
@@ -1616,7 +1595,7 @@
        * @note helper method for RSS Expanded
        */
       setLengthToZero() {
-          this.value = '';
+          this.value = "";
       }
       toString() {
           return this.value;
@@ -2110,7 +2089,6 @@
           return new NotFoundException();
       }
   }
-  NotFoundException.kind = 'NotFoundException';
 
   /*
    * Copyright 2009 ZXing authors
@@ -4366,7 +4344,6 @@
    */
   class ArithmeticException extends Exception {
   }
-  ArithmeticException.kind = 'ArithmeticException';
 
   /*
    * Copyright 2007 ZXing authors
@@ -4497,14 +4474,12 @@
    */
   class ReedSolomonException extends Exception {
   }
-  ReedSolomonException.kind = 'ReedSolomonException';
 
   /**
    * Custom Error class of type Exception.
    */
   class IllegalStateException extends Exception {
   }
-  IllegalStateException.kind = 'IllegalStateException';
 
   /*
    * Copyright 2007 ZXing authors
@@ -5043,7 +5018,8 @@
    * General math-related and numeric utility functions.
    */
   class MathUtils {
-      constructor() { }
+      MathUtils() {
+      }
       /**
        * Ends up being a bit faster than {@link Math#round(float)}. This merely rounds its
        * argument to the nearest int, where x.5 rounds up to x+1. Semantics of this shortcut
@@ -6742,494 +6718,6 @@
    * limitations under the License.
    */
   /**
-   * <p>Decodes Code 128 barcodes.</p>
-   *
-   * @author Sean Owen
-   */
-  class Code128Reader extends OneDReader {
-      static findStartPattern(row) {
-          const width = row.getSize();
-          const rowOffset = row.getNextSet(0);
-          let counterPosition = 0;
-          let counters = Int32Array.from([0, 0, 0, 0, 0, 0]);
-          let patternStart = rowOffset;
-          let isWhite = false;
-          const patternLength = 6;
-          for (let i = rowOffset; i < width; i++) {
-              if (row.get(i) !== isWhite) {
-                  counters[counterPosition]++;
-              }
-              else {
-                  if (counterPosition === (patternLength - 1)) {
-                      let bestVariance = Code128Reader.MAX_AVG_VARIANCE;
-                      let bestMatch = -1;
-                      for (let startCode = Code128Reader.CODE_START_A; startCode <= Code128Reader.CODE_START_C; startCode++) {
-                          const variance = OneDReader.patternMatchVariance(counters, Code128Reader.CODE_PATTERNS[startCode], Code128Reader.MAX_INDIVIDUAL_VARIANCE);
-                          if (variance < bestVariance) {
-                              bestVariance = variance;
-                              bestMatch = startCode;
-                          }
-                      }
-                      // Look for whitespace before start pattern, >= 50% of width of start pattern
-                      if (bestMatch >= 0 &&
-                          row.isRange(Math.max(0, patternStart - (i - patternStart) / 2), patternStart, false)) {
-                          return Int32Array.from([patternStart, i, bestMatch]);
-                      }
-                      patternStart += counters[0] + counters[1];
-                      counters = counters.slice(2, counters.length - 1);
-                      counters[counterPosition - 1] = 0;
-                      counters[counterPosition] = 0;
-                      counterPosition--;
-                  }
-                  else {
-                      counterPosition++;
-                  }
-                  counters[counterPosition] = 1;
-                  isWhite = !isWhite;
-              }
-          }
-          throw new NotFoundException();
-      }
-      static decodeCode(row, counters, rowOffset) {
-          OneDReader.recordPattern(row, rowOffset, counters);
-          let bestVariance = Code128Reader.MAX_AVG_VARIANCE; // worst variance we'll accept
-          let bestMatch = -1;
-          for (let d = 0; d < Code128Reader.CODE_PATTERNS.length; d++) {
-              const pattern = Code128Reader.CODE_PATTERNS[d];
-              const variance = this.patternMatchVariance(counters, pattern, Code128Reader.MAX_INDIVIDUAL_VARIANCE);
-              if (variance < bestVariance) {
-                  bestVariance = variance;
-                  bestMatch = d;
-              }
-          }
-          // TODO We're overlooking the fact that the STOP pattern has 7 values, not 6.
-          if (bestMatch >= 0) {
-              return bestMatch;
-          }
-          else {
-              throw new NotFoundException();
-          }
-      }
-      decodeRow(rowNumber, row, hints) {
-          const convertFNC1 = hints && (hints.get(DecodeHintType$1.ASSUME_GS1) === true);
-          const startPatternInfo = Code128Reader.findStartPattern(row);
-          const startCode = startPatternInfo[2];
-          let currentRawCodesIndex = 0;
-          const rawCodes = new Uint8Array(20);
-          rawCodes[currentRawCodesIndex++] = startCode;
-          let codeSet;
-          switch (startCode) {
-              case Code128Reader.CODE_START_A:
-                  codeSet = Code128Reader.CODE_CODE_A;
-                  break;
-              case Code128Reader.CODE_START_B:
-                  codeSet = Code128Reader.CODE_CODE_B;
-                  break;
-              case Code128Reader.CODE_START_C:
-                  codeSet = Code128Reader.CODE_CODE_C;
-                  break;
-              default:
-                  throw new FormatException();
-          }
-          let done = false;
-          let isNextShifted = false;
-          let result = '';
-          let lastStart = startPatternInfo[0];
-          let nextStart = startPatternInfo[1];
-          const counters = Int32Array.from([0, 0, 0, 0, 0, 0]);
-          let lastCode = 0;
-          let code = 0;
-          let checksumTotal = startCode;
-          let multiplier = 0;
-          let lastCharacterWasPrintable = true;
-          let upperMode = false;
-          let shiftUpperMode = false;
-          while (!done) {
-              const unshift = isNextShifted;
-              isNextShifted = false;
-              // Save off last code
-              lastCode = code;
-              // Decode another code from image
-              code = Code128Reader.decodeCode(row, counters, nextStart);
-              rawCodes[currentRawCodesIndex++] = code;
-              // Remember whether the last code was printable or not (excluding CODE_STOP)
-              if (code !== Code128Reader.CODE_STOP) {
-                  lastCharacterWasPrintable = true;
-              }
-              // Add to checksum computation (if not CODE_STOP of course)
-              if (code !== Code128Reader.CODE_STOP) {
-                  multiplier++;
-                  checksumTotal += multiplier * code;
-              }
-              // Advance to where the next code will to start
-              lastStart = nextStart;
-              nextStart += counters.reduce((previous, current) => previous + current, 0);
-              // Take care of illegal start codes
-              switch (code) {
-                  case Code128Reader.CODE_START_A:
-                  case Code128Reader.CODE_START_B:
-                  case Code128Reader.CODE_START_C:
-                      throw new FormatException();
-              }
-              switch (codeSet) {
-                  case Code128Reader.CODE_CODE_A:
-                      if (code < 64) {
-                          if (shiftUpperMode === upperMode) {
-                              result += String.fromCharCode((' '.charCodeAt(0) + code));
-                          }
-                          else {
-                              result += String.fromCharCode((' '.charCodeAt(0) + code + 128));
-                          }
-                          shiftUpperMode = false;
-                      }
-                      else if (code < 96) {
-                          if (shiftUpperMode === upperMode) {
-                              result += String.fromCharCode((code - 64));
-                          }
-                          else {
-                              result += String.fromCharCode((code + 64));
-                          }
-                          shiftUpperMode = false;
-                      }
-                      else {
-                          // Don't let CODE_STOP, which always appears, affect whether whether we think the last
-                          // code was printable or not.
-                          if (code !== Code128Reader.CODE_STOP) {
-                              lastCharacterWasPrintable = false;
-                          }
-                          switch (code) {
-                              case Code128Reader.CODE_FNC_1:
-                                  if (convertFNC1) {
-                                      if (result.length === 0) {
-                                          // GS1 specification 5.4.3.7. and 5.4.6.4. If the first char after the start code
-                                          // is FNC1 then this is GS1-128. We add the symbology identifier.
-                                          result += ']C1';
-                                      }
-                                      else {
-                                          // GS1 specification 5.4.7.5. Every subsequent FNC1 is returned as ASCII 29 (GS)
-                                          result += String.fromCharCode(29);
-                                      }
-                                  }
-                                  break;
-                              case Code128Reader.CODE_FNC_2:
-                              case Code128Reader.CODE_FNC_3:
-                                  // do nothing?
-                                  break;
-                              case Code128Reader.CODE_FNC_4_A:
-                                  if (!upperMode && shiftUpperMode) {
-                                      upperMode = true;
-                                      shiftUpperMode = false;
-                                  }
-                                  else if (upperMode && shiftUpperMode) {
-                                      upperMode = false;
-                                      shiftUpperMode = false;
-                                  }
-                                  else {
-                                      shiftUpperMode = true;
-                                  }
-                                  break;
-                              case Code128Reader.CODE_SHIFT:
-                                  isNextShifted = true;
-                                  codeSet = Code128Reader.CODE_CODE_B;
-                                  break;
-                              case Code128Reader.CODE_CODE_B:
-                                  codeSet = Code128Reader.CODE_CODE_B;
-                                  break;
-                              case Code128Reader.CODE_CODE_C:
-                                  codeSet = Code128Reader.CODE_CODE_C;
-                                  break;
-                              case Code128Reader.CODE_STOP:
-                                  done = true;
-                                  break;
-                          }
-                      }
-                      break;
-                  case Code128Reader.CODE_CODE_B:
-                      if (code < 96) {
-                          if (shiftUpperMode === upperMode) {
-                              result += String.fromCharCode((' '.charCodeAt(0) + code));
-                          }
-                          else {
-                              result += String.fromCharCode((' '.charCodeAt(0) + code + 128));
-                          }
-                          shiftUpperMode = false;
-                      }
-                      else {
-                          if (code !== Code128Reader.CODE_STOP) {
-                              lastCharacterWasPrintable = false;
-                          }
-                          switch (code) {
-                              case Code128Reader.CODE_FNC_1:
-                                  if (convertFNC1) {
-                                      if (result.length === 0) {
-                                          // GS1 specification 5.4.3.7. and 5.4.6.4. If the first char after the start code
-                                          // is FNC1 then this is GS1-128. We add the symbology identifier.
-                                          result += ']C1';
-                                      }
-                                      else {
-                                          // GS1 specification 5.4.7.5. Every subsequent FNC1 is returned as ASCII 29 (GS)
-                                          result += String.fromCharCode(29);
-                                      }
-                                  }
-                                  break;
-                              case Code128Reader.CODE_FNC_2:
-                              case Code128Reader.CODE_FNC_3:
-                                  // do nothing?
-                                  break;
-                              case Code128Reader.CODE_FNC_4_B:
-                                  if (!upperMode && shiftUpperMode) {
-                                      upperMode = true;
-                                      shiftUpperMode = false;
-                                  }
-                                  else if (upperMode && shiftUpperMode) {
-                                      upperMode = false;
-                                      shiftUpperMode = false;
-                                  }
-                                  else {
-                                      shiftUpperMode = true;
-                                  }
-                                  break;
-                              case Code128Reader.CODE_SHIFT:
-                                  isNextShifted = true;
-                                  codeSet = Code128Reader.CODE_CODE_A;
-                                  break;
-                              case Code128Reader.CODE_CODE_A:
-                                  codeSet = Code128Reader.CODE_CODE_A;
-                                  break;
-                              case Code128Reader.CODE_CODE_C:
-                                  codeSet = Code128Reader.CODE_CODE_C;
-                                  break;
-                              case Code128Reader.CODE_STOP:
-                                  done = true;
-                                  break;
-                          }
-                      }
-                      break;
-                  case Code128Reader.CODE_CODE_C:
-                      if (code < 100) {
-                          if (code < 10) {
-                              result += '0';
-                          }
-                          result += code;
-                      }
-                      else {
-                          if (code !== Code128Reader.CODE_STOP) {
-                              lastCharacterWasPrintable = false;
-                          }
-                          switch (code) {
-                              case Code128Reader.CODE_FNC_1:
-                                  if (convertFNC1) {
-                                      if (result.length === 0) {
-                                          // GS1 specification 5.4.3.7. and 5.4.6.4. If the first char after the start code
-                                          // is FNC1 then this is GS1-128. We add the symbology identifier.
-                                          result += ']C1';
-                                      }
-                                      else {
-                                          // GS1 specification 5.4.7.5. Every subsequent FNC1 is returned as ASCII 29 (GS)
-                                          result += String.fromCharCode(29);
-                                      }
-                                  }
-                                  break;
-                              case Code128Reader.CODE_CODE_A:
-                                  codeSet = Code128Reader.CODE_CODE_A;
-                                  break;
-                              case Code128Reader.CODE_CODE_B:
-                                  codeSet = Code128Reader.CODE_CODE_B;
-                                  break;
-                              case Code128Reader.CODE_STOP:
-                                  done = true;
-                                  break;
-                          }
-                      }
-                      break;
-              }
-              // Unshift back to another code set if we were shifted
-              if (unshift) {
-                  codeSet = codeSet === Code128Reader.CODE_CODE_A ? Code128Reader.CODE_CODE_B : Code128Reader.CODE_CODE_A;
-              }
-          }
-          const lastPatternSize = nextStart - lastStart;
-          // Check for ample whitespace following pattern, but, to do this we first need to remember that
-          // we fudged decoding CODE_STOP since it actually has 7 bars, not 6. There is a black bar left
-          // to read off. Would be slightly better to properly read. Here we just skip it:
-          nextStart = row.getNextUnset(nextStart);
-          if (!row.isRange(nextStart, Math.min(row.getSize(), nextStart + (nextStart - lastStart) / 2), false)) {
-              throw new NotFoundException();
-          }
-          // Pull out from sum the value of the penultimate check code
-          checksumTotal -= multiplier * lastCode;
-          // lastCode is the checksum then:
-          if (checksumTotal % 103 !== lastCode) {
-              throw new ChecksumException();
-          }
-          // Need to pull out the check digits from string
-          const resultLength = result.length;
-          if (resultLength === 0) {
-              // false positive
-              throw new NotFoundException();
-          }
-          // Only bother if the result had at least one character, and if the checksum digit happened to
-          // be a printable character. If it was just interpreted as a control code, nothing to remove.
-          if (resultLength > 0 && lastCharacterWasPrintable) {
-              if (codeSet === Code128Reader.CODE_CODE_C) {
-                  result = result.substring(0, resultLength - 2);
-              }
-              else {
-                  result = result.substring(0, resultLength - 1);
-              }
-          }
-          const left = (startPatternInfo[1] + startPatternInfo[0]) / 2.0;
-          const right = lastStart + lastPatternSize / 2.0;
-          const rawCodesSize = rawCodes.length;
-          const rawBytes = new Uint8Array(rawCodesSize);
-          for (let i = 0; i < rawCodesSize; i++) {
-              rawBytes[i] = rawCodes[i];
-          }
-          const points = [new ResultPoint(left, rowNumber), new ResultPoint(right, rowNumber)];
-          return new Result(result, rawBytes, 0, points, BarcodeFormat$1.CODE_128, new Date().getTime());
-      }
-  }
-  Code128Reader.CODE_PATTERNS = [
-      Int32Array.from([2, 1, 2, 2, 2, 2]),
-      Int32Array.from([2, 2, 2, 1, 2, 2]),
-      Int32Array.from([2, 2, 2, 2, 2, 1]),
-      Int32Array.from([1, 2, 1, 2, 2, 3]),
-      Int32Array.from([1, 2, 1, 3, 2, 2]),
-      Int32Array.from([1, 3, 1, 2, 2, 2]),
-      Int32Array.from([1, 2, 2, 2, 1, 3]),
-      Int32Array.from([1, 2, 2, 3, 1, 2]),
-      Int32Array.from([1, 3, 2, 2, 1, 2]),
-      Int32Array.from([2, 2, 1, 2, 1, 3]),
-      Int32Array.from([2, 2, 1, 3, 1, 2]),
-      Int32Array.from([2, 3, 1, 2, 1, 2]),
-      Int32Array.from([1, 1, 2, 2, 3, 2]),
-      Int32Array.from([1, 2, 2, 1, 3, 2]),
-      Int32Array.from([1, 2, 2, 2, 3, 1]),
-      Int32Array.from([1, 1, 3, 2, 2, 2]),
-      Int32Array.from([1, 2, 3, 1, 2, 2]),
-      Int32Array.from([1, 2, 3, 2, 2, 1]),
-      Int32Array.from([2, 2, 3, 2, 1, 1]),
-      Int32Array.from([2, 2, 1, 1, 3, 2]),
-      Int32Array.from([2, 2, 1, 2, 3, 1]),
-      Int32Array.from([2, 1, 3, 2, 1, 2]),
-      Int32Array.from([2, 2, 3, 1, 1, 2]),
-      Int32Array.from([3, 1, 2, 1, 3, 1]),
-      Int32Array.from([3, 1, 1, 2, 2, 2]),
-      Int32Array.from([3, 2, 1, 1, 2, 2]),
-      Int32Array.from([3, 2, 1, 2, 2, 1]),
-      Int32Array.from([3, 1, 2, 2, 1, 2]),
-      Int32Array.from([3, 2, 2, 1, 1, 2]),
-      Int32Array.from([3, 2, 2, 2, 1, 1]),
-      Int32Array.from([2, 1, 2, 1, 2, 3]),
-      Int32Array.from([2, 1, 2, 3, 2, 1]),
-      Int32Array.from([2, 3, 2, 1, 2, 1]),
-      Int32Array.from([1, 1, 1, 3, 2, 3]),
-      Int32Array.from([1, 3, 1, 1, 2, 3]),
-      Int32Array.from([1, 3, 1, 3, 2, 1]),
-      Int32Array.from([1, 1, 2, 3, 1, 3]),
-      Int32Array.from([1, 3, 2, 1, 1, 3]),
-      Int32Array.from([1, 3, 2, 3, 1, 1]),
-      Int32Array.from([2, 1, 1, 3, 1, 3]),
-      Int32Array.from([2, 3, 1, 1, 1, 3]),
-      Int32Array.from([2, 3, 1, 3, 1, 1]),
-      Int32Array.from([1, 1, 2, 1, 3, 3]),
-      Int32Array.from([1, 1, 2, 3, 3, 1]),
-      Int32Array.from([1, 3, 2, 1, 3, 1]),
-      Int32Array.from([1, 1, 3, 1, 2, 3]),
-      Int32Array.from([1, 1, 3, 3, 2, 1]),
-      Int32Array.from([1, 3, 3, 1, 2, 1]),
-      Int32Array.from([3, 1, 3, 1, 2, 1]),
-      Int32Array.from([2, 1, 1, 3, 3, 1]),
-      Int32Array.from([2, 3, 1, 1, 3, 1]),
-      Int32Array.from([2, 1, 3, 1, 1, 3]),
-      Int32Array.from([2, 1, 3, 3, 1, 1]),
-      Int32Array.from([2, 1, 3, 1, 3, 1]),
-      Int32Array.from([3, 1, 1, 1, 2, 3]),
-      Int32Array.from([3, 1, 1, 3, 2, 1]),
-      Int32Array.from([3, 3, 1, 1, 2, 1]),
-      Int32Array.from([3, 1, 2, 1, 1, 3]),
-      Int32Array.from([3, 1, 2, 3, 1, 1]),
-      Int32Array.from([3, 3, 2, 1, 1, 1]),
-      Int32Array.from([3, 1, 4, 1, 1, 1]),
-      Int32Array.from([2, 2, 1, 4, 1, 1]),
-      Int32Array.from([4, 3, 1, 1, 1, 1]),
-      Int32Array.from([1, 1, 1, 2, 2, 4]),
-      Int32Array.from([1, 1, 1, 4, 2, 2]),
-      Int32Array.from([1, 2, 1, 1, 2, 4]),
-      Int32Array.from([1, 2, 1, 4, 2, 1]),
-      Int32Array.from([1, 4, 1, 1, 2, 2]),
-      Int32Array.from([1, 4, 1, 2, 2, 1]),
-      Int32Array.from([1, 1, 2, 2, 1, 4]),
-      Int32Array.from([1, 1, 2, 4, 1, 2]),
-      Int32Array.from([1, 2, 2, 1, 1, 4]),
-      Int32Array.from([1, 2, 2, 4, 1, 1]),
-      Int32Array.from([1, 4, 2, 1, 1, 2]),
-      Int32Array.from([1, 4, 2, 2, 1, 1]),
-      Int32Array.from([2, 4, 1, 2, 1, 1]),
-      Int32Array.from([2, 2, 1, 1, 1, 4]),
-      Int32Array.from([4, 1, 3, 1, 1, 1]),
-      Int32Array.from([2, 4, 1, 1, 1, 2]),
-      Int32Array.from([1, 3, 4, 1, 1, 1]),
-      Int32Array.from([1, 1, 1, 2, 4, 2]),
-      Int32Array.from([1, 2, 1, 1, 4, 2]),
-      Int32Array.from([1, 2, 1, 2, 4, 1]),
-      Int32Array.from([1, 1, 4, 2, 1, 2]),
-      Int32Array.from([1, 2, 4, 1, 1, 2]),
-      Int32Array.from([1, 2, 4, 2, 1, 1]),
-      Int32Array.from([4, 1, 1, 2, 1, 2]),
-      Int32Array.from([4, 2, 1, 1, 1, 2]),
-      Int32Array.from([4, 2, 1, 2, 1, 1]),
-      Int32Array.from([2, 1, 2, 1, 4, 1]),
-      Int32Array.from([2, 1, 4, 1, 2, 1]),
-      Int32Array.from([4, 1, 2, 1, 2, 1]),
-      Int32Array.from([1, 1, 1, 1, 4, 3]),
-      Int32Array.from([1, 1, 1, 3, 4, 1]),
-      Int32Array.from([1, 3, 1, 1, 4, 1]),
-      Int32Array.from([1, 1, 4, 1, 1, 3]),
-      Int32Array.from([1, 1, 4, 3, 1, 1]),
-      Int32Array.from([4, 1, 1, 1, 1, 3]),
-      Int32Array.from([4, 1, 1, 3, 1, 1]),
-      Int32Array.from([1, 1, 3, 1, 4, 1]),
-      Int32Array.from([1, 1, 4, 1, 3, 1]),
-      Int32Array.from([3, 1, 1, 1, 4, 1]),
-      Int32Array.from([4, 1, 1, 1, 3, 1]),
-      Int32Array.from([2, 1, 1, 4, 1, 2]),
-      Int32Array.from([2, 1, 1, 2, 1, 4]),
-      Int32Array.from([2, 1, 1, 2, 3, 2]),
-      Int32Array.from([2, 3, 3, 1, 1, 1, 2]),
-  ];
-  Code128Reader.MAX_AVG_VARIANCE = 0.25;
-  Code128Reader.MAX_INDIVIDUAL_VARIANCE = 0.7;
-  Code128Reader.CODE_SHIFT = 98;
-  Code128Reader.CODE_CODE_C = 99;
-  Code128Reader.CODE_CODE_B = 100;
-  Code128Reader.CODE_CODE_A = 101;
-  Code128Reader.CODE_FNC_1 = 102;
-  Code128Reader.CODE_FNC_2 = 97;
-  Code128Reader.CODE_FNC_3 = 96;
-  Code128Reader.CODE_FNC_4_A = 101;
-  Code128Reader.CODE_FNC_4_B = 100;
-  Code128Reader.CODE_START_A = 103;
-  Code128Reader.CODE_START_B = 104;
-  Code128Reader.CODE_START_C = 105;
-  Code128Reader.CODE_STOP = 106;
-
-  /*
-   * Copyright 2008 ZXing authors
-   *
-   * Licensed under the Apache License, Version 2.0 (the "License");
-   * you may not use this file except in compliance with the License.
-   * You may obtain a copy of the License at
-   *
-   *      http://www.apache.org/licenses/LICENSE-2.0
-   *
-   * Unless required by applicable law or agreed to in writing, software
-   * distributed under the License is distributed on an "AS IS" BASIS,
-   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   * See the License for the specific language governing permissions and
-   * limitations under the License.
-   */
-  /**
    * <p>Decodes Code 39 barcodes. Supports "Full ASCII Code 39" if USE_CODE_39_EXTENDED_MODE is set.</p>
    *
    * @author Sean Owen
@@ -7268,7 +6756,7 @@
           this.usingCheckDigit = usingCheckDigit;
           this.extendedMode = extendedMode;
           this.decodeRowResult = '';
-          this.counters = new Int32Array(9);
+          this.counters = new Array(9);
       }
       decodeRow(rowNumber, row, hints) {
           let theCounters = this.counters;
@@ -7533,441 +7021,41 @@
    * limitations under the License.
    */
   /**
-   * <p>Decodes ITF barcodes.</p>
+   * <p>Decodes Code 128 barcodes.</p>
    *
-   * @author Tjieco
-   */
-  class ITFReader extends OneDReader {
-      constructor() {
-          // private static W = 3; // Pixel width of a 3x wide line
-          // private static w = 2; // Pixel width of a 2x wide line
-          // private static N = 1; // Pixed width of a narrow line
-          super(...arguments);
-          // Stores the actual narrow line width of the image being decoded.
-          this.narrowLineWidth = -1;
-      }
-      // See ITFWriter.PATTERNS
-      /*
-    
-      /!**
-       * Patterns of Wide / Narrow lines to indicate each digit
-       *!/
-      */
-      decodeRow(rowNumber, row, hints) {
-          // Find out where the Middle section (payload) starts & ends
-          let startRange = this.decodeStart(row);
-          let endRange = this.decodeEnd(row);
-          let result = new StringBuilder();
-          ITFReader.decodeMiddle(row, startRange[1], endRange[0], result);
-          let resultString = result.toString();
-          let allowedLengths = null;
-          if (hints != null) {
-              allowedLengths = hints.get(DecodeHintType$1.ALLOWED_LENGTHS);
-          }
-          if (allowedLengths == null) {
-              allowedLengths = ITFReader.DEFAULT_ALLOWED_LENGTHS;
-          }
-          // To avoid false positives with 2D barcodes (and other patterns), make
-          // an assumption that the decoded string must be a 'standard' length if it's short
-          let length = resultString.length;
-          let lengthOK = false;
-          let maxAllowedLength = 0;
-          for (let value of allowedLengths) {
-              if (length === value) {
-                  lengthOK = true;
-                  break;
-              }
-              if (value > maxAllowedLength) {
-                  maxAllowedLength = value;
-              }
-          }
-          if (!lengthOK && length > maxAllowedLength) {
-              lengthOK = true;
-          }
-          if (!lengthOK) {
-              throw new FormatException();
-          }
-          const points = [new ResultPoint(startRange[1], rowNumber), new ResultPoint(endRange[0], rowNumber)];
-          let resultReturn = new Result(resultString, null, // no natural byte representation for these barcodes
-          0, points, BarcodeFormat$1.ITF, new Date().getTime());
-          return resultReturn;
-      }
-      /*
-      /!**
-       * @param row          row of black/white values to search
-       * @param payloadStart offset of start pattern
-       * @param resultString {@link StringBuilder} to append decoded chars to
-       * @throws NotFoundException if decoding could not complete successfully
-       *!/*/
-      static decodeMiddle(row, payloadStart, payloadEnd, resultString) {
-          // Digits are interleaved in pairs - 5 black lines for one digit, and the
-          // 5
-          // interleaved white lines for the second digit.
-          // Therefore, need to scan 10 lines and then
-          // split these into two arrays
-          let counterDigitPair = new Int32Array(10); // 10
-          let counterBlack = new Int32Array(5); // 5
-          let counterWhite = new Int32Array(5); // 5
-          counterDigitPair.fill(0);
-          counterBlack.fill(0);
-          counterWhite.fill(0);
-          while (payloadStart < payloadEnd) {
-              // Get 10 runs of black/white.
-              OneDReader.recordPattern(row, payloadStart, counterDigitPair);
-              // Split them into each array
-              for (let k = 0; k < 5; k++) {
-                  let twoK = 2 * k;
-                  counterBlack[k] = counterDigitPair[twoK];
-                  counterWhite[k] = counterDigitPair[twoK + 1];
-              }
-              let bestMatch = ITFReader.decodeDigit(counterBlack);
-              resultString.append(bestMatch.toString());
-              bestMatch = this.decodeDigit(counterWhite);
-              resultString.append(bestMatch.toString());
-              counterDigitPair.forEach(function (counterDigit) {
-                  payloadStart += counterDigit;
-              });
-          }
-      }
-      /*/!**
-       * Identify where the start of the middle / payload section starts.
-       *
-       * @param row row of black/white values to search
-       * @return Array, containing index of start of 'start block' and end of
-       *         'start block'
-       *!/*/
-      decodeStart(row) {
-          let endStart = ITFReader.skipWhiteSpace(row);
-          let startPattern = ITFReader.findGuardPattern(row, endStart, ITFReader.START_PATTERN);
-          // Determine the width of a narrow line in pixels. We can do this by
-          // getting the width of the start pattern and dividing by 4 because its
-          // made up of 4 narrow lines.
-          this.narrowLineWidth = (startPattern[1] - startPattern[0]) / 4;
-          this.validateQuietZone(row, startPattern[0]);
-          return startPattern;
-      }
-      /*/!**
-       * The start & end patterns must be pre/post fixed by a quiet zone. This
-       * zone must be at least 10 times the width of a narrow line.  Scan back until
-       * we either get to the start of the barcode or match the necessary number of
-       * quiet zone pixels.
-       *
-       * Note: Its assumed the row is reversed when using this method to find
-       * quiet zone after the end pattern.
-       *
-       * ref: http://www.barcode-1.net/i25code.html
-       *
-       * @param row bit array representing the scanned barcode.
-       * @param startPattern index into row of the start or end pattern.
-       * @throws NotFoundException if the quiet zone cannot be found
-       *!/*/
-      validateQuietZone(row, startPattern) {
-          let quietCount = this.narrowLineWidth * 10; // expect to find this many pixels of quiet zone
-          // if there are not so many pixel at all let's try as many as possible
-          quietCount = quietCount < startPattern ? quietCount : startPattern;
-          for (let i = startPattern - 1; quietCount > 0 && i >= 0; i--) {
-              if (row.get(i)) {
-                  break;
-              }
-              quietCount--;
-          }
-          if (quietCount !== 0) {
-              // Unable to find the necessary number of quiet zone pixels.
-              throw new NotFoundException();
-          }
-      }
-      /*
-      /!**
-       * Skip all whitespace until we get to the first black line.
-       *
-       * @param row row of black/white values to search
-       * @return index of the first black line.
-       * @throws NotFoundException Throws exception if no black lines are found in the row
-       *!/*/
-      static skipWhiteSpace(row) {
-          const width = row.getSize();
-          const endStart = row.getNextSet(0);
-          if (endStart === width) {
-              throw new NotFoundException();
-          }
-          return endStart;
-      }
-      /*/!**
-       * Identify where the end of the middle / payload section ends.
-       *
-       * @param row row of black/white values to search
-       * @return Array, containing index of start of 'end block' and end of 'end
-       *         block'
-       *!/*/
-      decodeEnd(row) {
-          // For convenience, reverse the row and then
-          // search from 'the start' for the end block
-          row.reverse();
-          try {
-              let endStart = ITFReader.skipWhiteSpace(row);
-              let endPattern;
-              try {
-                  endPattern = ITFReader.findGuardPattern(row, endStart, ITFReader.END_PATTERN_REVERSED[0]);
-              }
-              catch (error) {
-                  if (error instanceof NotFoundException) {
-                      endPattern = ITFReader.findGuardPattern(row, endStart, ITFReader.END_PATTERN_REVERSED[1]);
-                  }
-              }
-              // The start & end patterns must be pre/post fixed by a quiet zone. This
-              // zone must be at least 10 times the width of a narrow line.
-              // ref: http://www.barcode-1.net/i25code.html
-              this.validateQuietZone(row, endPattern[0]);
-              // Now recalculate the indices of where the 'endblock' starts & stops to
-              // accommodate
-              // the reversed nature of the search
-              let temp = endPattern[0];
-              endPattern[0] = row.getSize() - endPattern[1];
-              endPattern[1] = row.getSize() - temp;
-              return endPattern;
-          }
-          finally {
-              // Put the row back the right way.
-              row.reverse();
-          }
-      }
-      /*
-      /!**
-       * @param row       row of black/white values to search
-       * @param rowOffset position to start search
-       * @param pattern   pattern of counts of number of black and white pixels that are
-       *                  being searched for as a pattern
-       * @return start/end horizontal offset of guard pattern, as an array of two
-       *         ints
-       * @throws NotFoundException if pattern is not found
-       *!/*/
-      static findGuardPattern(row, rowOffset, pattern) {
-          let patternLength = pattern.length;
-          let counters = new Int32Array(patternLength);
-          let width = row.getSize();
-          let isWhite = false;
-          let counterPosition = 0;
-          let patternStart = rowOffset;
-          counters.fill(0);
-          for (let x = rowOffset; x < width; x++) {
-              if (row.get(x) !== isWhite) {
-                  counters[counterPosition]++;
-              }
-              else {
-                  if (counterPosition === patternLength - 1) {
-                      if (OneDReader.patternMatchVariance(counters, pattern, ITFReader.MAX_INDIVIDUAL_VARIANCE) < ITFReader.MAX_AVG_VARIANCE) {
-                          return [patternStart, x];
-                      }
-                      patternStart += counters[0] + counters[1];
-                      System.arraycopy(counters, 2, counters, 0, counterPosition - 1);
-                      counters[counterPosition - 1] = 0;
-                      counters[counterPosition] = 0;
-                      counterPosition--;
-                  }
-                  else {
-                      counterPosition++;
-                  }
-                  counters[counterPosition] = 1;
-                  isWhite = !isWhite;
-              }
-          }
-          throw new NotFoundException();
-      }
-      /*/!**
-       * Attempts to decode a sequence of ITF black/white lines into single
-       * digit.
-       *
-       * @param counters the counts of runs of observed black/white/black/... values
-       * @return The decoded digit
-       * @throws NotFoundException if digit cannot be decoded
-       *!/*/
-      static decodeDigit(counters) {
-          let bestVariance = ITFReader.MAX_AVG_VARIANCE; // worst variance we'll accept
-          let bestMatch = -1;
-          let max = ITFReader.PATTERNS.length;
-          for (let i = 0; i < max; i++) {
-              let pattern = ITFReader.PATTERNS[i];
-              let variance = OneDReader.patternMatchVariance(counters, pattern, ITFReader.MAX_INDIVIDUAL_VARIANCE);
-              if (variance < bestVariance) {
-                  bestVariance = variance;
-                  bestMatch = i;
-              }
-              else if (variance === bestVariance) {
-                  // if we find a second 'best match' with the same variance, we can not reliably report to have a suitable match
-                  bestMatch = -1;
-              }
-          }
-          if (bestMatch >= 0) {
-              return bestMatch % 10;
-          }
-          else {
-              throw new NotFoundException();
-          }
-      }
-  }
-  ITFReader.PATTERNS = [
-      Int32Array.from([1, 1, 2, 2, 1]),
-      Int32Array.from([2, 1, 1, 1, 2]),
-      Int32Array.from([1, 2, 1, 1, 2]),
-      Int32Array.from([2, 2, 1, 1, 1]),
-      Int32Array.from([1, 1, 2, 1, 2]),
-      Int32Array.from([2, 1, 2, 1, 1]),
-      Int32Array.from([1, 2, 2, 1, 1]),
-      Int32Array.from([1, 1, 1, 2, 2]),
-      Int32Array.from([2, 1, 1, 2, 1]),
-      Int32Array.from([1, 2, 1, 2, 1]),
-      Int32Array.from([1, 1, 3, 3, 1]),
-      Int32Array.from([3, 1, 1, 1, 3]),
-      Int32Array.from([1, 3, 1, 1, 3]),
-      Int32Array.from([3, 3, 1, 1, 1]),
-      Int32Array.from([1, 1, 3, 1, 3]),
-      Int32Array.from([3, 1, 3, 1, 1]),
-      Int32Array.from([1, 3, 3, 1, 1]),
-      Int32Array.from([1, 1, 1, 3, 3]),
-      Int32Array.from([3, 1, 1, 3, 1]),
-      Int32Array.from([1, 3, 1, 3, 1]) // 9
-  ];
-  ITFReader.MAX_AVG_VARIANCE = 0.38;
-  ITFReader.MAX_INDIVIDUAL_VARIANCE = 0.5;
-  /* /!** Valid ITF lengths. Anything longer than the largest value is also allowed. *!/*/
-  ITFReader.DEFAULT_ALLOWED_LENGTHS = [6, 8, 10, 12, 14];
-  /*/!**
-   * Start/end guard pattern.
-   *
-   * Note: The end pattern is reversed because the row is reversed before
-   * searching for the END_PATTERN
-   *!/*/
-  ITFReader.START_PATTERN = Int32Array.from([1, 1, 1, 1]);
-  ITFReader.END_PATTERN_REVERSED = [
-      Int32Array.from([1, 1, 2]),
-      Int32Array.from([1, 1, 3]) // 3x
-  ];
-
-  /*
-   * Copyright 2008 ZXing authors
-   *
-   * Licensed under the Apache License, Version 2.0 (the "License");
-   * you may not use this file except in compliance with the License.
-   * You may obtain a copy of the License at
-   *
-   *      http://www.apache.org/licenses/LICENSE-2.0
-   *
-   * Unless required by applicable law or agreed to in writing, software
-   * distributed under the License is distributed on an "AS IS" BASIS,
-   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   * See the License for the specific language governing permissions and
-   * limitations under the License.
-   */
-  /**
-   * <p>Encapsulates functionality and implementation that is common to UPC and EAN families
-   * of one-dimensional barcodes.</p>
-   *
-   * @author dswitkin@google.com (Daniel Switkin)
    * @author Sean Owen
-   * @author alasdair@google.com (Alasdair Mackintosh)
    */
-  class AbstractUPCEANReader extends OneDReader {
-      constructor() {
-          super(...arguments);
-          this.decodeRowStringBuffer = '';
-      }
-      // private final UPCEANExtensionSupport extensionReader;
-      // private final EANManufacturerOrgSupport eanManSupport;
-      /*
-      protected UPCEANReader() {
-          decodeRowStringBuffer = new StringBuilder(20);
-          extensionReader = new UPCEANExtensionSupport();
-          eanManSupport = new EANManufacturerOrgSupport();
-      }
-      */
-      static findStartGuardPattern(row) {
-          let foundStart = false;
-          let startRange;
-          let nextStart = 0;
-          let counters = Int32Array.from([0, 0, 0]);
-          while (!foundStart) {
-              counters = Int32Array.from([0, 0, 0]);
-              startRange = AbstractUPCEANReader.findGuardPattern(row, nextStart, false, this.START_END_PATTERN, counters);
-              let start = startRange[0];
-              nextStart = startRange[1];
-              let quietStart = start - (nextStart - start);
-              if (quietStart >= 0) {
-                  foundStart = row.isRange(quietStart, start, false);
-              }
-          }
-          return startRange;
-      }
-      static checkChecksum(s) {
-          return AbstractUPCEANReader.checkStandardUPCEANChecksum(s);
-      }
-      static checkStandardUPCEANChecksum(s) {
-          let length = s.length;
-          if (length === 0)
-              return false;
-          let check = parseInt(s.charAt(length - 1), 10);
-          return AbstractUPCEANReader.getStandardUPCEANChecksum(s.substring(0, length - 1)) === check;
-      }
-      static getStandardUPCEANChecksum(s) {
-          let length = s.length;
-          let sum = 0;
-          for (let i = length - 1; i >= 0; i -= 2) {
-              let digit = s.charAt(i).charCodeAt(0) - '0'.charCodeAt(0);
-              if (digit < 0 || digit > 9) {
-                  throw new FormatException();
-              }
-              sum += digit;
-          }
-          sum *= 3;
-          for (let i = length - 2; i >= 0; i -= 2) {
-              let digit = s.charAt(i).charCodeAt(0) - '0'.charCodeAt(0);
-              if (digit < 0 || digit > 9) {
-                  throw new FormatException();
-              }
-              sum += digit;
-          }
-          return (1000 - sum) % 10;
-      }
-      static decodeEnd(row, endStart) {
-          return AbstractUPCEANReader.findGuardPattern(row, endStart, false, AbstractUPCEANReader.START_END_PATTERN, new Int32Array(AbstractUPCEANReader.START_END_PATTERN.length).fill(0));
-      }
-      /**
-       * @throws NotFoundException
-       */
-      static findGuardPatternWithoutCounters(row, rowOffset, whiteFirst, pattern) {
-          return this.findGuardPattern(row, rowOffset, whiteFirst, pattern, new Int32Array(pattern.length));
-      }
-      /**
-       * @param row row of black/white values to search
-       * @param rowOffset position to start search
-       * @param whiteFirst if true, indicates that the pattern specifies white/black/white/...
-       * pixel counts, otherwise, it is interpreted as black/white/black/...
-       * @param pattern pattern of counts of number of black and white pixels that are being
-       * searched for as a pattern
-       * @param counters array of counters, as long as pattern, to re-use
-       * @return start/end horizontal offset of guard pattern, as an array of two ints
-       * @throws NotFoundException if pattern is not found
-       */
-      static findGuardPattern(row, rowOffset, whiteFirst, pattern, counters) {
-          let width = row.getSize();
-          rowOffset = whiteFirst ? row.getNextUnset(rowOffset) : row.getNextSet(rowOffset);
+  class Code128Reader extends OneDReader {
+      static findStartPattern(row) {
+          const width = row.getSize();
+          const rowOffset = row.getNextSet(0);
           let counterPosition = 0;
+          const counters = [0, 0, 0, 0, 0, 0];
           let patternStart = rowOffset;
-          let patternLength = pattern.length;
-          let isWhite = whiteFirst;
-          for (let x = rowOffset; x < width; x++) {
-              if (row.get(x) !== isWhite) {
+          let isWhite = false;
+          const patternLength = 6;
+          for (let i = rowOffset; i < width; i++) {
+              if (row.get(i) !== isWhite) {
                   counters[counterPosition]++;
               }
               else {
-                  if (counterPosition === patternLength - 1) {
-                      if (OneDReader.patternMatchVariance(counters, pattern, AbstractUPCEANReader.MAX_INDIVIDUAL_VARIANCE) < AbstractUPCEANReader.MAX_AVG_VARIANCE) {
-                          return Int32Array.from([patternStart, x]);
+                  if (counterPosition === (patternLength - 1)) {
+                      let bestVariance = Code128Reader.MAX_AVG_VARIANCE;
+                      let bestMatch = -1;
+                      for (let startCode = Code128Reader.CODE_START_A; startCode <= Code128Reader.CODE_START_C; startCode++) {
+                          const variance = OneDReader.patternMatchVariance(counters, Code128Reader.CODE_PATTERNS[startCode], Code128Reader.MAX_INDIVIDUAL_VARIANCE);
+                          if (variance < bestVariance) {
+                              bestVariance = variance;
+                              bestMatch = startCode;
+                          }
+                      }
+                      // Look for whitespace before start pattern, >= 50% of width of start pattern
+                      if (bestMatch >= 0 &&
+                          row.isRange(Math.max(0, patternStart - (i - patternStart) / 2), patternStart, false)) {
+                          return [patternStart, i, bestMatch];
                       }
                       patternStart += counters[0] + counters[1];
-                      let slice = counters.slice(2, counters.length - 1);
-                      for (let i = 0; i < counterPosition - 1; i++) {
-                          counters[i] = slice[i];
-                      }
+                      counters.splice(0, 2);
                       counters[counterPosition - 1] = 0;
                       counters[counterPosition] = 0;
                       counterPosition--;
@@ -7981,19 +7069,19 @@
           }
           throw new NotFoundException();
       }
-      static decodeDigit(row, counters, rowOffset, patterns) {
-          this.recordPattern(row, rowOffset, counters);
-          let bestVariance = this.MAX_AVG_VARIANCE;
+      static decodeCode(row, counters, rowOffset) {
+          OneDReader.recordPattern(row, rowOffset, counters);
+          let bestVariance = Code128Reader.MAX_AVG_VARIANCE; // worst variance we'll accept
           let bestMatch = -1;
-          let max = patterns.length;
-          for (let i = 0; i < max; i++) {
-              let pattern = patterns[i];
-              let variance = OneDReader.patternMatchVariance(counters, pattern, AbstractUPCEANReader.MAX_INDIVIDUAL_VARIANCE);
+          for (let d = 0; d < Code128Reader.CODE_PATTERNS.length; d++) {
+              const pattern = Code128Reader.CODE_PATTERNS[d];
+              const variance = this.patternMatchVariance(counters, pattern, Code128Reader.MAX_INDIVIDUAL_VARIANCE);
               if (variance < bestVariance) {
                   bestVariance = variance;
-                  bestMatch = i;
+                  bestMatch = d;
               }
           }
+          // TODO We're overlooking the fact that the STOP pattern has 7 values, not 6.
           if (bestMatch >= 0) {
               return bestMatch;
           }
@@ -8001,899 +7089,415 @@
               throw new NotFoundException();
           }
       }
-  }
-  // These two values are critical for determining how permissive the decoding will be.
-  // We've arrived at these values through a lot of trial and error. Setting them any higher
-  // lets false positives creep in quickly.
-  AbstractUPCEANReader.MAX_AVG_VARIANCE = 0.48;
-  AbstractUPCEANReader.MAX_INDIVIDUAL_VARIANCE = 0.7;
-  /**
-   * Start/end guard pattern.
-   */
-  AbstractUPCEANReader.START_END_PATTERN = Int32Array.from([1, 1, 1]);
-  /**
-   * Pattern marking the middle of a UPC/EAN pattern, separating the two halves.
-   */
-  AbstractUPCEANReader.MIDDLE_PATTERN = Int32Array.from([1, 1, 1, 1, 1]);
-  /**
-   * end guard pattern.
-   */
-  AbstractUPCEANReader.END_PATTERN = Int32Array.from([1, 1, 1, 1, 1, 1]);
-  /**
-   * "Odd", or "L" patterns used to encode UPC/EAN digits.
-   */
-  AbstractUPCEANReader.L_PATTERNS = [
-      Int32Array.from([3, 2, 1, 1]),
-      Int32Array.from([2, 2, 2, 1]),
-      Int32Array.from([2, 1, 2, 2]),
-      Int32Array.from([1, 4, 1, 1]),
-      Int32Array.from([1, 1, 3, 2]),
-      Int32Array.from([1, 2, 3, 1]),
-      Int32Array.from([1, 1, 1, 4]),
-      Int32Array.from([1, 3, 1, 2]),
-      Int32Array.from([1, 2, 1, 3]),
-      Int32Array.from([3, 1, 1, 2]),
-  ];
-
-  /*
-   * Copyright (C) 2010 ZXing authors
-   *
-   * Licensed under the Apache License, Version 2.0 (the "License");
-   * you may not use this file except in compliance with the License.
-   * You may obtain a copy of the License at
-   *
-   *      http://www.apache.org/licenses/LICENSE-2.0
-   *
-   * Unless required by applicable law or agreed to in writing, software
-   * distributed under the License is distributed on an "AS IS" BASIS,
-   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   * See the License for the specific language governing permissions and
-   * limitations under the License.
-   */
-  /**
-   * @see UPCEANExtension2Support
-   */
-  class UPCEANExtension5Support {
-      constructor() {
-          this.CHECK_DIGIT_ENCODINGS = [0x18, 0x14, 0x12, 0x11, 0x0C, 0x06, 0x03, 0x0A, 0x09, 0x05];
-          this.decodeMiddleCounters = Int32Array.from([0, 0, 0, 0]);
-          this.decodeRowStringBuffer = '';
-      }
-      decodeRow(rowNumber, row, extensionStartRange) {
-          let result = this.decodeRowStringBuffer;
-          let end = this.decodeMiddle(row, extensionStartRange, result);
-          let resultString = result.toString();
-          let extensionData = UPCEANExtension5Support.parseExtensionString(resultString);
-          let resultPoints = [
-              new ResultPoint((extensionStartRange[0] + extensionStartRange[1]) / 2.0, rowNumber),
-              new ResultPoint(end, rowNumber)
-          ];
-          let extensionResult = new Result(resultString, null, 0, resultPoints, BarcodeFormat$1.UPC_EAN_EXTENSION, new Date().getTime());
-          if (extensionData != null) {
-              extensionResult.putAllMetadata(extensionData);
-          }
-          return extensionResult;
-      }
-      decodeMiddle(row, startRange, resultString) {
-          let counters = this.decodeMiddleCounters;
-          counters[0] = 0;
-          counters[1] = 0;
-          counters[2] = 0;
-          counters[3] = 0;
-          let end = row.getSize();
-          let rowOffset = startRange[1];
-          let lgPatternFound = 0;
-          for (let x = 0; x < 5 && rowOffset < end; x++) {
-              let bestMatch = AbstractUPCEANReader.decodeDigit(row, counters, rowOffset, AbstractUPCEANReader.L_AND_G_PATTERNS);
-              resultString += String.fromCharCode(('0'.charCodeAt(0) + bestMatch % 10));
-              for (let counter of counters) {
-                  rowOffset += counter;
-              }
-              if (bestMatch >= 10) {
-                  lgPatternFound |= 1 << (4 - x);
-              }
-              if (x !== 4) {
-                  // Read off separator if not last
-                  rowOffset = row.getNextSet(rowOffset);
-                  rowOffset = row.getNextUnset(rowOffset);
-              }
-          }
-          if (resultString.length !== 5) {
-              throw new NotFoundException();
-          }
-          let checkDigit = this.determineCheckDigit(lgPatternFound);
-          if (UPCEANExtension5Support.extensionChecksum(resultString.toString()) !== checkDigit) {
-              throw new NotFoundException();
-          }
-          return rowOffset;
-      }
-      static extensionChecksum(s) {
-          let length = s.length;
-          let sum = 0;
-          for (let i = length - 2; i >= 0; i -= 2) {
-              sum += s.charAt(i).charCodeAt(0) - '0'.charCodeAt(0);
-          }
-          sum *= 3;
-          for (let i = length - 1; i >= 0; i -= 2) {
-              sum += s.charAt(i).charCodeAt(0) - '0'.charCodeAt(0);
-          }
-          sum *= 3;
-          return sum % 10;
-      }
-      determineCheckDigit(lgPatternFound) {
-          for (let d = 0; d < 10; d++) {
-              if (lgPatternFound === this.CHECK_DIGIT_ENCODINGS[d]) {
-                  return d;
-              }
-          }
-          throw new NotFoundException();
-      }
-      static parseExtensionString(raw) {
-          if (raw.length !== 5) {
-              return null;
-          }
-          let value = UPCEANExtension5Support.parseExtension5String(raw);
-          if (value == null) {
-              return null;
-          }
-          return new Map([[ResultMetadataType$1.SUGGESTED_PRICE, value]]);
-      }
-      static parseExtension5String(raw) {
-          let currency;
-          switch (raw.charAt(0)) {
-              case '0':
-                  currency = '£';
+      decodeRow(rowNumber, row, hints) {
+          const convertFNC1 = hints && (hints.get(DecodeHintType$1.ASSUME_GS1) === true);
+          const startPatternInfo = Code128Reader.findStartPattern(row);
+          const startCode = startPatternInfo[2];
+          let currentRawCodesIndex = 0;
+          const rawCodes = new Uint8Array(20);
+          rawCodes[currentRawCodesIndex++] = startCode;
+          let codeSet;
+          switch (startCode) {
+              case Code128Reader.CODE_START_A:
+                  codeSet = Code128Reader.CODE_CODE_A;
                   break;
-              case '5':
-                  currency = '$';
+              case Code128Reader.CODE_START_B:
+                  codeSet = Code128Reader.CODE_CODE_B;
                   break;
-              case '9':
-                  // Reference: http://www.jollytech.com
-                  switch (raw) {
-                      case '90000':
-                          // No suggested retail price
-                          return null;
-                      case '99991':
-                          // Complementary
-                          return '0.00';
-                      case '99990':
-                          return 'Used';
-                  }
-                  // Otherwise... unknown currency?
-                  currency = '';
+              case Code128Reader.CODE_START_C:
+                  codeSet = Code128Reader.CODE_CODE_C;
                   break;
               default:
-                  currency = '';
-                  break;
+                  throw new FormatException();
           }
-          let rawAmount = parseInt(raw.substring(1));
-          let unitsString = (rawAmount / 100).toString();
-          let hundredths = rawAmount % 100;
-          let hundredthsString = hundredths < 10 ? '0' + hundredths : hundredths.toString(); // fixme
-          return currency + unitsString + '.' + hundredthsString;
-      }
-  }
-
-  /*
-   * Copyright (C) 2012 ZXing authors
-   *
-   * Licensed under the Apache License, Version 2.0 (the "License");
-   * you may not use this file except in compliance with the License.
-   * You may obtain a copy of the License at
-   *
-   *      http://www.apache.org/licenses/LICENSE-2.0
-   *
-   * Unless required by applicable law or agreed to in writing, software
-   * distributed under the License is distributed on an "AS IS" BASIS,
-   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   * See the License for the specific language governing permissions and
-   * limitations under the License.
-   */
-  /**
-   * @see UPCEANExtension5Support
-   */
-  class UPCEANExtension2Support {
-      constructor() {
-          this.decodeMiddleCounters = Int32Array.from([0, 0, 0, 0]);
-          this.decodeRowStringBuffer = '';
-      }
-      decodeRow(rowNumber, row, extensionStartRange) {
-          let result = this.decodeRowStringBuffer;
-          let end = this.decodeMiddle(row, extensionStartRange, result);
-          let resultString = result.toString();
-          let extensionData = UPCEANExtension2Support.parseExtensionString(resultString);
-          let resultPoints = [
-              new ResultPoint((extensionStartRange[0] + extensionStartRange[1]) / 2.0, rowNumber),
-              new ResultPoint(end, rowNumber)
-          ];
-          let extensionResult = new Result(resultString, null, 0, resultPoints, BarcodeFormat$1.UPC_EAN_EXTENSION, new Date().getTime());
-          if (extensionData != null) {
-              extensionResult.putAllMetadata(extensionData);
+          let done = false;
+          let isNextShifted = false;
+          let result = '';
+          let lastStart = startPatternInfo[0];
+          let nextStart = startPatternInfo[1];
+          const counters = [0, 0, 0, 0, 0, 0];
+          let lastCode = 0;
+          let code = 0;
+          let checksumTotal = startCode;
+          let multiplier = 0;
+          let lastCharacterWasPrintable = true;
+          let upperMode = false;
+          let shiftUpperMode = false;
+          while (!done) {
+              const unshift = isNextShifted;
+              isNextShifted = false;
+              // Save off last code
+              lastCode = code;
+              // Decode another code from image
+              code = Code128Reader.decodeCode(row, counters, nextStart);
+              rawCodes[currentRawCodesIndex++] = code;
+              // Remember whether the last code was printable or not (excluding CODE_STOP)
+              if (code !== Code128Reader.CODE_STOP) {
+                  lastCharacterWasPrintable = true;
+              }
+              // Add to checksum computation (if not CODE_STOP of course)
+              if (code !== Code128Reader.CODE_STOP) {
+                  multiplier++;
+                  checksumTotal += multiplier * code;
+              }
+              // Advance to where the next code will to start
+              lastStart = nextStart;
+              nextStart += counters.reduce((previous, current) => previous + current, 0);
+              // Take care of illegal start codes
+              switch (code) {
+                  case Code128Reader.CODE_START_A:
+                  case Code128Reader.CODE_START_B:
+                  case Code128Reader.CODE_START_C:
+                      throw new FormatException();
+              }
+              switch (codeSet) {
+                  case Code128Reader.CODE_CODE_A:
+                      if (code < 64) {
+                          if (shiftUpperMode === upperMode) {
+                              result += String.fromCharCode((' '.charCodeAt(0) + code));
+                          }
+                          else {
+                              result += String.fromCharCode((' '.charCodeAt(0) + code + 128));
+                          }
+                          shiftUpperMode = false;
+                      }
+                      else if (code < 96) {
+                          if (shiftUpperMode === upperMode) {
+                              result += String.fromCharCode((code - 64));
+                          }
+                          else {
+                              result += String.fromCharCode((code + 64));
+                          }
+                          shiftUpperMode = false;
+                      }
+                      else {
+                          // Don't let CODE_STOP, which always appears, affect whether whether we think the last
+                          // code was printable or not.
+                          if (code !== Code128Reader.CODE_STOP) {
+                              lastCharacterWasPrintable = false;
+                          }
+                          switch (code) {
+                              case Code128Reader.CODE_FNC_1:
+                                  if (convertFNC1) {
+                                      if (result.length === 0) {
+                                          // GS1 specification 5.4.3.7. and 5.4.6.4. If the first char after the start code
+                                          // is FNC1 then this is GS1-128. We add the symbology identifier.
+                                          result += ']C1';
+                                      }
+                                      else {
+                                          // GS1 specification 5.4.7.5. Every subsequent FNC1 is returned as ASCII 29 (GS)
+                                          result += String.fromCharCode(29);
+                                      }
+                                  }
+                                  break;
+                              case Code128Reader.CODE_FNC_2:
+                              case Code128Reader.CODE_FNC_3:
+                                  // do nothing?
+                                  break;
+                              case Code128Reader.CODE_FNC_4_A:
+                                  if (!upperMode && shiftUpperMode) {
+                                      upperMode = true;
+                                      shiftUpperMode = false;
+                                  }
+                                  else if (upperMode && shiftUpperMode) {
+                                      upperMode = false;
+                                      shiftUpperMode = false;
+                                  }
+                                  else {
+                                      shiftUpperMode = true;
+                                  }
+                                  break;
+                              case Code128Reader.CODE_SHIFT:
+                                  isNextShifted = true;
+                                  codeSet = Code128Reader.CODE_CODE_B;
+                                  break;
+                              case Code128Reader.CODE_CODE_B:
+                                  codeSet = Code128Reader.CODE_CODE_B;
+                                  break;
+                              case Code128Reader.CODE_CODE_C:
+                                  codeSet = Code128Reader.CODE_CODE_C;
+                                  break;
+                              case Code128Reader.CODE_STOP:
+                                  done = true;
+                                  break;
+                          }
+                      }
+                      break;
+                  case Code128Reader.CODE_CODE_B:
+                      if (code < 96) {
+                          if (shiftUpperMode === upperMode) {
+                              result += String.fromCharCode((' '.charCodeAt(0) + code));
+                          }
+                          else {
+                              result += String.fromCharCode((' '.charCodeAt(0) + code + 128));
+                          }
+                          shiftUpperMode = false;
+                      }
+                      else {
+                          if (code !== Code128Reader.CODE_STOP) {
+                              lastCharacterWasPrintable = false;
+                          }
+                          switch (code) {
+                              case Code128Reader.CODE_FNC_1:
+                                  if (convertFNC1) {
+                                      if (result.length === 0) {
+                                          // GS1 specification 5.4.3.7. and 5.4.6.4. If the first char after the start code
+                                          // is FNC1 then this is GS1-128. We add the symbology identifier.
+                                          result += ']C1';
+                                      }
+                                      else {
+                                          // GS1 specification 5.4.7.5. Every subsequent FNC1 is returned as ASCII 29 (GS)
+                                          result += String.fromCharCode(29);
+                                      }
+                                  }
+                                  break;
+                              case Code128Reader.CODE_FNC_2:
+                              case Code128Reader.CODE_FNC_3:
+                                  // do nothing?
+                                  break;
+                              case Code128Reader.CODE_FNC_4_B:
+                                  if (!upperMode && shiftUpperMode) {
+                                      upperMode = true;
+                                      shiftUpperMode = false;
+                                  }
+                                  else if (upperMode && shiftUpperMode) {
+                                      upperMode = false;
+                                      shiftUpperMode = false;
+                                  }
+                                  else {
+                                      shiftUpperMode = true;
+                                  }
+                                  break;
+                              case Code128Reader.CODE_SHIFT:
+                                  isNextShifted = true;
+                                  codeSet = Code128Reader.CODE_CODE_A;
+                                  break;
+                              case Code128Reader.CODE_CODE_A:
+                                  codeSet = Code128Reader.CODE_CODE_A;
+                                  break;
+                              case Code128Reader.CODE_CODE_C:
+                                  codeSet = Code128Reader.CODE_CODE_C;
+                                  break;
+                              case Code128Reader.CODE_STOP:
+                                  done = true;
+                                  break;
+                          }
+                      }
+                      break;
+                  case Code128Reader.CODE_CODE_C:
+                      if (code < 100) {
+                          if (code < 10) {
+                              result += '0';
+                          }
+                          result += code;
+                      }
+                      else {
+                          if (code !== Code128Reader.CODE_STOP) {
+                              lastCharacterWasPrintable = false;
+                          }
+                          switch (code) {
+                              case Code128Reader.CODE_FNC_1:
+                                  if (convertFNC1) {
+                                      if (result.length === 0) {
+                                          // GS1 specification 5.4.3.7. and 5.4.6.4. If the first char after the start code
+                                          // is FNC1 then this is GS1-128. We add the symbology identifier.
+                                          result += ']C1';
+                                      }
+                                      else {
+                                          // GS1 specification 5.4.7.5. Every subsequent FNC1 is returned as ASCII 29 (GS)
+                                          result += String.fromCharCode(29);
+                                      }
+                                  }
+                                  break;
+                              case Code128Reader.CODE_CODE_A:
+                                  codeSet = Code128Reader.CODE_CODE_A;
+                                  break;
+                              case Code128Reader.CODE_CODE_B:
+                                  codeSet = Code128Reader.CODE_CODE_B;
+                                  break;
+                              case Code128Reader.CODE_STOP:
+                                  done = true;
+                                  break;
+                          }
+                      }
+                      break;
+              }
+              // Unshift back to another code set if we were shifted
+              if (unshift) {
+                  codeSet = codeSet === Code128Reader.CODE_CODE_A ? Code128Reader.CODE_CODE_B : Code128Reader.CODE_CODE_A;
+              }
           }
-          return extensionResult;
-      }
-      decodeMiddle(row, startRange, resultString) {
-          let counters = this.decodeMiddleCounters;
-          counters[0] = 0;
-          counters[1] = 0;
-          counters[2] = 0;
-          counters[3] = 0;
-          let end = row.getSize();
-          let rowOffset = startRange[1];
-          let checkParity = 0;
-          for (let x = 0; x < 2 && rowOffset < end; x++) {
-              let bestMatch = AbstractUPCEANReader.decodeDigit(row, counters, rowOffset, AbstractUPCEANReader.L_AND_G_PATTERNS);
-              resultString += String.fromCharCode(('0'.charCodeAt(0) + bestMatch % 10));
-              for (let counter of counters) {
-                  rowOffset += counter;
-              }
-              if (bestMatch >= 10) {
-                  checkParity |= 1 << (1 - x);
-              }
-              if (x !== 1) {
-                  // Read off separator if not last
-                  rowOffset = row.getNextSet(rowOffset);
-                  rowOffset = row.getNextUnset(rowOffset);
-              }
-          }
-          if (resultString.length !== 2) {
+          const lastPatternSize = nextStart - lastStart;
+          // Check for ample whitespace following pattern, but, to do this we first need to remember that
+          // we fudged decoding CODE_STOP since it actually has 7 bars, not 6. There is a black bar left
+          // to read off. Would be slightly better to properly read. Here we just skip it:
+          nextStart = row.getNextUnset(nextStart);
+          if (!row.isRange(nextStart, Math.min(row.getSize(), nextStart + (nextStart - lastStart) / 2), false)) {
               throw new NotFoundException();
           }
-          if (parseInt(resultString.toString()) % 4 !== checkParity) {
-              throw new NotFoundException();
-          }
-          return rowOffset;
-      }
-      static parseExtensionString(raw) {
-          if (raw.length !== 2) {
-              return null;
-          }
-          return new Map([[ResultMetadataType$1.ISSUE_NUMBER, parseInt(raw)]]);
-      }
-  }
-
-  /*
-   * Copyright (C) 2010 ZXing authors
-   *
-   * Licensed under the Apache License, Version 2.0 (the "License");
-   * you may not use this file except in compliance with the License.
-   * You may obtain a copy of the License at
-   *
-   *      http://www.apache.org/licenses/LICENSE-2.0
-   *
-   * Unless required by applicable law or agreed to in writing, software
-   * distributed under the License is distributed on an "AS IS" BASIS,
-   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   * See the License for the specific language governing permissions and
-   * limitations under the License.
-   */
-  class UPCEANExtensionSupport {
-      static decodeRow(rowNumber, row, rowOffset) {
-          let extensionStartRange = AbstractUPCEANReader.findGuardPattern(row, rowOffset, false, this.EXTENSION_START_PATTERN, new Int32Array(this.EXTENSION_START_PATTERN.length).fill(0));
-          try {
-              // return null;
-              let fiveSupport = new UPCEANExtension5Support();
-              return fiveSupport.decodeRow(rowNumber, row, extensionStartRange);
-          }
-          catch (err) {
-              // return null;
-              let twoSupport = new UPCEANExtension2Support();
-              return twoSupport.decodeRow(rowNumber, row, extensionStartRange);
-          }
-      }
-  }
-  UPCEANExtensionSupport.EXTENSION_START_PATTERN = Int32Array.from([1, 1, 2]);
-
-  /*
-   * Copyright 2008 ZXing authors
-   *
-   * Licensed under the Apache License, Version 2.0 (the "License");
-   * you may not use this file except in compliance with the License.
-   * You may obtain a copy of the License at
-   *
-   *      http://www.apache.org/licenses/LICENSE-2.0
-   *
-   * Unless required by applicable law or agreed to in writing, software
-   * distributed under the License is distributed on an "AS IS" BASIS,
-   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   * See the License for the specific language governing permissions and
-   * limitations under the License.
-   */
-  /**
-   * <p>Encapsulates functionality and implementation that is common to UPC and EAN families
-   * of one-dimensional barcodes.</p>
-   *
-   * @author dswitkin@google.com (Daniel Switkin)
-   * @author Sean Owen
-   * @author alasdair@google.com (Alasdair Mackintosh)
-   */
-  class UPCEANReader extends AbstractUPCEANReader {
-      constructor() {
-          super();
-          this.decodeRowStringBuffer = '';
-          UPCEANReader.L_AND_G_PATTERNS = UPCEANReader.L_PATTERNS.map(arr => Int32Array.from(arr));
-          for (let i = 10; i < 20; i++) {
-              let widths = UPCEANReader.L_PATTERNS[i - 10];
-              let reversedWidths = new Int32Array(widths.length);
-              for (let j = 0; j < widths.length; j++) {
-                  reversedWidths[j] = widths[widths.length - j - 1];
-              }
-              UPCEANReader.L_AND_G_PATTERNS[i] = reversedWidths;
-          }
-      }
-      decodeRow(rowNumber, row, hints) {
-          let startGuardRange = UPCEANReader.findStartGuardPattern(row);
-          let resultPointCallback = hints == null ? null : hints.get(DecodeHintType$1.NEED_RESULT_POINT_CALLBACK);
-          if (resultPointCallback != null) {
-              const resultPoint = new ResultPoint((startGuardRange[0] + startGuardRange[1]) / 2.0, rowNumber);
-              resultPointCallback.foundPossibleResultPoint(resultPoint);
-          }
-          let budello = this.decodeMiddle(row, startGuardRange, this.decodeRowStringBuffer);
-          let endStart = budello.rowOffset;
-          let result = budello.resultString;
-          if (resultPointCallback != null) {
-              const resultPoint = new ResultPoint(endStart, rowNumber);
-              resultPointCallback.foundPossibleResultPoint(resultPoint);
-          }
-          let endRange = UPCEANReader.decodeEnd(row, endStart);
-          if (resultPointCallback != null) {
-              const resultPoint = new ResultPoint((endRange[0] + endRange[1]) / 2.0, rowNumber);
-              resultPointCallback.foundPossibleResultPoint(resultPoint);
-          }
-          // Make sure there is a quiet zone at least as big as the end pattern after the barcode. The
-          // spec might want more whitespace, but in practice this is the maximum we can count on.
-          let end = endRange[1];
-          let quietEnd = end + (end - endRange[0]);
-          if (quietEnd >= row.getSize() || !row.isRange(end, quietEnd, false)) {
-              throw new NotFoundException();
-          }
-          let resultString = result.toString();
-          // UPC/EAN should never be less than 8 chars anyway
-          if (resultString.length < 8) {
-              throw new FormatException();
-          }
-          if (!UPCEANReader.checkChecksum(resultString)) {
+          // Pull out from sum the value of the penultimate check code
+          checksumTotal -= multiplier * lastCode;
+          // lastCode is the checksum then:
+          if (checksumTotal % 103 !== lastCode) {
               throw new ChecksumException();
           }
-          let left = (startGuardRange[1] + startGuardRange[0]) / 2.0;
-          let right = (endRange[1] + endRange[0]) / 2.0;
-          let format = this.getBarcodeFormat();
-          let resultPoint = [new ResultPoint(left, rowNumber), new ResultPoint(right, rowNumber)];
-          let decodeResult = new Result(resultString, null, 0, resultPoint, format, new Date().getTime());
-          let extensionLength = 0;
-          try {
-              let extensionResult = UPCEANExtensionSupport.decodeRow(rowNumber, row, endRange[1]);
-              decodeResult.putMetadata(ResultMetadataType$1.UPC_EAN_EXTENSION, extensionResult.getText());
-              decodeResult.putAllMetadata(extensionResult.getResultMetadata());
-              decodeResult.addResultPoints(extensionResult.getResultPoints());
-              extensionLength = extensionResult.getText().length;
-          }
-          catch (err) {
-          }
-          let allowedExtensions = hints == null ? null : hints.get(DecodeHintType$1.ALLOWED_EAN_EXTENSIONS);
-          if (allowedExtensions != null) {
-              let valid = false;
-              for (let length in allowedExtensions) {
-                  if (extensionLength.toString() === length) { // check me
-                      valid = true;
-                      break;
-                  }
-              }
-              if (!valid) {
-                  throw new NotFoundException();
-              }
-          }
-          if (format === BarcodeFormat$1.EAN_13 || format === BarcodeFormat$1.UPC_A) ;
-          return decodeResult;
-      }
-      static checkChecksum(s) {
-          return UPCEANReader.checkStandardUPCEANChecksum(s);
-      }
-      static checkStandardUPCEANChecksum(s) {
-          let length = s.length;
-          if (length === 0)
-              return false;
-          let check = parseInt(s.charAt(length - 1), 10);
-          return UPCEANReader.getStandardUPCEANChecksum(s.substring(0, length - 1)) === check;
-      }
-      static getStandardUPCEANChecksum(s) {
-          let length = s.length;
-          let sum = 0;
-          for (let i = length - 1; i >= 0; i -= 2) {
-              let digit = s.charAt(i).charCodeAt(0) - '0'.charCodeAt(0);
-              if (digit < 0 || digit > 9) {
-                  throw new FormatException();
-              }
-              sum += digit;
-          }
-          sum *= 3;
-          for (let i = length - 2; i >= 0; i -= 2) {
-              let digit = s.charAt(i).charCodeAt(0) - '0'.charCodeAt(0);
-              if (digit < 0 || digit > 9) {
-                  throw new FormatException();
-              }
-              sum += digit;
-          }
-          return (1000 - sum) % 10;
-      }
-      static decodeEnd(row, endStart) {
-          return UPCEANReader.findGuardPattern(row, endStart, false, UPCEANReader.START_END_PATTERN, new Int32Array(UPCEANReader.START_END_PATTERN.length).fill(0));
-      }
-  }
-
-  /*
-   * Copyright 2008 ZXing authors
-   *
-   * Licensed under the Apache License, Version 2.0 (the "License");
-   * you may not use this file except in compliance with the License.
-   * You may obtain a copy of the License at
-   *
-   *      http://www.apache.org/licenses/LICENSE-2.0
-   *
-   * Unless required by applicable law or agreed to in writing, software
-   * distributed under the License is distributed on an "AS IS" BASIS,
-   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   * See the License for the specific language governing permissions and
-   * limitations under the License.
-   */
-  /**
-   * <p>Implements decoding of the EAN-13 format.</p>
-   *
-   * @author dswitkin@google.com (Daniel Switkin)
-   * @author Sean Owen
-   * @author alasdair@google.com (Alasdair Mackintosh)
-   */
-  class EAN13Reader extends UPCEANReader {
-      constructor() {
-          super();
-          this.decodeMiddleCounters = Int32Array.from([0, 0, 0, 0]);
-      }
-      decodeMiddle(row, startRange, resultString) {
-          let counters = this.decodeMiddleCounters;
-          counters[0] = 0;
-          counters[1] = 0;
-          counters[2] = 0;
-          counters[3] = 0;
-          let end = row.getSize();
-          let rowOffset = startRange[1];
-          let lgPatternFound = 0;
-          for (let x = 0; x < 6 && rowOffset < end; x++) {
-              let bestMatch = UPCEANReader.decodeDigit(row, counters, rowOffset, UPCEANReader.L_AND_G_PATTERNS);
-              resultString += String.fromCharCode(('0'.charCodeAt(0) + bestMatch % 10));
-              for (let counter of counters) {
-                  rowOffset += counter;
-              }
-              if (bestMatch >= 10) {
-                  lgPatternFound |= 1 << (5 - x);
-              }
-          }
-          resultString = EAN13Reader.determineFirstDigit(resultString, lgPatternFound);
-          let middleRange = UPCEANReader.findGuardPattern(row, rowOffset, true, UPCEANReader.MIDDLE_PATTERN, new Int32Array(UPCEANReader.MIDDLE_PATTERN.length).fill(0));
-          rowOffset = middleRange[1];
-          for (let x = 0; x < 6 && rowOffset < end; x++) {
-              let bestMatch = UPCEANReader.decodeDigit(row, counters, rowOffset, UPCEANReader.L_PATTERNS);
-              resultString += String.fromCharCode(('0'.charCodeAt(0) + bestMatch));
-              for (let counter of counters) {
-                  rowOffset += counter;
-              }
-          }
-          return { rowOffset, resultString };
-      }
-      getBarcodeFormat() {
-          return BarcodeFormat$1.EAN_13;
-      }
-      static determineFirstDigit(resultString, lgPatternFound) {
-          for (let d = 0; d < 10; d++) {
-              if (lgPatternFound === this.FIRST_DIGIT_ENCODINGS[d]) {
-                  resultString = String.fromCharCode(('0'.charCodeAt(0) + d)) + resultString;
-                  return resultString;
-              }
-          }
-          throw new NotFoundException();
-      }
-  }
-  EAN13Reader.FIRST_DIGIT_ENCODINGS = [0x00, 0x0B, 0x0D, 0xE, 0x13, 0x19, 0x1C, 0x15, 0x16, 0x1A];
-
-  /*
-   * Copyright 2008 ZXing authors
-   *
-   * Licensed under the Apache License, Version 2.0 (the "License");
-   * you may not use this file except in compliance with the License.
-   * You may obtain a copy of the License at
-   *
-   *      http://www.apache.org/licenses/LICENSE-2.0
-   *
-   * Unless required by applicable law or agreed to in writing, software
-   * distributed under the License is distributed on an "AS IS" BASIS,
-   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   * See the License for the specific language governing permissions and
-   * limitations under the License.
-   */
-  /**
-   * <p>Implements decoding of the EAN-8 format.</p>
-   *
-   * @author Sean Owen
-   */
-  class EAN8Reader extends UPCEANReader {
-      constructor() {
-          super();
-          this.decodeMiddleCounters = Int32Array.from([0, 0, 0, 0]);
-      }
-      decodeMiddle(row, startRange, resultString) {
-          const counters = this.decodeMiddleCounters;
-          counters[0] = 0;
-          counters[1] = 0;
-          counters[2] = 0;
-          counters[3] = 0;
-          let end = row.getSize();
-          let rowOffset = startRange[1];
-          for (let x = 0; x < 4 && rowOffset < end; x++) {
-              let bestMatch = UPCEANReader.decodeDigit(row, counters, rowOffset, UPCEANReader.L_PATTERNS);
-              resultString += String.fromCharCode(('0'.charCodeAt(0) + bestMatch));
-              for (let counter of counters) {
-                  rowOffset += counter;
-              }
-          }
-          let middleRange = UPCEANReader.findGuardPattern(row, rowOffset, true, UPCEANReader.MIDDLE_PATTERN, new Int32Array(UPCEANReader.MIDDLE_PATTERN.length).fill(0));
-          rowOffset = middleRange[1];
-          for (let x = 0; x < 4 && rowOffset < end; x++) {
-              let bestMatch = UPCEANReader.decodeDigit(row, counters, rowOffset, UPCEANReader.L_PATTERNS);
-              resultString += String.fromCharCode(('0'.charCodeAt(0) + bestMatch));
-              for (let counter of counters) {
-                  rowOffset += counter;
-              }
-          }
-          return { rowOffset, resultString };
-      }
-      getBarcodeFormat() {
-          return BarcodeFormat$1.EAN_8;
-      }
-  }
-
-  /*
-   * Copyright 2008 ZXing authors
-   *
-   * Licensed under the Apache License, Version 2.0 (the "License");
-   * you may not use this file except in compliance with the License.
-   * You may obtain a copy of the License at
-   *
-   *      http://www.apache.org/licenses/LICENSE-2.0
-   *
-   * Unless required by applicable law or agreed to in writing, software
-   * distributed under the License is distributed on an "AS IS" BASIS,
-   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   * See the License for the specific language governing permissions and
-   * limitations under the License.
-   */
-  /**
-   * Encapsulates functionality and implementation that is common to all families
-   * of one-dimensional barcodes.
-   *
-   * @author dswitkin@google.com (Daniel Switkin)
-   * @author Sean Owen
-   * @author sam2332 (Sam Rudloff)
-   *
-   * @source https://github.com/zxing/zxing/blob/3c96923276dd5785d58eb970b6ba3f80d36a9505/core/src/main/java/com/google/zxing/oned/UPCAReader.java
-   *
-   * @experimental
-   */
-  class UPCAReader extends UPCEANReader {
-      constructor() {
-          super(...arguments);
-          this.ean13Reader = new EAN13Reader();
-      }
-      // @Override
-      getBarcodeFormat() {
-          return BarcodeFormat$1.UPC_A;
-      }
-      // Note that we don't try rotation without the try harder flag, even if rotation was supported.
-      // @Override
-      decode(image, hints) {
-          return this.maybeReturnResult(this.ean13Reader.decode(image));
-      }
-      // @Override
-      decodeRow(rowNumber, row, hints) {
-          return this.maybeReturnResult(this.ean13Reader.decodeRow(rowNumber, row, hints));
-      }
-      // @Override
-      decodeMiddle(row, startRange, resultString) {
-          return this.ean13Reader.decodeMiddle(row, startRange, resultString);
-      }
-      maybeReturnResult(result) {
-          let text = result.getText();
-          if (text.charAt(0) === '0') {
-              let upcaResult = new Result(text.substring(1), null, null, result.getResultPoints(), BarcodeFormat$1.UPC_A);
-              if (result.getResultMetadata() != null) {
-                  upcaResult.putAllMetadata(result.getResultMetadata());
-              }
-              return upcaResult;
-          }
-          else {
+          // Need to pull out the check digits from string
+          const resultLength = result.length;
+          if (resultLength === 0) {
+              // false positive
               throw new NotFoundException();
           }
-      }
-      reset() {
-          this.ean13Reader.reset();
+          // Only bother if the result had at least one character, and if the checksum digit happened to
+          // be a printable character. If it was just interpreted as a control code, nothing to remove.
+          if (resultLength > 0 && lastCharacterWasPrintable) {
+              if (codeSet === Code128Reader.CODE_CODE_C) {
+                  result = result.substring(0, resultLength - 2);
+              }
+              else {
+                  result = result.substring(0, resultLength - 1);
+              }
+          }
+          const left = (startPatternInfo[1] + startPatternInfo[0]) / 2.0;
+          const right = lastStart + lastPatternSize / 2.0;
+          const rawCodesSize = rawCodes.length;
+          const rawBytes = new Uint8Array(rawCodesSize);
+          for (let i = 0; i < rawCodesSize; i++) {
+              rawBytes[i] = rawCodes[i];
+          }
+          const points = [new ResultPoint(left, rowNumber), new ResultPoint(right, rowNumber)];
+          return new Result(result, rawBytes, 0, points, BarcodeFormat$1.CODE_128, new Date().getTime());
       }
   }
-
-  /*
-   * Copyright 2008 ZXing authors
-   *
-   * Licensed under the Apache License, Version 2.0 (the "License");
-   * you may not use this file except in compliance with the License.
-   * You may obtain a copy of the License at
-   *
-   *      http://www.apache.org/licenses/LICENSE-2.0
-   *
-   * Unless required by applicable law or agreed to in writing, software
-   * distributed under the License is distributed on an "AS IS" BASIS,
-   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   * See the License for the specific language governing permissions and
-   * limitations under the License.
-   */
-  // package com.google.zxing.oned;
-  // import com.google.zxing.BarcodeFormat;
-  // import com.google.zxing.FormatException;
-  // import com.google.zxing.NotFoundException;
-  // import com.google.zxing.common.BitArray;
-  /**
-   * <p>Implements decoding of the UPC-E format.</p>
-   * <p><a href="http://www.barcodeisland.com/upce.phtml">This</a> is a great reference for
-   * UPC-E information.</p>
-   *
-   * @author Sean Owen
-   *
-   * @source https://github.com/zxing/zxing/blob/3c96923276dd5785d58eb970b6ba3f80d36a9505/core/src/main/java/com/google/zxing/oned/UPCEReader.java
-   *
-   * @experimental
-   */
-  /* final */ class UPCEReader extends UPCEANReader {
-      constructor() {
-          super();
-          this.decodeMiddleCounters = new Int32Array(4);
-      }
-      /**
-       * @throws NotFoundException
-       */
-      // @Override
-      decodeMiddle(row, startRange, result) {
-          const counters = this.decodeMiddleCounters.map(x => x);
-          counters[0] = 0;
-          counters[1] = 0;
-          counters[2] = 0;
-          counters[3] = 0;
-          const end = row.getSize();
-          let rowOffset = startRange[1];
-          let lgPatternFound = 0;
-          for (let x = 0; x < 6 && rowOffset < end; x++) {
-              const bestMatch = UPCEReader.decodeDigit(row, counters, rowOffset, UPCEReader.L_AND_G_PATTERNS);
-              result += String.fromCharCode(('0'.charCodeAt(0) + bestMatch % 10));
-              for (let counter of counters) {
-                  rowOffset += counter;
-              }
-              if (bestMatch >= 10) {
-                  lgPatternFound |= 1 << (5 - x);
-              }
-          }
-          UPCEReader.determineNumSysAndCheckDigit(new StringBuilder(result), lgPatternFound);
-          return rowOffset;
-      }
-      /**
-       * @throws NotFoundException
-       */
-      // @Override
-      decodeEnd(row, endStart) {
-          return UPCEReader.findGuardPatternWithoutCounters(row, endStart, true, UPCEReader.MIDDLE_END_PATTERN);
-      }
-      /**
-       * @throws FormatException
-       */
-      // @Override
-      checkChecksum(s) {
-          return UPCEANReader.checkChecksum(UPCEReader.convertUPCEtoUPCA(s));
-      }
-      /**
-       * @throws NotFoundException
-       */
-      static determineNumSysAndCheckDigit(resultString, lgPatternFound) {
-          for (let numSys = 0; numSys <= 1; numSys++) {
-              for (let d = 0; d < 10; d++) {
-                  if (lgPatternFound === this.NUMSYS_AND_CHECK_DIGIT_PATTERNS[numSys][d]) {
-                      resultString.insert(0, /*(char)*/ ('0' + numSys));
-                      resultString.append(/*(char)*/ ('0' + d));
-                      return;
-                  }
-              }
-          }
-          throw NotFoundException.getNotFoundInstance();
-      }
-      // @Override
-      getBarcodeFormat() {
-          return BarcodeFormat$1.UPC_E;
-      }
-      /**
-       * Expands a UPC-E value back into its full, equivalent UPC-A code value.
-       *
-       * @param upce UPC-E code as string of digits
-       * @return equivalent UPC-A code as string of digits
-       */
-      static convertUPCEtoUPCA(upce) {
-          // the following line is equivalent to upce.getChars(1, 7, upceChars, 0);
-          const upceChars = upce.slice(1, 7).split('').map(x => x.charCodeAt(0));
-          const result = new StringBuilder( /*12*/);
-          result.append(upce.charAt(0));
-          let lastChar = upceChars[5];
-          switch (lastChar) {
-              case 0:
-              case 1:
-              case 2:
-                  result.appendChars(upceChars, 0, 2);
-                  result.append(lastChar);
-                  result.append('0000');
-                  result.appendChars(upceChars, 2, 3);
-                  break;
-              case 3:
-                  result.appendChars(upceChars, 0, 3);
-                  result.append('00000');
-                  result.appendChars(upceChars, 3, 2);
-                  break;
-              case 4:
-                  result.appendChars(upceChars, 0, 4);
-                  result.append('00000');
-                  result.append(upceChars[4]);
-                  break;
-              default:
-                  result.appendChars(upceChars, 0, 5);
-                  result.append('0000');
-                  result.append(lastChar);
-                  break;
-          }
-          // Only append check digit in conversion if supplied
-          if (upce.length >= 8) {
-              result.append(upce.charAt(7));
-          }
-          return result.toString();
-      }
-  }
-  /**
-   * The pattern that marks the middle, and end, of a UPC-E pattern.
-   * There is no "second half" to a UPC-E barcode.
-   */
-  UPCEReader.MIDDLE_END_PATTERN = Int32Array.from([1, 1, 1, 1, 1, 1]);
-  // For an UPC-E barcode, the final digit is represented by the parities used
-  // to encode the middle six digits, according to the table below.
-  //
-  //                Parity of next 6 digits
-  //    Digit   0     1     2     3     4     5
-  //       0    Even   Even  Even Odd  Odd   Odd
-  //       1    Even   Even  Odd  Even Odd   Odd
-  //       2    Even   Even  Odd  Odd  Even  Odd
-  //       3    Even   Even  Odd  Odd  Odd   Even
-  //       4    Even   Odd   Even Even Odd   Odd
-  //       5    Even   Odd   Odd  Even Even  Odd
-  //       6    Even   Odd   Odd  Odd  Even  Even
-  //       7    Even   Odd   Even Odd  Even  Odd
-  //       8    Even   Odd   Even Odd  Odd   Even
-  //       9    Even   Odd   Odd  Even Odd   Even
-  //
-  // The encoding is represented by the following array, which is a bit pattern
-  // using Odd = 0 and Even = 1. For example, 5 is represented by:
-  //
-  //              Odd Even Even Odd Odd Even
-  // in binary:
-  //                0    1    1   0   0    1   == 0x19
-  //
-  /**
-   * See {@link #L_AND_G_PATTERNS}; these values similarly represent patterns of
-   * even-odd parity encodings of digits that imply both the number system (0 or 1)
-   * used, and the check digit.
-   */
-  UPCEReader.NUMSYS_AND_CHECK_DIGIT_PATTERNS = [
-      Int32Array.from([0x38, 0x34, 0x32, 0x31, 0x2C, 0x26, 0x23, 0x2A, 0x29, 0x25]),
-      Int32Array.from([0x07, 0x0B, 0x0D, 0x0E, 0x13, 0x19, 0x1C, 0x15, 0x16, 0x1]),
+  Code128Reader.CODE_PATTERNS = [
+      [2, 1, 2, 2, 2, 2],
+      [2, 2, 2, 1, 2, 2],
+      [2, 2, 2, 2, 2, 1],
+      [1, 2, 1, 2, 2, 3],
+      [1, 2, 1, 3, 2, 2],
+      [1, 3, 1, 2, 2, 2],
+      [1, 2, 2, 2, 1, 3],
+      [1, 2, 2, 3, 1, 2],
+      [1, 3, 2, 2, 1, 2],
+      [2, 2, 1, 2, 1, 3],
+      [2, 2, 1, 3, 1, 2],
+      [2, 3, 1, 2, 1, 2],
+      [1, 1, 2, 2, 3, 2],
+      [1, 2, 2, 1, 3, 2],
+      [1, 2, 2, 2, 3, 1],
+      [1, 1, 3, 2, 2, 2],
+      [1, 2, 3, 1, 2, 2],
+      [1, 2, 3, 2, 2, 1],
+      [2, 2, 3, 2, 1, 1],
+      [2, 2, 1, 1, 3, 2],
+      [2, 2, 1, 2, 3, 1],
+      [2, 1, 3, 2, 1, 2],
+      [2, 2, 3, 1, 1, 2],
+      [3, 1, 2, 1, 3, 1],
+      [3, 1, 1, 2, 2, 2],
+      [3, 2, 1, 1, 2, 2],
+      [3, 2, 1, 2, 2, 1],
+      [3, 1, 2, 2, 1, 2],
+      [3, 2, 2, 1, 1, 2],
+      [3, 2, 2, 2, 1, 1],
+      [2, 1, 2, 1, 2, 3],
+      [2, 1, 2, 3, 2, 1],
+      [2, 3, 2, 1, 2, 1],
+      [1, 1, 1, 3, 2, 3],
+      [1, 3, 1, 1, 2, 3],
+      [1, 3, 1, 3, 2, 1],
+      [1, 1, 2, 3, 1, 3],
+      [1, 3, 2, 1, 1, 3],
+      [1, 3, 2, 3, 1, 1],
+      [2, 1, 1, 3, 1, 3],
+      [2, 3, 1, 1, 1, 3],
+      [2, 3, 1, 3, 1, 1],
+      [1, 1, 2, 1, 3, 3],
+      [1, 1, 2, 3, 3, 1],
+      [1, 3, 2, 1, 3, 1],
+      [1, 1, 3, 1, 2, 3],
+      [1, 1, 3, 3, 2, 1],
+      [1, 3, 3, 1, 2, 1],
+      [3, 1, 3, 1, 2, 1],
+      [2, 1, 1, 3, 3, 1],
+      [2, 3, 1, 1, 3, 1],
+      [2, 1, 3, 1, 1, 3],
+      [2, 1, 3, 3, 1, 1],
+      [2, 1, 3, 1, 3, 1],
+      [3, 1, 1, 1, 2, 3],
+      [3, 1, 1, 3, 2, 1],
+      [3, 3, 1, 1, 2, 1],
+      [3, 1, 2, 1, 1, 3],
+      [3, 1, 2, 3, 1, 1],
+      [3, 3, 2, 1, 1, 1],
+      [3, 1, 4, 1, 1, 1],
+      [2, 2, 1, 4, 1, 1],
+      [4, 3, 1, 1, 1, 1],
+      [1, 1, 1, 2, 2, 4],
+      [1, 1, 1, 4, 2, 2],
+      [1, 2, 1, 1, 2, 4],
+      [1, 2, 1, 4, 2, 1],
+      [1, 4, 1, 1, 2, 2],
+      [1, 4, 1, 2, 2, 1],
+      [1, 1, 2, 2, 1, 4],
+      [1, 1, 2, 4, 1, 2],
+      [1, 2, 2, 1, 1, 4],
+      [1, 2, 2, 4, 1, 1],
+      [1, 4, 2, 1, 1, 2],
+      [1, 4, 2, 2, 1, 1],
+      [2, 4, 1, 2, 1, 1],
+      [2, 2, 1, 1, 1, 4],
+      [4, 1, 3, 1, 1, 1],
+      [2, 4, 1, 1, 1, 2],
+      [1, 3, 4, 1, 1, 1],
+      [1, 1, 1, 2, 4, 2],
+      [1, 2, 1, 1, 4, 2],
+      [1, 2, 1, 2, 4, 1],
+      [1, 1, 4, 2, 1, 2],
+      [1, 2, 4, 1, 1, 2],
+      [1, 2, 4, 2, 1, 1],
+      [4, 1, 1, 2, 1, 2],
+      [4, 2, 1, 1, 1, 2],
+      [4, 2, 1, 2, 1, 1],
+      [2, 1, 2, 1, 4, 1],
+      [2, 1, 4, 1, 2, 1],
+      [4, 1, 2, 1, 2, 1],
+      [1, 1, 1, 1, 4, 3],
+      [1, 1, 1, 3, 4, 1],
+      [1, 3, 1, 1, 4, 1],
+      [1, 1, 4, 1, 1, 3],
+      [1, 1, 4, 3, 1, 1],
+      [4, 1, 1, 1, 1, 3],
+      [4, 1, 1, 3, 1, 1],
+      [1, 1, 3, 1, 4, 1],
+      [1, 1, 4, 1, 3, 1],
+      [3, 1, 1, 1, 4, 1],
+      [4, 1, 1, 1, 3, 1],
+      [2, 1, 1, 4, 1, 2],
+      [2, 1, 1, 2, 1, 4],
+      [2, 1, 1, 2, 3, 2],
+      [2, 3, 3, 1, 1, 1, 2]
   ];
+  Code128Reader.MAX_AVG_VARIANCE = 0.25;
+  Code128Reader.MAX_INDIVIDUAL_VARIANCE = 0.7;
+  Code128Reader.CODE_SHIFT = 98;
+  Code128Reader.CODE_CODE_C = 99;
+  Code128Reader.CODE_CODE_B = 100;
+  Code128Reader.CODE_CODE_A = 101;
+  Code128Reader.CODE_FNC_1 = 102;
+  Code128Reader.CODE_FNC_2 = 97;
+  Code128Reader.CODE_FNC_3 = 96;
+  Code128Reader.CODE_FNC_4_A = 101;
+  Code128Reader.CODE_FNC_4_B = 100;
+  Code128Reader.CODE_START_A = 103;
+  Code128Reader.CODE_START_B = 104;
+  Code128Reader.CODE_START_C = 105;
+  Code128Reader.CODE_STOP = 106;
 
-  /*
-   * Copyright 2008 ZXing authors
-   *
-   * Licensed under the Apache License, Version 2.0 (the "License");
-   * you may not use this file except in compliance with the License.
-   * You may obtain a copy of the License at
-   *
-   *      http://www.apache.org/licenses/LICENSE-2.0
-   *
-   * Unless required by applicable law or agreed to in writing, software
-   * distributed under the License is distributed on an "AS IS" BASIS,
-   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   * See the License for the specific language governing permissions and
-   * limitations under the License.
-   */
-  /**
-   * <p>A reader that can read all available UPC/EAN formats. If a caller wants to try to
-   * read all such formats, it is most efficient to use this implementation rather than invoke
-   * individual readers.</p>
-   *
-   * @author Sean Owen
-   */
-  class MultiFormatUPCEANReader extends OneDReader {
-      constructor(hints) {
-          super();
-          let possibleFormats = hints == null ? null : hints.get(DecodeHintType$1.POSSIBLE_FORMATS);
-          let readers = [];
-          if (possibleFormats != null) {
-              if (possibleFormats.indexOf(BarcodeFormat$1.EAN_13) > -1) {
-                  readers.push(new EAN13Reader());
-              }
-              else if (possibleFormats.indexOf(BarcodeFormat$1.UPC_A) > -1) {
-                  readers.push(new UPCAReader());
-              }
-              if (possibleFormats.indexOf(BarcodeFormat$1.EAN_8) > -1) {
-                  readers.push(new EAN8Reader());
-              }
-              if (possibleFormats.indexOf(BarcodeFormat$1.UPC_E) > -1) {
-                  readers.push(new UPCEReader());
-              }
-          }
-          if (readers.length === 0) {
-              readers.push(new EAN13Reader());
-              // UPC-A is covered by EAN-13
-              readers.push(new EAN8Reader());
-              readers.push(new UPCEReader());
-          }
-          this.readers = readers;
-      }
-      decodeRow(rowNumber, row, hints) {
-          for (let reader of this.readers) {
-              try {
-                  // const result: Result = reader.decodeRow(rowNumber, row, startGuardPattern, hints);
-                  const result = reader.decodeRow(rowNumber, row, hints);
-                  // Special case: a 12-digit code encoded in UPC-A is identical to a "0"
-                  // followed by those 12 digits encoded as EAN-13. Each will recognize such a code,
-                  // UPC-A as a 12-digit string and EAN-13 as a 13-digit string starting with "0".
-                  // Individually these are correct and their readers will both read such a code
-                  // and correctly call it EAN-13, or UPC-A, respectively.
-                  //
-                  // In this case, if we've been looking for both types, we'd like to call it
-                  // a UPC-A code. But for efficiency we only run the EAN-13 decoder to also read
-                  // UPC-A. So we special case it here, and convert an EAN-13 result to a UPC-A
-                  // result if appropriate.
-                  //
-                  // But, don't return UPC-A if UPC-A was not a requested format!
-                  const ean13MayBeUPCA = result.getBarcodeFormat() === BarcodeFormat$1.EAN_13 &&
-                      result.getText().charAt(0) === '0';
-                  // @SuppressWarnings("unchecked")
-                  const possibleFormats = hints == null ? null : hints.get(DecodeHintType$1.POSSIBLE_FORMATS);
-                  const canReturnUPCA = possibleFormats == null || possibleFormats.includes(BarcodeFormat$1.UPC_A);
-                  if (ean13MayBeUPCA && canReturnUPCA) {
-                      const rawBytes = result.getRawBytes();
-                      // Transfer the metadata across
-                      const resultUPCA = new Result(result.getText().substring(1), rawBytes, rawBytes.length, result.getResultPoints(), BarcodeFormat$1.UPC_A);
-                      resultUPCA.putAllMetadata(result.getResultMetadata());
-                      return resultUPCA;
-                  }
-                  return result;
-              }
-              catch (err) {
-                  // continue;
-              }
-          }
-          throw new NotFoundException();
-      }
-      reset() {
-          for (let reader of this.readers) {
-              reader.reset();
-          }
-      }
-  }
-
-  // import Integer from '../../util/Integer';
-  // import Float from '../../util/Float';
   class AbstractRSSReader extends OneDReader {
       constructor() {
           super();
-          this.decodeFinderCounters = new Int32Array(4);
-          this.dataCharacterCounters = new Int32Array(8);
+          this.decodeFinderCounters = new Array(4);
+          this.dataCharacterCounters = new Array(8);
           this.oddRoundingErrors = new Array(4);
           this.evenRoundingErrors = new Array(4);
           this.oddCounts = new Array(this.dataCharacterCounters.length / 2);
@@ -9007,6 +7611,23 @@
       }
   }
 
+  class Pair extends DataCharacter {
+      constructor(value, checksumPortion, finderPattern) {
+          super(value, checksumPortion);
+          this.count = 0;
+          this.finderPattern = finderPattern;
+      }
+      getFinderPattern() {
+          return this.finderPattern;
+      }
+      getCount() {
+          return this.count;
+      }
+      incrementCount() {
+          this.count++;
+      }
+  }
+
   class FinderPattern {
       constructor(value, startEnd, start, end, rowNumber) {
           this.value = value;
@@ -9042,7 +7663,7 @@
    * RSS util functions.
    */
   class RSSUtils {
-      constructor() { }
+      RSSUtils() { }
       static getRSSvalue(widths, maxWidth, noNarrow) {
           let n = 0;
           for (let width of widths) {
@@ -9099,1828 +7720,6 @@
               j++;
           }
           return val;
-      }
-  }
-
-  class BitArrayBuilder {
-      static buildBitArray(pairs) {
-          let charNumber = (pairs.length * 2) - 1;
-          if (pairs[pairs.length - 1].getRightChar() == null) {
-              charNumber -= 1;
-          }
-          let size = 12 * charNumber;
-          let binary = new BitArray(size);
-          let accPos = 0;
-          let firstPair = pairs[0];
-          let firstValue = firstPair.getRightChar().getValue();
-          for (let i = 11; i >= 0; --i) {
-              if ((firstValue & (1 << i)) != 0) {
-                  binary.set(accPos);
-              }
-              accPos++;
-          }
-          for (let i = 1; i < pairs.length; ++i) {
-              let currentPair = pairs[i];
-              let leftValue = currentPair.getLeftChar().getValue();
-              for (let j = 11; j >= 0; --j) {
-                  if ((leftValue & (1 << j)) != 0) {
-                      binary.set(accPos);
-                  }
-                  accPos++;
-              }
-              if (currentPair.getRightChar() != null) {
-                  let rightValue = currentPair.getRightChar().getValue();
-                  for (let j = 11; j >= 0; --j) {
-                      if ((rightValue & (1 << j)) != 0) {
-                          binary.set(accPos);
-                      }
-                      accPos++;
-                  }
-              }
-          }
-          return binary;
-      }
-  }
-
-  class BlockParsedResult {
-      constructor(finished, decodedInformation) {
-          if (decodedInformation) {
-              this.decodedInformation = null;
-          }
-          else {
-              this.finished = finished;
-              this.decodedInformation = decodedInformation;
-          }
-      }
-      getDecodedInformation() {
-          return this.decodedInformation;
-      }
-      isFinished() {
-          return this.finished;
-      }
-  }
-
-  class DecodedObject {
-      constructor(newPosition) {
-          this.newPosition = newPosition;
-      }
-      getNewPosition() {
-          return this.newPosition;
-      }
-  }
-
-  class DecodedChar extends DecodedObject {
-      constructor(newPosition, value) {
-          super(newPosition);
-          this.value = value;
-      }
-      getValue() {
-          return this.value;
-      }
-      isFNC1() {
-          return this.value === DecodedChar.FNC1;
-      }
-  }
-  DecodedChar.FNC1 = '$';
-
-  class DecodedInformation extends DecodedObject {
-      constructor(newPosition, newString, remainingValue) {
-          super(newPosition);
-          if (remainingValue) {
-              this.remaining = true;
-              this.remainingValue = this.remainingValue;
-          }
-          else {
-              this.remaining = false;
-              this.remainingValue = 0;
-          }
-          this.newString = newString;
-      }
-      getNewString() {
-          return this.newString;
-      }
-      isRemaining() {
-          return this.remaining;
-      }
-      getRemainingValue() {
-          return this.remainingValue;
-      }
-  }
-
-  class DecodedNumeric extends DecodedObject {
-      constructor(newPosition, firstDigit, secondDigit) {
-          super(newPosition);
-          if (firstDigit < 0 || firstDigit > 10 || secondDigit < 0 || secondDigit > 10) {
-              throw new FormatException();
-          }
-          this.firstDigit = firstDigit;
-          this.secondDigit = secondDigit;
-      }
-      getFirstDigit() {
-          return this.firstDigit;
-      }
-      getSecondDigit() {
-          return this.secondDigit;
-      }
-      getValue() {
-          return this.firstDigit * 10 + this.secondDigit;
-      }
-      isFirstDigitFNC1() {
-          return this.firstDigit === DecodedNumeric.FNC1;
-      }
-      isSecondDigitFNC1() {
-          return this.secondDigit === DecodedNumeric.FNC1;
-      }
-      isAnyFNC1() {
-          return this.firstDigit === DecodedNumeric.FNC1 || this.secondDigit === DecodedNumeric.FNC1;
-      }
-  }
-  DecodedNumeric.FNC1 = 10;
-
-  class FieldParser {
-      constructor() {
-      }
-      static parseFieldsInGeneralPurpose(rawInformation) {
-          if (!rawInformation) {
-              return null;
-          }
-          // Processing 2-digit AIs
-          if (rawInformation.length < 2) {
-              throw new NotFoundException();
-          }
-          let firstTwoDigits = rawInformation.substring(0, 2);
-          for (let dataLength of FieldParser.TWO_DIGIT_DATA_LENGTH) {
-              if (dataLength[0] === firstTwoDigits) {
-                  if (dataLength[1] === FieldParser.VARIABLE_LENGTH) {
-                      return FieldParser.processVariableAI(2, dataLength[2], rawInformation);
-                  }
-                  return FieldParser.processFixedAI(2, dataLength[1], rawInformation);
-              }
-          }
-          if (rawInformation.length < 3) {
-              throw new NotFoundException();
-          }
-          let firstThreeDigits = rawInformation.substring(0, 3);
-          for (let dataLength of FieldParser.THREE_DIGIT_DATA_LENGTH) {
-              if (dataLength[0] === firstThreeDigits) {
-                  if (dataLength[1] === FieldParser.VARIABLE_LENGTH) {
-                      return FieldParser.processVariableAI(3, dataLength[2], rawInformation);
-                  }
-                  return FieldParser.processFixedAI(3, dataLength[1], rawInformation);
-              }
-          }
-          for (let dataLength of FieldParser.THREE_DIGIT_PLUS_DIGIT_DATA_LENGTH) {
-              if (dataLength[0] === firstThreeDigits) {
-                  if (dataLength[1] === FieldParser.VARIABLE_LENGTH) {
-                      return FieldParser.processVariableAI(4, dataLength[2], rawInformation);
-                  }
-                  return FieldParser.processFixedAI(4, dataLength[1], rawInformation);
-              }
-          }
-          if (rawInformation.length < 4) {
-              throw new NotFoundException();
-          }
-          let firstFourDigits = rawInformation.substring(0, 4);
-          for (let dataLength of FieldParser.FOUR_DIGIT_DATA_LENGTH) {
-              if (dataLength[0] === firstFourDigits) {
-                  if (dataLength[1] === FieldParser.VARIABLE_LENGTH) {
-                      return FieldParser.processVariableAI(4, dataLength[2], rawInformation);
-                  }
-                  return FieldParser.processFixedAI(4, dataLength[1], rawInformation);
-              }
-          }
-          throw new NotFoundException();
-      }
-      static processFixedAI(aiSize, fieldSize, rawInformation) {
-          if (rawInformation.length < aiSize) {
-              throw new NotFoundException();
-          }
-          let ai = rawInformation.substring(0, aiSize);
-          if (rawInformation.length < aiSize + fieldSize) {
-              throw new NotFoundException();
-          }
-          let field = rawInformation.substring(aiSize, aiSize + fieldSize);
-          let remaining = rawInformation.substring(aiSize + fieldSize);
-          let result = '(' + ai + ')' + field;
-          let parsedAI = FieldParser.parseFieldsInGeneralPurpose(remaining);
-          return parsedAI == null ? result : result + parsedAI;
-      }
-      static processVariableAI(aiSize, variableFieldSize, rawInformation) {
-          let ai = rawInformation.substring(0, aiSize);
-          let maxSize;
-          if (rawInformation.length < aiSize + variableFieldSize) {
-              maxSize = rawInformation.length;
-          }
-          else {
-              maxSize = aiSize + variableFieldSize;
-          }
-          let field = rawInformation.substring(aiSize, maxSize);
-          let remaining = rawInformation.substring(maxSize);
-          let result = '(' + ai + ')' + field;
-          let parsedAI = FieldParser.parseFieldsInGeneralPurpose(remaining);
-          return parsedAI == null ? result : result + parsedAI;
-      }
-  }
-  FieldParser.VARIABLE_LENGTH = [];
-  FieldParser.TWO_DIGIT_DATA_LENGTH = [
-      ['00', 18],
-      ['01', 14],
-      ['02', 14],
-      ['10', FieldParser.VARIABLE_LENGTH, 20],
-      ['11', 6],
-      ['12', 6],
-      ['13', 6],
-      ['15', 6],
-      ['17', 6],
-      ['20', 2],
-      ['21', FieldParser.VARIABLE_LENGTH, 20],
-      ['22', FieldParser.VARIABLE_LENGTH, 29],
-      ['30', FieldParser.VARIABLE_LENGTH, 8],
-      ['37', FieldParser.VARIABLE_LENGTH, 8],
-      // internal company codes
-      ['90', FieldParser.VARIABLE_LENGTH, 30],
-      ['91', FieldParser.VARIABLE_LENGTH, 30],
-      ['92', FieldParser.VARIABLE_LENGTH, 30],
-      ['93', FieldParser.VARIABLE_LENGTH, 30],
-      ['94', FieldParser.VARIABLE_LENGTH, 30],
-      ['95', FieldParser.VARIABLE_LENGTH, 30],
-      ['96', FieldParser.VARIABLE_LENGTH, 30],
-      ['97', FieldParser.VARIABLE_LENGTH, 3],
-      ['98', FieldParser.VARIABLE_LENGTH, 30],
-      ['99', FieldParser.VARIABLE_LENGTH, 30],
-  ];
-  FieldParser.THREE_DIGIT_DATA_LENGTH = [
-      // Same format as above
-      ['240', FieldParser.VARIABLE_LENGTH, 30],
-      ['241', FieldParser.VARIABLE_LENGTH, 30],
-      ['242', FieldParser.VARIABLE_LENGTH, 6],
-      ['250', FieldParser.VARIABLE_LENGTH, 30],
-      ['251', FieldParser.VARIABLE_LENGTH, 30],
-      ['253', FieldParser.VARIABLE_LENGTH, 17],
-      ['254', FieldParser.VARIABLE_LENGTH, 20],
-      ['400', FieldParser.VARIABLE_LENGTH, 30],
-      ['401', FieldParser.VARIABLE_LENGTH, 30],
-      ['402', 17],
-      ['403', FieldParser.VARIABLE_LENGTH, 30],
-      ['410', 13],
-      ['411', 13],
-      ['412', 13],
-      ['413', 13],
-      ['414', 13],
-      ['420', FieldParser.VARIABLE_LENGTH, 20],
-      ['421', FieldParser.VARIABLE_LENGTH, 15],
-      ['422', 3],
-      ['423', FieldParser.VARIABLE_LENGTH, 15],
-      ['424', 3],
-      ['425', 3],
-      ['426', 3],
-  ];
-  FieldParser.THREE_DIGIT_PLUS_DIGIT_DATA_LENGTH = [
-      // Same format as above
-      ['310', 6],
-      ['311', 6],
-      ['312', 6],
-      ['313', 6],
-      ['314', 6],
-      ['315', 6],
-      ['316', 6],
-      ['320', 6],
-      ['321', 6],
-      ['322', 6],
-      ['323', 6],
-      ['324', 6],
-      ['325', 6],
-      ['326', 6],
-      ['327', 6],
-      ['328', 6],
-      ['329', 6],
-      ['330', 6],
-      ['331', 6],
-      ['332', 6],
-      ['333', 6],
-      ['334', 6],
-      ['335', 6],
-      ['336', 6],
-      ['340', 6],
-      ['341', 6],
-      ['342', 6],
-      ['343', 6],
-      ['344', 6],
-      ['345', 6],
-      ['346', 6],
-      ['347', 6],
-      ['348', 6],
-      ['349', 6],
-      ['350', 6],
-      ['351', 6],
-      ['352', 6],
-      ['353', 6],
-      ['354', 6],
-      ['355', 6],
-      ['356', 6],
-      ['357', 6],
-      ['360', 6],
-      ['361', 6],
-      ['362', 6],
-      ['363', 6],
-      ['364', 6],
-      ['365', 6],
-      ['366', 6],
-      ['367', 6],
-      ['368', 6],
-      ['369', 6],
-      ['390', FieldParser.VARIABLE_LENGTH, 15],
-      ['391', FieldParser.VARIABLE_LENGTH, 18],
-      ['392', FieldParser.VARIABLE_LENGTH, 15],
-      ['393', FieldParser.VARIABLE_LENGTH, 18],
-      ['703', FieldParser.VARIABLE_LENGTH, 30],
-  ];
-  FieldParser.FOUR_DIGIT_DATA_LENGTH = [
-      // Same format as above
-      ['7001', 13],
-      ['7002', FieldParser.VARIABLE_LENGTH, 30],
-      ['7003', 10],
-      ['8001', 14],
-      ['8002', FieldParser.VARIABLE_LENGTH, 20],
-      ['8003', FieldParser.VARIABLE_LENGTH, 30],
-      ['8004', FieldParser.VARIABLE_LENGTH, 30],
-      ['8005', 6],
-      ['8006', 18],
-      ['8007', FieldParser.VARIABLE_LENGTH, 30],
-      ['8008', FieldParser.VARIABLE_LENGTH, 12],
-      ['8018', 18],
-      ['8020', FieldParser.VARIABLE_LENGTH, 25],
-      ['8100', 6],
-      ['8101', 10],
-      ['8102', 2],
-      ['8110', FieldParser.VARIABLE_LENGTH, 70],
-      ['8200', FieldParser.VARIABLE_LENGTH, 70],
-  ];
-
-  class GeneralAppIdDecoder {
-      constructor(information) {
-          this.buffer = new StringBuilder();
-          this.information = information;
-      }
-      decodeAllCodes(buff, initialPosition) {
-          let currentPosition = initialPosition;
-          let remaining = null;
-          do {
-              let info = this.decodeGeneralPurposeField(currentPosition, remaining);
-              let parsedFields = FieldParser.parseFieldsInGeneralPurpose(info.getNewString());
-              if (parsedFields != null) {
-                  buff.append(parsedFields);
-              }
-              if (info.isRemaining()) {
-                  remaining = '' + info.getRemainingValue();
-              }
-              else {
-                  remaining = null;
-              }
-              if (currentPosition === info.getNewPosition()) { // No step forward!
-                  break;
-              }
-              currentPosition = info.getNewPosition();
-          } while (true);
-          return buff.toString();
-      }
-      isStillNumeric(pos) {
-          // It's numeric if it still has 7 positions
-          // and one of the first 4 bits is "1".
-          if (pos + 7 > this.information.getSize()) {
-              return pos + 4 <= this.information.getSize();
-          }
-          for (let i = pos; i < pos + 3; ++i) {
-              if (this.information.get(i)) {
-                  return true;
-              }
-          }
-          return this.information.get(pos + 3);
-      }
-      decodeNumeric(pos) {
-          if (pos + 7 > this.information.getSize()) {
-              let numeric = this.extractNumericValueFromBitArray(pos, 4);
-              if (numeric === 0) {
-                  return new DecodedNumeric(this.information.getSize(), DecodedNumeric.FNC1, DecodedNumeric.FNC1);
-              }
-              return new DecodedNumeric(this.information.getSize(), numeric - 1, DecodedNumeric.FNC1);
-          }
-          let numeric = this.extractNumericValueFromBitArray(pos, 7);
-          let digit1 = (numeric - 8) / 11;
-          let digit2 = (numeric - 8) % 11;
-          return new DecodedNumeric(pos + 7, digit1, digit2);
-      }
-      extractNumericValueFromBitArray(pos, bits) {
-          return GeneralAppIdDecoder.extractNumericValueFromBitArray(this.information, pos, bits);
-      }
-      static extractNumericValueFromBitArray(information, pos, bits) {
-          let value = 0;
-          for (let i = 0; i < bits; ++i) {
-              if (information.get(pos + i)) {
-                  value |= 1 << (bits - i - 1);
-              }
-          }
-          return value;
-      }
-      decodeGeneralPurposeField(pos, remaining) {
-          // this.buffer.setLength(0);
-          this.buffer.setLengthToZero();
-          if (remaining != null) {
-              this.buffer.append(remaining);
-          }
-          this.current.setPosition(pos);
-          let lastDecoded = this.parseBlocks();
-          if (lastDecoded != null && lastDecoded.isRemaining()) {
-              return new DecodedInformation(this.current.getPosition(), this.buffer.toString(), lastDecoded.getRemainingValue());
-          }
-          return new DecodedInformation(this.current.getPosition(), this.buffer.toString());
-      }
-      parseBlocks() {
-          let isFinished;
-          let result;
-          do {
-              let initialPosition = this.current.getPosition();
-              if (this.current.isAlpha()) {
-                  result = this.parseAlphaBlock();
-                  isFinished = result.isFinished();
-              }
-              else if (this.current.isIsoIec646()) {
-                  result = this.parseIsoIec646Block();
-                  isFinished = result.isFinished();
-              }
-              else { // it must be numeric
-                  result = this.parseNumericBlock();
-                  isFinished = result.isFinished();
-              }
-              let positionChanged = initialPosition !== this.current.getPosition();
-              if (!positionChanged && !isFinished) {
-                  break;
-              }
-          } while (!isFinished);
-          return result.getDecodedInformation();
-      }
-      parseNumericBlock() {
-          while (this.isStillNumeric(this.current.getPosition())) {
-              let numeric = this.decodeNumeric(this.current.getPosition());
-              this.current.setPosition(numeric.getNewPosition());
-              if (numeric.isFirstDigitFNC1()) {
-                  let information;
-                  if (numeric.isSecondDigitFNC1()) {
-                      information = new DecodedInformation(this.current.getPosition(), this.buffer.toString());
-                  }
-                  else {
-                      information = new DecodedInformation(this.current.getPosition(), this.buffer.toString(), numeric.getSecondDigit());
-                  }
-                  return new BlockParsedResult(true, information);
-              }
-              this.buffer.append(numeric.getFirstDigit());
-              if (numeric.isSecondDigitFNC1()) {
-                  let information = new DecodedInformation(this.current.getPosition(), this.buffer.toString());
-                  return new BlockParsedResult(true, information);
-              }
-              this.buffer.append(numeric.getSecondDigit());
-          }
-          if (this.isNumericToAlphaNumericLatch(this.current.getPosition())) {
-              this.current.setAlpha();
-              this.current.incrementPosition(4);
-          }
-          return new BlockParsedResult(false);
-      }
-      parseIsoIec646Block() {
-          while (this.isStillIsoIec646(this.current.getPosition())) {
-              let iso = this.decodeIsoIec646(this.current.getPosition());
-              this.current.setPosition(iso.getNewPosition());
-              if (iso.isFNC1()) {
-                  let information = new DecodedInformation(this.current.getPosition(), this.buffer.toString());
-                  return new BlockParsedResult(true, information);
-              }
-              this.buffer.append(iso.getValue());
-          }
-          if (this.isAlphaOr646ToNumericLatch(this.current.getPosition())) {
-              this.current.incrementPosition(3);
-              this.current.setNumeric();
-          }
-          else if (this.isAlphaTo646ToAlphaLatch(this.current.getPosition())) {
-              if (this.current.getPosition() + 5 < this.information.getSize()) {
-                  this.current.incrementPosition(5);
-              }
-              else {
-                  this.current.setPosition(this.information.getSize());
-              }
-              this.current.setAlpha();
-          }
-          return new BlockParsedResult(false);
-      }
-      parseAlphaBlock() {
-          while (this.isStillAlpha(this.current.getPosition())) {
-              let alpha = this.decodeAlphanumeric(this.current.getPosition());
-              this.current.setPosition(alpha.getNewPosition());
-              if (alpha.isFNC1()) {
-                  let information = new DecodedInformation(this.current.getPosition(), this.buffer.toString());
-                  return new BlockParsedResult(true, information); // end of the char block
-              }
-              this.buffer.append(alpha.getValue());
-          }
-          if (this.isAlphaOr646ToNumericLatch(this.current.getPosition())) {
-              this.current.incrementPosition(3);
-              this.current.setNumeric();
-          }
-          else if (this.isAlphaTo646ToAlphaLatch(this.current.getPosition())) {
-              if (this.current.getPosition() + 5 < this.information.getSize()) {
-                  this.current.incrementPosition(5);
-              }
-              else {
-                  this.current.setPosition(this.information.getSize());
-              }
-              this.current.setIsoIec646();
-          }
-          return new BlockParsedResult(false);
-      }
-      isStillIsoIec646(pos) {
-          if (pos + 5 > this.information.getSize()) {
-              return false;
-          }
-          let fiveBitValue = this.extractNumericValueFromBitArray(pos, 5);
-          if (fiveBitValue >= 5 && fiveBitValue < 16) {
-              return true;
-          }
-          if (pos + 7 > this.information.getSize()) {
-              return false;
-          }
-          let sevenBitValue = this.extractNumericValueFromBitArray(pos, 7);
-          if (sevenBitValue >= 64 && sevenBitValue < 116) {
-              return true;
-          }
-          if (pos + 8 > this.information.getSize()) {
-              return false;
-          }
-          let eightBitValue = this.extractNumericValueFromBitArray(pos, 8);
-          return eightBitValue >= 232 && eightBitValue < 253;
-      }
-      decodeIsoIec646(pos) {
-          let fiveBitValue = this.extractNumericValueFromBitArray(pos, 5);
-          if (fiveBitValue === 15) {
-              return new DecodedChar(pos + 5, DecodedChar.FNC1);
-          }
-          if (fiveBitValue >= 5 && fiveBitValue < 15) {
-              return new DecodedChar(pos + 5, ('0' + (fiveBitValue - 5)));
-          }
-          let sevenBitValue = this.extractNumericValueFromBitArray(pos, 7);
-          if (sevenBitValue >= 64 && sevenBitValue < 90) {
-              return new DecodedChar(pos + 7, ('' + (sevenBitValue + 1)));
-          }
-          if (sevenBitValue >= 90 && sevenBitValue < 116) {
-              return new DecodedChar(pos + 7, ('' + (sevenBitValue + 7)));
-          }
-          let eightBitValue = this.extractNumericValueFromBitArray(pos, 8);
-          let c;
-          switch (eightBitValue) {
-              case 232:
-                  c = '!';
-                  break;
-              case 233:
-                  c = '"';
-                  break;
-              case 234:
-                  c = '%';
-                  break;
-              case 235:
-                  c = '&';
-                  break;
-              case 236:
-                  c = '\'';
-                  break;
-              case 237:
-                  c = '(';
-                  break;
-              case 238:
-                  c = ')';
-                  break;
-              case 239:
-                  c = '*';
-                  break;
-              case 240:
-                  c = '+';
-                  break;
-              case 241:
-                  c = ',';
-                  break;
-              case 242:
-                  c = '-';
-                  break;
-              case 243:
-                  c = '.';
-                  break;
-              case 244:
-                  c = '/';
-                  break;
-              case 245:
-                  c = ':';
-                  break;
-              case 246:
-                  c = ';';
-                  break;
-              case 247:
-                  c = '<';
-                  break;
-              case 248:
-                  c = '=';
-                  break;
-              case 249:
-                  c = '>';
-                  break;
-              case 250:
-                  c = '?';
-                  break;
-              case 251:
-                  c = '_';
-                  break;
-              case 252:
-                  c = ' ';
-                  break;
-              default:
-                  throw new FormatException();
-          }
-          return new DecodedChar(pos + 8, c);
-      }
-      isStillAlpha(pos) {
-          if (pos + 5 > this.information.getSize()) {
-              return false;
-          }
-          // We now check if it's a valid 5-bit value (0..9 and FNC1)
-          let fiveBitValue = this.extractNumericValueFromBitArray(pos, 5);
-          if (fiveBitValue >= 5 && fiveBitValue < 16) {
-              return true;
-          }
-          if (pos + 6 > this.information.getSize()) {
-              return false;
-          }
-          let sixBitValue = this.extractNumericValueFromBitArray(pos, 6);
-          return sixBitValue >= 16 && sixBitValue < 63; // 63 not included
-      }
-      decodeAlphanumeric(pos) {
-          let fiveBitValue = this.extractNumericValueFromBitArray(pos, 5);
-          if (fiveBitValue === 15) {
-              return new DecodedChar(pos + 5, DecodedChar.FNC1);
-          }
-          if (fiveBitValue >= 5 && fiveBitValue < 15) {
-              return new DecodedChar(pos + 5, ('0' + (fiveBitValue - 5)));
-          }
-          let sixBitValue = this.extractNumericValueFromBitArray(pos, 6);
-          if (sixBitValue >= 32 && sixBitValue < 58) {
-              return new DecodedChar(pos + 6, ('' + (sixBitValue + 33)));
-          }
-          let c;
-          switch (sixBitValue) {
-              case 58:
-                  c = '*';
-                  break;
-              case 59:
-                  c = ',';
-                  break;
-              case 60:
-                  c = '-';
-                  break;
-              case 61:
-                  c = '.';
-                  break;
-              case 62:
-                  c = '/';
-                  break;
-              default:
-                  throw new IllegalStateException('Decoding invalid alphanumeric value: ' + sixBitValue);
-          }
-          return new DecodedChar(pos + 6, c);
-      }
-      isAlphaTo646ToAlphaLatch(pos) {
-          if (pos + 1 > this.information.getSize()) {
-              return false;
-          }
-          for (let i = 0; i < 5 && i + pos < this.information.getSize(); ++i) {
-              if (i === 2) {
-                  if (!this.information.get(pos + 2)) {
-                      return false;
-                  }
-              }
-              else if (this.information.get(pos + i)) {
-                  return false;
-              }
-          }
-          return true;
-      }
-      isAlphaOr646ToNumericLatch(pos) {
-          // Next is alphanumeric if there are 3 positions and they are all zeros
-          if (pos + 3 > this.information.getSize()) {
-              return false;
-          }
-          for (let i = pos; i < pos + 3; ++i) {
-              if (this.information.get(i)) {
-                  return false;
-              }
-          }
-          return true;
-      }
-      isNumericToAlphaNumericLatch(pos) {
-          // Next is alphanumeric if there are 4 positions and they are all zeros, or
-          // if there is a subset of this just before the end of the symbol
-          if (pos + 1 > this.information.getSize()) {
-              return false;
-          }
-          for (let i = 0; i < 4 && i + pos < this.information.getSize(); ++i) {
-              if (this.information.get(pos + i)) {
-                  return false;
-              }
-          }
-          return true;
-      }
-  }
-
-  class AbstractExpandedDecoder {
-      constructor(information) {
-          this.information = information;
-          this.generalDecoder = new GeneralAppIdDecoder(information);
-      }
-      getInformation() {
-          return this.information;
-      }
-      getGeneralDecoder() {
-          return this.generalDecoder;
-      }
-  }
-
-  class AI01decoder extends AbstractExpandedDecoder {
-      constructor(information) {
-          super(information);
-      }
-      encodeCompressedGtin(buf, currentPos) {
-          buf.append('(01)');
-          let initialPosition = buf.length();
-          buf.append('9');
-          this.encodeCompressedGtinWithoutAI(buf, currentPos, initialPosition);
-      }
-      encodeCompressedGtinWithoutAI(buf, currentPos, initialBufferPosition) {
-          for (let i = 0; i < 4; ++i) {
-              let currentBlock = this.getGeneralDecoder().extractNumericValueFromBitArray(currentPos + 10 * i, 10);
-              if (currentBlock / 100 === 0) {
-                  buf.append('0');
-              }
-              if (currentBlock / 10 === 0) {
-                  buf.append('0');
-              }
-              buf.append(currentBlock);
-          }
-          AI01decoder.appendCheckDigit(buf, initialBufferPosition);
-      }
-      static appendCheckDigit(buf, currentPos) {
-          let checkDigit = 0;
-          for (let i = 0; i < 13; i++) {
-              // let digit = buf.charAt(i + currentPos) - '0';
-              // To be checked
-              let digit = buf.charAt(i + currentPos).charCodeAt(0) - '0'.charCodeAt(0);
-              checkDigit += (i & 0x01) === 0 ? 3 * digit : digit;
-          }
-          checkDigit = 10 - (checkDigit % 10);
-          if (checkDigit === 10) {
-              checkDigit = 0;
-          }
-          buf.append(checkDigit);
-      }
-  }
-  AI01decoder.GTIN_SIZE = 40;
-
-  class AI01AndOtherAIs extends AI01decoder {
-      // the second one is the encodation method, and the other two are for the variable length
-      constructor(information) {
-          super(information);
-      }
-      parseInformation() {
-          let buff = new StringBuilder();
-          buff.append('(01)');
-          let initialGtinPosition = buff.length();
-          let firstGtinDigit = this.getGeneralDecoder().extractNumericValueFromBitArray(AI01AndOtherAIs.HEADER_SIZE, 4);
-          buff.append(firstGtinDigit);
-          this.encodeCompressedGtinWithoutAI(buff, AI01AndOtherAIs.HEADER_SIZE + 4, initialGtinPosition);
-          return this.getGeneralDecoder().decodeAllCodes(buff, AI01AndOtherAIs.HEADER_SIZE + 44);
-      }
-  }
-  AI01AndOtherAIs.HEADER_SIZE = 1 + 1 + 2; // first bit encodes the linkage flag,
-
-  class AnyAIDecoder extends AbstractExpandedDecoder {
-      constructor(information) {
-          super(information);
-      }
-      parseInformation() {
-          let buf = new StringBuilder();
-          return this.getGeneralDecoder().decodeAllCodes(buf, AnyAIDecoder.HEADER_SIZE);
-      }
-  }
-  AnyAIDecoder.HEADER_SIZE = 2 + 1 + 2;
-
-  class AI01weightDecoder extends AI01decoder {
-      constructor(information) {
-          super(information);
-      }
-      encodeCompressedWeight(buf, currentPos, weightSize) {
-          let originalWeightNumeric = this.getGeneralDecoder().extractNumericValueFromBitArray(currentPos, weightSize);
-          this.addWeightCode(buf, originalWeightNumeric);
-          let weightNumeric = this.checkWeight(originalWeightNumeric);
-          let currentDivisor = 100000;
-          for (let i = 0; i < 5; ++i) {
-              if (weightNumeric / currentDivisor === 0) {
-                  buf.append('0');
-              }
-              currentDivisor /= 10;
-          }
-          buf.append(weightNumeric);
-      }
-  }
-
-  class AI013x0xDecoder extends AI01weightDecoder {
-      constructor(information) {
-          super(information);
-      }
-      parseInformation() {
-          if (this.getInformation().getSize() != AI013x0xDecoder.HEADER_SIZE + AI01weightDecoder.GTIN_SIZE + AI013x0xDecoder.WEIGHT_SIZE) {
-              throw new NotFoundException();
-          }
-          let buf = new StringBuilder();
-          this.encodeCompressedGtin(buf, AI013x0xDecoder.HEADER_SIZE);
-          this.encodeCompressedWeight(buf, AI013x0xDecoder.HEADER_SIZE + AI01weightDecoder.GTIN_SIZE, AI013x0xDecoder.WEIGHT_SIZE);
-          return buf.toString();
-      }
-  }
-  AI013x0xDecoder.HEADER_SIZE = 4 + 1;
-  AI013x0xDecoder.WEIGHT_SIZE = 15;
-
-  class AI013103decoder extends AI013x0xDecoder {
-      constructor(information) {
-          super(information);
-      }
-      addWeightCode(buf, weight) {
-          buf.append('(3103)');
-      }
-      checkWeight(weight) {
-          return weight;
-      }
-  }
-
-  class AI01320xDecoder extends AI013x0xDecoder {
-      constructor(information) {
-          super(information);
-      }
-      addWeightCode(buf, weight) {
-          if (weight < 10000) {
-              buf.append('(3202)');
-          }
-          else {
-              buf.append('(3203)');
-          }
-      }
-      checkWeight(weight) {
-          if (weight < 10000) {
-              return weight;
-          }
-          return weight - 10000;
-      }
-  }
-
-  class AI01392xDecoder extends AI01decoder {
-      constructor(information) {
-          super(information);
-      }
-      parseInformation() {
-          if (this.getInformation().getSize() < AI01392xDecoder.HEADER_SIZE + AI01decoder.GTIN_SIZE) {
-              throw new NotFoundException();
-          }
-          let buf = new StringBuilder();
-          this.encodeCompressedGtin(buf, AI01392xDecoder.HEADER_SIZE);
-          let lastAIdigit = this.getGeneralDecoder().extractNumericValueFromBitArray(AI01392xDecoder.HEADER_SIZE + AI01decoder.GTIN_SIZE, AI01392xDecoder.LAST_DIGIT_SIZE);
-          buf.append('(392');
-          buf.append(lastAIdigit);
-          buf.append(')');
-          let decodedInformation = this.getGeneralDecoder().decodeGeneralPurposeField(AI01392xDecoder.HEADER_SIZE + AI01decoder.GTIN_SIZE + AI01392xDecoder.LAST_DIGIT_SIZE, null);
-          buf.append(decodedInformation.getNewString());
-          return buf.toString();
-      }
-  }
-  AI01392xDecoder.HEADER_SIZE = 5 + 1 + 2;
-  AI01392xDecoder.LAST_DIGIT_SIZE = 2;
-
-  class AI01393xDecoder extends AI01decoder {
-      constructor(information) {
-          super(information);
-      }
-      parseInformation() {
-          if (this.getInformation().getSize() < AI01393xDecoder.HEADER_SIZE + AI01decoder.GTIN_SIZE) {
-              throw new NotFoundException();
-          }
-          let buf = new StringBuilder();
-          this.encodeCompressedGtin(buf, AI01393xDecoder.HEADER_SIZE);
-          let lastAIdigit = this.getGeneralDecoder().extractNumericValueFromBitArray(AI01393xDecoder.HEADER_SIZE + AI01decoder.GTIN_SIZE, AI01393xDecoder.LAST_DIGIT_SIZE);
-          buf.append('(393');
-          buf.append(lastAIdigit);
-          buf.append(')');
-          let firstThreeDigits = this.getGeneralDecoder().extractNumericValueFromBitArray(AI01393xDecoder.HEADER_SIZE + AI01decoder.GTIN_SIZE + AI01393xDecoder.LAST_DIGIT_SIZE, AI01393xDecoder.FIRST_THREE_DIGITS_SIZE);
-          if (firstThreeDigits / 100 == 0) {
-              buf.append('0');
-          }
-          if (firstThreeDigits / 10 == 0) {
-              buf.append('0');
-          }
-          buf.append(firstThreeDigits);
-          let generalInformation = this.getGeneralDecoder().decodeGeneralPurposeField(AI01393xDecoder.HEADER_SIZE + AI01decoder.GTIN_SIZE + AI01393xDecoder.LAST_DIGIT_SIZE + AI01393xDecoder.FIRST_THREE_DIGITS_SIZE, null);
-          buf.append(generalInformation.getNewString());
-          return buf.toString();
-      }
-  }
-  AI01393xDecoder.HEADER_SIZE = 5 + 1 + 2;
-  AI01393xDecoder.LAST_DIGIT_SIZE = 2;
-  AI01393xDecoder.FIRST_THREE_DIGITS_SIZE = 10;
-
-  class AI013x0x1xDecoder extends AI01weightDecoder {
-      constructor(information, firstAIdigits, dateCode) {
-          super(information);
-          this.dateCode = dateCode;
-          this.firstAIdigits = firstAIdigits;
-      }
-      parseInformation() {
-          if (this.getInformation().getSize() != AI013x0x1xDecoder.HEADER_SIZE + AI013x0x1xDecoder.GTIN_SIZE + AI013x0x1xDecoder.WEIGHT_SIZE + AI013x0x1xDecoder.DATE_SIZE) {
-              throw new NotFoundException();
-          }
-          let buf = new StringBuilder();
-          this.encodeCompressedGtin(buf, AI013x0x1xDecoder.HEADER_SIZE);
-          this.encodeCompressedWeight(buf, AI013x0x1xDecoder.HEADER_SIZE + AI013x0x1xDecoder.GTIN_SIZE, AI013x0x1xDecoder.WEIGHT_SIZE);
-          this.encodeCompressedDate(buf, AI013x0x1xDecoder.HEADER_SIZE + AI013x0x1xDecoder.GTIN_SIZE + AI013x0x1xDecoder.WEIGHT_SIZE);
-          return buf.toString();
-      }
-      encodeCompressedDate(buf, currentPos) {
-          let numericDate = this.getGeneralDecoder().extractNumericValueFromBitArray(currentPos, AI013x0x1xDecoder.DATE_SIZE);
-          if (numericDate == 38400) {
-              return;
-          }
-          buf.append('(');
-          buf.append(this.dateCode);
-          buf.append(')');
-          let day = numericDate % 32;
-          numericDate /= 32;
-          let month = numericDate % 12 + 1;
-          numericDate /= 12;
-          let year = numericDate;
-          if (year / 10 == 0) {
-              buf.append('0');
-          }
-          buf.append(year);
-          if (month / 10 == 0) {
-              buf.append('0');
-          }
-          buf.append(month);
-          if (day / 10 == 0) {
-              buf.append('0');
-          }
-          buf.append(day);
-      }
-      addWeightCode(buf, weight) {
-          buf.append('(');
-          buf.append(this.firstAIdigits);
-          buf.append(weight / 100000);
-          buf.append(')');
-      }
-      checkWeight(weight) {
-          return weight % 100000;
-      }
-  }
-  AI013x0x1xDecoder.HEADER_SIZE = 7 + 1;
-  AI013x0x1xDecoder.WEIGHT_SIZE = 20;
-  AI013x0x1xDecoder.DATE_SIZE = 16;
-
-  function createDecoder(information) {
-      try {
-          if (information.get(1)) {
-              return new AI01AndOtherAIs(information);
-          }
-          if (!information.get(2)) {
-              return new AnyAIDecoder(information);
-          }
-          let fourBitEncodationMethod = GeneralAppIdDecoder.extractNumericValueFromBitArray(information, 1, 4);
-          switch (fourBitEncodationMethod) {
-              case 4: return new AI013103decoder(information);
-              case 5: return new AI01320xDecoder(information);
-          }
-          let fiveBitEncodationMethod = GeneralAppIdDecoder.extractNumericValueFromBitArray(information, 1, 5);
-          switch (fiveBitEncodationMethod) {
-              case 12: return new AI01392xDecoder(information);
-              case 13: return new AI01393xDecoder(information);
-          }
-          let sevenBitEncodationMethod = GeneralAppIdDecoder.extractNumericValueFromBitArray(information, 1, 7);
-          switch (sevenBitEncodationMethod) {
-              case 56: return new AI013x0x1xDecoder(information, '310', '11');
-              case 57: return new AI013x0x1xDecoder(information, '320', '11');
-              case 58: return new AI013x0x1xDecoder(information, '310', '13');
-              case 59: return new AI013x0x1xDecoder(information, '320', '13');
-              case 60: return new AI013x0x1xDecoder(information, '310', '15');
-              case 61: return new AI013x0x1xDecoder(information, '320', '15');
-              case 62: return new AI013x0x1xDecoder(information, '310', '17');
-              case 63: return new AI013x0x1xDecoder(information, '320', '17');
-          }
-      }
-      catch (e) {
-          console.log(e);
-          throw new IllegalStateException('unknown decoder: ' + information);
-      }
-  }
-
-  class ExpandedPair {
-      constructor(leftChar, rightChar, finderPatter, mayBeLast) {
-          this.leftchar = leftChar;
-          this.rightchar = rightChar;
-          this.finderpattern = finderPatter;
-          this.maybeLast = mayBeLast;
-      }
-      mayBeLast() {
-          return this.maybeLast;
-      }
-      getLeftChar() {
-          return this.leftchar;
-      }
-      getRightChar() {
-          return this.rightchar;
-      }
-      getFinderPattern() {
-          return this.finderpattern;
-      }
-      mustBeLast() {
-          return this.rightchar == null;
-      }
-      toString() {
-          return '[ ' + this.leftchar + ', ' + this.rightchar + ' : ' + (this.finderpattern == null ? 'null' : this.finderpattern.getValue()) + ' ]';
-      }
-      static equals(o1, o2) {
-          if (!(o1 instanceof ExpandedPair)) {
-              return false;
-          }
-          return ExpandedPair.equalsOrNull(o1.leftchar, o2.leftchar) &&
-              ExpandedPair.equalsOrNull(o1.rightchar, o2.rightchar) &&
-              ExpandedPair.equalsOrNull(o1.finderpattern, o2.finderpattern);
-      }
-      static equalsOrNull(o1, o2) {
-          return o1 === null ? o2 === null : ExpandedPair.equals(o1, o2);
-      }
-      hashCode() {
-          // return ExpandedPair.hashNotNull(leftChar) ^ hashNotNull(rightChar) ^ hashNotNull(finderPattern);
-          let value = this.leftchar.getValue() ^ this.rightchar.getValue() ^ this.finderpattern.getValue();
-          return value;
-      }
-  }
-
-  class ExpandedRow {
-      constructor(pairs, rowNumber, wasReversed) {
-          this.pairs = pairs;
-          this.rowNumber = rowNumber;
-          this.wasReversed = wasReversed;
-      }
-      getPairs() {
-          return this.pairs;
-      }
-      getRowNumber() {
-          return this.rowNumber;
-      }
-      isReversed() {
-          return this.wasReversed;
-      }
-      // check implementation
-      isEquivalent(otherPairs) {
-          return this.checkEqualitity(this, otherPairs);
-      }
-      // @Override
-      toString() {
-          return '{ ' + this.pairs + ' }';
-      }
-      /**
-       * Two rows are equal if they contain the same pairs in the same order.
-       */
-      // @Override
-      // check implementation
-      equals(o1, o2) {
-          if (!(o1 instanceof ExpandedRow)) {
-              return false;
-          }
-          return this.checkEqualitity(o1, o2) && o1.wasReversed === o2.wasReversed;
-      }
-      checkEqualitity(pair1, pair2) {
-          if (!pair1 || !pair2)
-              return;
-          let result;
-          pair1.forEach((e1, i) => {
-              pair2.forEach(e2 => {
-                  if (e1.getLeftChar().getValue() === e2.getLeftChar().getValue() && e1.getRightChar().getValue() === e2.getRightChar().getValue() && e1.getFinderPatter().getValue() === e2.getFinderPatter().getValue()) {
-                      result = true;
-                  }
-              });
-          });
-          return result;
-      }
-  }
-
-  // import java.util.ArrayList;
-  // import java.util.Iterator;
-  // import java.util.List;
-  // import java.util.Map;
-  // import java.util.Collections;
-  class RSSExpandedReader extends AbstractRSSReader {
-      constructor() {
-          super(...arguments);
-          this.pairs = new Array(RSSExpandedReader.MAX_PAIRS);
-          this.rows = new Array();
-          this.startEnd = [2];
-      }
-      decodeRow(rowNumber, row, hints) {
-          // Rows can start with even pattern in case in prev rows there where odd number of patters.
-          // So lets try twice
-          // this.pairs.clear();
-          this.pairs.length = 0;
-          this.startFromEven = false;
-          try {
-              return RSSExpandedReader.constructResult(this.decodeRow2pairs(rowNumber, row));
-          }
-          catch (e) {
-              // OK
-            //   console.log(e);
-          }
-          this.pairs.length = 0;
-          this.startFromEven = true;
-          return RSSExpandedReader.constructResult(this.decodeRow2pairs(rowNumber, row));
-      }
-      reset() {
-          this.pairs.length = 0;
-          this.rows.length = 0;
-      }
-      // Not private for testing
-      decodeRow2pairs(rowNumber, row) {
-          let done = false;
-          while (!done) {
-              try {
-                  this.pairs.push(this.retrieveNextPair(row, this.pairs, rowNumber));
-              }
-              catch (error) {
-                  if (error instanceof NotFoundException) {
-                      if (!this.pairs.length) {
-                          throw new NotFoundException();
-                      }
-                      // exit this loop when retrieveNextPair() fails and throws
-                      done = true;
-                  }
-              }
-          }
-          // TODO: verify sequence of finder patterns as in checkPairSequence()
-          if (this.checkChecksum()) {
-              return this.pairs;
-          }
-          let tryStackedDecode;
-          if (this.rows.length) {
-              tryStackedDecode = true;
-          }
-          else {
-              tryStackedDecode = false;
-          }
-          // let tryStackedDecode = !this.rows.isEmpty();
-          this.storeRow(rowNumber, false); // TODO: deal with reversed rows
-          if (tryStackedDecode) {
-              // When the image is 180-rotated, then rows are sorted in wrong direction.
-              // Try twice with both the directions.
-              let ps = this.checkRowsBoolean(false);
-              if (ps != null) {
-                  return ps;
-              }
-              ps = this.checkRowsBoolean(true);
-              if (ps != null) {
-                  return ps;
-              }
-          }
-          throw new NotFoundException();
-      }
-      // Need to Verify
-      checkRowsBoolean(reverse) {
-          // Limit number of rows we are checking
-          // We use recursive algorithm with pure complexity and don't want it to take forever
-          // Stacked barcode can have up to 11 rows, so 25 seems reasonable enough
-          if (this.rows.length > 25) {
-              this.rows.length = 0; // We will never have a chance to get result, so clear it
-              return null;
-          }
-          this.pairs.length = 0;
-          if (reverse) {
-              this.rows = this.rows.reverse();
-              // Collections.reverse(this.rows);
-          }
-          let ps = null;
-          try {
-              ps = this.checkRows(new Array(), 0);
-          }
-          catch (e) {
-              // OK
-            //   console.log(e);
-          }
-          if (reverse) {
-              this.rows = this.rows.reverse();
-              // Collections.reverse(this.rows);
-          }
-          return ps;
-      }
-      // Try to construct a valid rows sequence
-      // Recursion is used to implement backtracking
-      checkRows(collectedRows, currentRow) {
-          for (let i = currentRow; i < this.rows.length; i++) {
-              let row = this.rows[i];
-              this.pairs.length = 0;
-              for (let collectedRow of collectedRows) {
-                  this.pairs.push(collectedRow.getPairs());
-              }
-              this.pairs.push(row.getPairs());
-              if (!RSSExpandedReader.isValidSequence(this.pairs)) {
-                  continue;
-              }
-              if (this.checkChecksum()) {
-                  return this.pairs;
-              }
-              let rs = new Array(collectedRows);
-              rs.push(row);
-              try {
-                  // Recursion: try to add more rows
-                  return this.checkRows(rs, i + 1);
-              }
-              catch (e) {
-                  // We failed, try the next candidate
-                //   console.log(e);
-              }
-          }
-          throw new NotFoundException();
-      }
-      // Whether the pairs form a valid find pattern sequence,
-      // either complete or a prefix
-      static isValidSequence(pairs) {
-          for (let sequence of RSSExpandedReader.FINDER_PATTERN_SEQUENCES) {
-              if (pairs.length > sequence.length) {
-                  continue;
-              }
-              let stop = true;
-              for (let j = 0; j < pairs.length; j++) {
-                  if (pairs[j].getFinderPattern().getValue() != sequence[j]) {
-                      stop = false;
-                      break;
-                  }
-              }
-              if (stop) {
-                  return true;
-              }
-          }
-          return false;
-      }
-      storeRow(rowNumber, wasReversed) {
-          // Discard if duplicate above or below; otherwise insert in order by row number.
-          let insertPos = 0;
-          let prevIsSame = false;
-          let nextIsSame = false;
-          while (insertPos < this.rows.length) {
-              let erow = this.rows[insertPos];
-              if (erow.getRowNumber() > rowNumber) {
-                  nextIsSame = erow.isEquivalent(this.pairs);
-                  break;
-              }
-              prevIsSame = erow.isEquivalent(this.pairs);
-              insertPos++;
-          }
-          if (nextIsSame || prevIsSame) {
-              return;
-          }
-          // When the row was partially decoded (e.g. 2 pairs found instead of 3),
-          // it will prevent us from detecting the barcode.
-          // Try to merge partial rows
-          // Check whether the row is part of an allready detected row
-          if (RSSExpandedReader.isPartialRow(this.pairs, this.rows)) {
-              return;
-          }
-          this.rows.push(insertPos, new ExpandedRow(this.pairs, rowNumber, wasReversed));
-          this.removePartialRows(this.pairs, this.rows);
-      }
-      // Remove all the rows that contains only specified pairs
-      removePartialRows(pairs, rows) {
-          // for (Iterator<ExpandedRow> iterator = rows.iterator(); iterator.hasNext();) {
-          //   ExpandedRow r = iterator.next();
-          //   if (r.getPairs().size() == pairs.size()) {
-          //     continue;
-          //   }
-          //   boolean allFound = true;
-          //   for (ExpandedPair p : r.getPairs()) {
-          //     boolean found = false;
-          //     for (ExpandedPair pp : pairs) {
-          //       if (p.equals(pp)) {
-          //         found = true;
-          //         break;
-          //       }
-          //     }
-          //     if (!found) {
-          //       allFound = false;
-          //       break;
-          //     }
-          //   }
-          //   if (allFound) {
-          //     // 'pairs' contains all the pairs from the row 'r'
-          //     iterator.remove();
-          //   }
-          // }
-          for (let row of rows) {
-              if (row.getPairs().length === pairs.length) {
-                  continue;
-              }
-              for (let p of row.getPairs()) {
-                  for (let pp of pairs) {
-                      if (ExpandedPair.equals(p, pp)) {
-                          break;
-                      }
-                  }
-              }
-          }
-      }
-      // Returns true when one of the rows already contains all the pairs
-      static isPartialRow(pairs, rows) {
-          for (let r of rows) {
-              let allFound = true;
-              for (let p of pairs) {
-                  let found = false;
-                  for (let pp of r.getPairs()) {
-                      if (p.equals(pp)) {
-                          found = true;
-                          break;
-                      }
-                  }
-                  if (!found) {
-                      allFound = false;
-                      break;
-                  }
-              }
-              if (allFound) {
-                  // the row 'r' contain all the pairs from 'pairs'
-                  return true;
-              }
-          }
-          return false;
-      }
-      // Only used for unit testing
-      getRows() {
-          return this.rows;
-      }
-      // Not private for unit testing
-      static constructResult(pairs) {
-          let binary = BitArrayBuilder.buildBitArray(pairs);
-          let decoder = createDecoder(binary);
-          let resultingString = decoder.parseInformation();
-          let firstPoints = pairs[0].getFinderPattern().getResultPoints();
-          let lastPoints = pairs[pairs.length - 1].getFinderPattern().getResultPoints();
-          let points = [firstPoints[0], firstPoints[1], lastPoints[0], lastPoints[1]];
-          return new Result(resultingString, null, null, points, BarcodeFormat$1.RSS_EXPANDED, null);
-      }
-      checkChecksum() {
-          let firstPair = this.pairs.get(0);
-          let checkCharacter = firstPair.getLeftChar();
-          let firstCharacter = firstPair.getRightChar();
-          if (firstCharacter == null) {
-              return false;
-          }
-          let checksum = firstCharacter.getChecksumPortion();
-          let s = 2;
-          for (let i = 1; i < this.pairs.size(); ++i) {
-              let currentPair = this.pairs.get(i);
-              checksum += currentPair.getLeftChar().getChecksumPortion();
-              s++;
-              let currentRightChar = currentPair.getRightChar();
-              if (currentRightChar != null) {
-                  checksum += currentRightChar.getChecksumPortion();
-                  s++;
-              }
-          }
-          checksum %= 211;
-          let checkCharacterValue = 211 * (s - 4) + checksum;
-          return checkCharacterValue == checkCharacter.getValue();
-      }
-      static getNextSecondBar(row, initialPos) {
-          let currentPos;
-          if (row.get(initialPos)) {
-              currentPos = row.getNextUnset(initialPos);
-              currentPos = row.getNextSet(currentPos);
-          }
-          else {
-              currentPos = row.getNextSet(initialPos);
-              currentPos = row.getNextUnset(currentPos);
-          }
-          return currentPos;
-      }
-      // not private for testing
-      retrieveNextPair(row, previousPairs, rowNumber) {
-          let isOddPattern = previousPairs.length % 2 == 0;
-          if (this.startFromEven) {
-              isOddPattern = !isOddPattern;
-          }
-          let pattern;
-          let keepFinding = true;
-          let forcedOffset = -1;
-          do {
-              this.findNextPair(row, previousPairs, forcedOffset);
-              pattern = this.parseFoundFinderPattern(row, rowNumber, isOddPattern);
-              if (pattern == null) {
-                  forcedOffset = RSSExpandedReader.getNextSecondBar(row, this.startEnd[0]);
-              }
-              else {
-                  keepFinding = false;
-              }
-          } while (keepFinding);
-          // When stacked symbol is split over multiple rows, there's no way to guess if this pair can be last or not.
-          // boolean mayBeLast = checkPairSequence(previousPairs, pattern);
-          let leftChar = this.decodeDataCharacter(row, pattern, isOddPattern, true);
-          if (!this.isEmptyPair(previousPairs) && previousPairs[previousPairs.length - 1].mustBeLast()) {
-              throw new NotFoundException();
-          }
-          let rightChar;
-          try {
-              rightChar = this.decodeDataCharacter(row, pattern, isOddPattern, false);
-          }
-          catch (e) {
-              rightChar = null;
-              console.log(e);
-          }
-          return new ExpandedPair(leftChar, rightChar, pattern, true);
-      }
-      isEmptyPair(pairs) {
-          if (pairs.length === 0) {
-              return true;
-          }
-          return false;
-      }
-      findNextPair(row, previousPairs, forcedOffset) {
-          let counters = this.getDecodeFinderCounters();
-          counters[0] = 0;
-          counters[1] = 0;
-          counters[2] = 0;
-          counters[3] = 0;
-          let width = row.getSize();
-          let rowOffset;
-          if (forcedOffset >= 0) {
-              rowOffset = forcedOffset;
-          }
-          else if (this.isEmptyPair(previousPairs)) {
-              rowOffset = 0;
-          }
-          else {
-              let lastPair = previousPairs[previousPairs.length - 1];
-              rowOffset = lastPair.getFinderPattern().getStartEnd()[1];
-          }
-          let searchingEvenPair = previousPairs.length % 2 != 0;
-          if (this.startFromEven) {
-              searchingEvenPair = !searchingEvenPair;
-          }
-          let isWhite = false;
-          while (rowOffset < width) {
-              isWhite = !row.get(rowOffset);
-              if (!isWhite) {
-                  break;
-              }
-              rowOffset++;
-          }
-          let counterPosition = 0;
-          let patternStart = rowOffset;
-          for (let x = rowOffset; x < width; x++) {
-              if (row.get(x) != isWhite) {
-                  counters[counterPosition]++;
-              }
-              else {
-                  if (counterPosition == 3) {
-                      if (searchingEvenPair) {
-                          RSSExpandedReader.reverseCounters(counters);
-                      }
-                      if (RSSExpandedReader.isFinderPattern(counters)) {
-                          this.startEnd[0] = patternStart;
-                          this.startEnd[1] = x;
-                          return;
-                      }
-                      if (searchingEvenPair) {
-                          RSSExpandedReader.reverseCounters(counters);
-                      }
-                      patternStart += counters[0] + counters[1];
-                      counters[0] = counters[2];
-                      counters[1] = counters[3];
-                      counters[2] = 0;
-                      counters[3] = 0;
-                      counterPosition--;
-                  }
-                  else {
-                      counterPosition++;
-                  }
-                  counters[counterPosition] = 1;
-                  isWhite = !isWhite;
-              }
-          }
-          throw new NotFoundException();
-      }
-      static reverseCounters(counters) {
-          let length = counters.length;
-          for (let i = 0; i < length / 2; ++i) {
-              let tmp = counters[i];
-              counters[i] = counters[length - i - 1];
-              counters[length - i - 1] = tmp;
-          }
-      }
-      parseFoundFinderPattern(row, rowNumber, oddPattern) {
-          // Actually we found elements 2-5.
-          let firstCounter;
-          let start;
-          let end;
-          if (oddPattern) {
-              // If pattern number is odd, we need to locate element 1 *before* the current block.
-              let firstElementStart = this.startEnd[0] - 1;
-              // Locate element 1
-              while (firstElementStart >= 0 && !row.get(firstElementStart)) {
-                  firstElementStart--;
-              }
-              firstElementStart++;
-              firstCounter = this.startEnd[0] - firstElementStart;
-              start = firstElementStart;
-              end = this.startEnd[1];
-          }
-          else {
-              // If pattern number is even, the pattern is reversed, so we need to locate element 1 *after* the current block.
-              start = this.startEnd[0];
-              end = row.getNextUnset(this.startEnd[1] + 1);
-              firstCounter = end - this.startEnd[1];
-          }
-          // Make 'counters' hold 1-4
-          let counters = this.getDecodeFinderCounters();
-          System.arraycopy(counters, 0, counters, 1, counters.length - 1);
-          counters[0] = firstCounter;
-          let value;
-          try {
-              value = this.parseFinderValue(counters, RSSExpandedReader.FINDER_PATTERNS);
-          }
-          catch (e) {
-              return null;
-          }
-          // return new FinderPattern(value, new int[] { start, end }, start, end, rowNumber});
-          return new FinderPattern(value, [start, end], start, end, rowNumber);
-      }
-      decodeDataCharacter(row, pattern, isOddPattern, leftChar) {
-          let counters = this.getDataCharacterCounters();
-          for (let x = 0; x < counters.length; x++) {
-              counters[x] = 0;
-          }
-          if (leftChar) {
-              RSSExpandedReader.recordPatternInReverse(row, pattern.getStartEnd()[0], counters);
-          }
-          else {
-              RSSExpandedReader.recordPattern(row, pattern.getStartEnd()[1], counters);
-              // reverse it
-              for (let i = 0, j = counters.length - 1; i < j; i++, j--) {
-                  let temp = counters[i];
-                  counters[i] = counters[j];
-                  counters[j] = temp;
-              }
-          } // counters[] has the pixels of the module
-          let numModules = 17; // left and right data characters have all the same length
-          let elementWidth = MathUtils.sum(new Int32Array(counters)) / numModules;
-          // Sanity check: element width for pattern and the character should match
-          let expectedElementWidth = (pattern.getStartEnd()[1] - pattern.getStartEnd()[0]) / 15.0;
-          if (Math.abs(elementWidth - expectedElementWidth) / expectedElementWidth > 0.3) {
-              throw new NotFoundException();
-          }
-          let oddCounts = this.getOddCounts();
-          let evenCounts = this.getEvenCounts();
-          let oddRoundingErrors = this.getOddRoundingErrors();
-          let evenRoundingErrors = this.getEvenRoundingErrors();
-          for (let i = 0; i < counters.length; i++) {
-              let value = 1.0 * counters[i] / elementWidth;
-              let count = value + 0.5; // Round
-              if (count < 1) {
-                  if (value < 0.3) {
-                      throw new NotFoundException();
-                  }
-                  count = 1;
-              }
-              else if (count > 8) {
-                  if (value > 8.7) {
-                      throw new NotFoundException();
-                  }
-                  count = 8;
-              }
-              let offset = i / 2;
-              if ((i & 0x01) == 0) {
-                  oddCounts[offset] = count;
-                  oddRoundingErrors[offset] = value - count;
-              }
-              else {
-                  evenCounts[offset] = count;
-                  evenRoundingErrors[offset] = value - count;
-              }
-          }
-          this.adjustOddEvenCounts(numModules);
-          let weightRowNumber = 4 * pattern.getValue() + (isOddPattern ? 0 : 2) + (leftChar ? 0 : 1) - 1;
-          let oddSum = 0;
-          let oddChecksumPortion = 0;
-          for (let i = oddCounts.length - 1; i >= 0; i--) {
-              if (RSSExpandedReader.isNotA1left(pattern, isOddPattern, leftChar)) {
-                  let weight = RSSExpandedReader.WEIGHTS[weightRowNumber][2 * i];
-                  oddChecksumPortion += oddCounts[i] * weight;
-              }
-              oddSum += oddCounts[i];
-          }
-          let evenChecksumPortion = 0;
-          // int evenSum = 0;
-          for (let i = evenCounts.length - 1; i >= 0; i--) {
-              if (RSSExpandedReader.isNotA1left(pattern, isOddPattern, leftChar)) {
-                  let weight = RSSExpandedReader.WEIGHTS[weightRowNumber][2 * i + 1];
-                  evenChecksumPortion += evenCounts[i] * weight;
-              }
-              // evenSum += evenCounts[i];
-          }
-          let checksumPortion = oddChecksumPortion + evenChecksumPortion;
-          if ((oddSum & 0x01) != 0 || oddSum > 13 || oddSum < 4) {
-              throw new NotFoundException();
-          }
-          let group = (13 - oddSum) / 2;
-          let oddWidest = RSSExpandedReader.SYMBOL_WIDEST[group];
-          let evenWidest = 9 - oddWidest;
-          let vOdd = RSSUtils.getRSSvalue(oddCounts, oddWidest, true);
-          let vEven = RSSUtils.getRSSvalue(evenCounts, evenWidest, false);
-          let tEven = RSSExpandedReader.EVEN_TOTAL_SUBSET[group];
-          let gSum = RSSExpandedReader.GSUM[group];
-          let value = vOdd * tEven + vEven + gSum;
-          return new DataCharacter(value, checksumPortion);
-      }
-      static isNotA1left(pattern, isOddPattern, leftChar) {
-          // A1: pattern.getValue is 0 (A), and it's an oddPattern, and it is a left char
-          return !(pattern.getValue() == 0 && isOddPattern && leftChar);
-      }
-      adjustOddEvenCounts(numModules) {
-          let oddSum = MathUtils.sum(new Int32Array(this.getOddCounts()));
-          let evenSum = MathUtils.sum(new Int32Array(this.getEvenCounts()));
-          let incrementOdd = false;
-          let decrementOdd = false;
-          if (oddSum > 13) {
-              decrementOdd = true;
-          }
-          else if (oddSum < 4) {
-              incrementOdd = true;
-          }
-          let incrementEven = false;
-          let decrementEven = false;
-          if (evenSum > 13) {
-              decrementEven = true;
-          }
-          else if (evenSum < 4) {
-              incrementEven = true;
-          }
-          let mismatch = oddSum + evenSum - numModules;
-          let oddParityBad = (oddSum & 0x01) == 1;
-          let evenParityBad = (evenSum & 0x01) == 0;
-          if (mismatch == 1) {
-              if (oddParityBad) {
-                  if (evenParityBad) {
-                      throw new NotFoundException();
-                  }
-                  decrementOdd = true;
-              }
-              else {
-                  if (!evenParityBad) {
-                      throw new NotFoundException();
-                  }
-                  decrementEven = true;
-              }
-          }
-          else if (mismatch == -1) {
-              if (oddParityBad) {
-                  if (evenParityBad) {
-                      throw new NotFoundException();
-                  }
-                  incrementOdd = true;
-              }
-              else {
-                  if (!evenParityBad) {
-                      throw new NotFoundException();
-                  }
-                  incrementEven = true;
-              }
-          }
-          else if (mismatch == 0) {
-              if (oddParityBad) {
-                  if (!evenParityBad) {
-                      throw new NotFoundException();
-                  }
-                  // Both bad
-                  if (oddSum < evenSum) {
-                      incrementOdd = true;
-                      decrementEven = true;
-                  }
-                  else {
-                      decrementOdd = true;
-                      incrementEven = true;
-                  }
-              }
-              else {
-                  if (evenParityBad) {
-                      throw new NotFoundException();
-                  }
-                  // Nothing to do!
-              }
-          }
-          else {
-              throw new NotFoundException();
-          }
-          if (incrementOdd) {
-              if (decrementOdd) {
-                  throw new NotFoundException();
-              }
-              RSSExpandedReader.increment(this.getOddCounts(), this.getOddRoundingErrors());
-          }
-          if (decrementOdd) {
-              RSSExpandedReader.decrement(this.getOddCounts(), this.getOddRoundingErrors());
-          }
-          if (incrementEven) {
-              if (decrementEven) {
-                  throw new NotFoundException();
-              }
-              RSSExpandedReader.increment(this.getEvenCounts(), this.getOddRoundingErrors());
-          }
-          if (decrementEven) {
-              RSSExpandedReader.decrement(this.getEvenCounts(), this.getEvenRoundingErrors());
-          }
-      }
-  }
-  RSSExpandedReader.SYMBOL_WIDEST = [7, 5, 4, 3, 1];
-  RSSExpandedReader.EVEN_TOTAL_SUBSET = [4, 20, 52, 104, 204];
-  RSSExpandedReader.GSUM = [0, 348, 1388, 2948, 3988];
-  RSSExpandedReader.FINDER_PATTERNS = [
-      Int32Array.from([1, 8, 4, 1]),
-      Int32Array.from([3, 6, 4, 1]),
-      Int32Array.from([3, 4, 6, 1]),
-      Int32Array.from([3, 2, 8, 1]),
-      Int32Array.from([2, 6, 5, 1]),
-      Int32Array.from([2, 2, 9, 1]) // F
-  ];
-  RSSExpandedReader.WEIGHTS = [
-      [1, 3, 9, 27, 81, 32, 96, 77],
-      [20, 60, 180, 118, 143, 7, 21, 63],
-      [189, 145, 13, 39, 117, 140, 209, 205],
-      [193, 157, 49, 147, 19, 57, 171, 91],
-      [62, 186, 136, 197, 169, 85, 44, 132],
-      [185, 133, 188, 142, 4, 12, 36, 108],
-      [113, 128, 173, 97, 80, 29, 87, 50],
-      [150, 28, 84, 41, 123, 158, 52, 156],
-      [46, 138, 203, 187, 139, 206, 196, 166],
-      [76, 17, 51, 153, 37, 111, 122, 155],
-      [43, 129, 176, 106, 107, 110, 119, 146],
-      [16, 48, 144, 10, 30, 90, 59, 177],
-      [109, 116, 137, 200, 178, 112, 125, 164],
-      [70, 210, 208, 202, 184, 130, 179, 115],
-      [134, 191, 151, 31, 93, 68, 204, 190],
-      [148, 22, 66, 198, 172, 94, 71, 2],
-      [6, 18, 54, 162, 64, 192, 154, 40],
-      [120, 149, 25, 75, 14, 42, 126, 167],
-      [79, 26, 78, 23, 69, 207, 199, 175],
-      [103, 98, 83, 38, 114, 131, 182, 124],
-      [161, 61, 183, 127, 170, 88, 53, 159],
-      [55, 165, 73, 8, 24, 72, 5, 15],
-      [45, 135, 194, 160, 58, 174, 100, 89]
-  ];
-  RSSExpandedReader.FINDER_PAT_A = 0;
-  RSSExpandedReader.FINDER_PAT_B = 1;
-  RSSExpandedReader.FINDER_PAT_C = 2;
-  RSSExpandedReader.FINDER_PAT_D = 3;
-  RSSExpandedReader.FINDER_PAT_E = 4;
-  RSSExpandedReader.FINDER_PAT_F = 5;
-  RSSExpandedReader.FINDER_PATTERN_SEQUENCES = [
-      [RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_A],
-      [RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_B],
-      [RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_C, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_D],
-      [RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_E, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_D, RSSExpandedReader.FINDER_PAT_C],
-      [RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_E, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_D, RSSExpandedReader.FINDER_PAT_D, RSSExpandedReader.FINDER_PAT_F],
-      [RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_E, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_D, RSSExpandedReader.FINDER_PAT_E, RSSExpandedReader.FINDER_PAT_F, RSSExpandedReader.FINDER_PAT_F],
-      [RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_C, RSSExpandedReader.FINDER_PAT_C, RSSExpandedReader.FINDER_PAT_D, RSSExpandedReader.FINDER_PAT_D],
-      [RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_C, RSSExpandedReader.FINDER_PAT_C, RSSExpandedReader.FINDER_PAT_D, RSSExpandedReader.FINDER_PAT_E, RSSExpandedReader.FINDER_PAT_E],
-      [RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_C, RSSExpandedReader.FINDER_PAT_C, RSSExpandedReader.FINDER_PAT_D, RSSExpandedReader.FINDER_PAT_E, RSSExpandedReader.FINDER_PAT_F, RSSExpandedReader.FINDER_PAT_F],
-      [RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_C, RSSExpandedReader.FINDER_PAT_D, RSSExpandedReader.FINDER_PAT_D, RSSExpandedReader.FINDER_PAT_E, RSSExpandedReader.FINDER_PAT_E, RSSExpandedReader.FINDER_PAT_F, RSSExpandedReader.FINDER_PAT_F],
-  ];
-  RSSExpandedReader.MAX_PAIRS = 11;
-
-  class Pair extends DataCharacter {
-      constructor(value, checksumPortion, finderPattern) {
-          super(value, checksumPortion);
-          this.count = 0;
-          this.finderPattern = finderPattern;
-      }
-      getFinderPattern() {
-          return this.finderPattern;
-      }
-      getCount() {
-          return this.count;
-      }
-      incrementCount() {
-          this.count++;
       }
   }
 
@@ -11160,13 +7959,13 @@
               firstElementStart--;
           }
           firstElementStart++;
-          const firstCounter = startEnd[0] - firstElementStart;
+          let firstCounter = startEnd[0] - firstElementStart;
           // Make 'counters' hold 1-4
-          const counters = this.getDecodeFinderCounters();
-          const copy = new Int32Array(counters.length);
+          let counters = this.getDecodeFinderCounters();
+          let copy = new Array(counters.length);
           System.arraycopy(counters, 0, copy, 1, counters.length - 1);
           copy[0] = firstCounter;
-          const value = this.parseFinderValue(copy, RSS14Reader.FINDER_PATTERNS);
+          let value = this.parseFinderValue(copy, RSS14Reader.FINDER_PATTERNS);
           let start = firstElementStart;
           let end = startEnd[1];
           if (right) {
@@ -11294,16 +8093,1094 @@
   RSS14Reader.OUTSIDE_ODD_WIDEST = [8, 6, 4, 3, 1];
   RSS14Reader.INSIDE_ODD_WIDEST = [2, 4, 6, 8];
   RSS14Reader.FINDER_PATTERNS = [
-      Int32Array.from([3, 8, 2, 1]),
-      Int32Array.from([3, 5, 5, 1]),
-      Int32Array.from([3, 3, 7, 1]),
-      Int32Array.from([3, 1, 9, 1]),
-      Int32Array.from([2, 7, 4, 1]),
-      Int32Array.from([2, 5, 6, 1]),
-      Int32Array.from([2, 3, 8, 1]),
-      Int32Array.from([1, 5, 7, 1]),
-      Int32Array.from([1, 3, 9, 1]),
+      [3, 8, 2, 1],
+      [3, 5, 5, 1],
+      [3, 3, 7, 1],
+      [3, 1, 9, 1],
+      [2, 7, 4, 1],
+      [2, 5, 6, 1],
+      [2, 3, 8, 1],
+      [1, 5, 7, 1],
+      [1, 3, 9, 1],
   ];
+
+  /*
+   * Copyright 2008 ZXing authors
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *      http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  /**
+   * <p>Decodes ITF barcodes.</p>
+   *
+   * @author Tjieco
+   */
+  class ITFReader extends OneDReader {
+      constructor() {
+          super(...arguments);
+          // Stores the actual narrow line width of the image being decoded.
+          this.narrowLineWidth = -1;
+      }
+      // See ITFWriter.PATTERNS
+      /*
+
+      /!**
+       * Patterns of Wide / Narrow lines to indicate each digit
+       *!/
+      */
+      decodeRow(rowNumber, row, hints) {
+          // Find out where the Middle section (payload) starts & ends
+          let startRange = this.decodeStart(row);
+          let endRange = this.decodeEnd(row);
+          let result = new StringBuilder();
+          ITFReader.decodeMiddle(row, startRange[1], endRange[0], result);
+          let resultString = result.toString();
+          let allowedLengths = null;
+          if (hints != null) {
+              allowedLengths = hints.get(DecodeHintType$1.ALLOWED_LENGTHS);
+          }
+          if (allowedLengths == null) {
+              allowedLengths = ITFReader.DEFAULT_ALLOWED_LENGTHS;
+          }
+          // To avoid false positives with 2D barcodes (and other patterns), make
+          // an assumption that the decoded string must be a 'standard' length if it's short
+          let length = resultString.length;
+          let lengthOK = false;
+          let maxAllowedLength = 0;
+          for (let value of allowedLengths) {
+              if (length === value) {
+                  lengthOK = true;
+                  break;
+              }
+              if (value > maxAllowedLength) {
+                  maxAllowedLength = value;
+              }
+          }
+          if (!lengthOK && length > maxAllowedLength) {
+              lengthOK = true;
+          }
+          if (!lengthOK) {
+              throw new FormatException();
+          }
+          const points = [new ResultPoint(startRange[1], rowNumber), new ResultPoint(endRange[0], rowNumber)];
+          let resultReturn = new Result(resultString, null, // no natural byte representation for these barcodes
+          0, points, BarcodeFormat$1.ITF, new Date().getTime());
+          return resultReturn;
+      }
+      /*
+      /!**
+       * @param row          row of black/white values to search
+       * @param payloadStart offset of start pattern
+       * @param resultString {@link StringBuilder} to append decoded chars to
+       * @throws NotFoundException if decoding could not complete successfully
+       *!/*/
+      static decodeMiddle(row, payloadStart, payloadEnd, resultString) {
+          // Digits are interleaved in pairs - 5 black lines for one digit, and the
+          // 5
+          // interleaved white lines for the second digit.
+          // Therefore, need to scan 10 lines and then
+          // split these into two arrays
+          let counterDigitPair = new Array(10); // 10
+          let counterBlack = new Array(5); // 5
+          let counterWhite = new Array(5); // 5
+          counterDigitPair.fill(0);
+          counterBlack.fill(0);
+          counterWhite.fill(0);
+          while (payloadStart < payloadEnd) {
+              // Get 10 runs of black/white.
+              OneDReader.recordPattern(row, payloadStart, counterDigitPair);
+              // Split them into each array
+              for (let k = 0; k < 5; k++) {
+                  let twoK = 2 * k;
+                  counterBlack[k] = counterDigitPair[twoK];
+                  counterWhite[k] = counterDigitPair[twoK + 1];
+              }
+              let bestMatch = ITFReader.decodeDigit(counterBlack);
+              resultString.append(bestMatch.toString());
+              bestMatch = this.decodeDigit(counterWhite);
+              resultString.append(bestMatch.toString());
+              counterDigitPair.forEach(function (counterDigit) {
+                  payloadStart += counterDigit;
+              });
+          }
+      }
+      /*/!**
+       * Identify where the start of the middle / payload section starts.
+       *
+       * @param row row of black/white values to search
+       * @return Array, containing index of start of 'start block' and end of
+       *         'start block'
+       *!/*/
+      decodeStart(row) {
+          let endStart = ITFReader.skipWhiteSpace(row);
+          let startPattern = ITFReader.findGuardPattern(row, endStart, ITFReader.START_PATTERN);
+          // Determine the width of a narrow line in pixels. We can do this by
+          // getting the width of the start pattern and dividing by 4 because its
+          // made up of 4 narrow lines.
+          this.narrowLineWidth = (startPattern[1] - startPattern[0]) / 4;
+          this.validateQuietZone(row, startPattern[0]);
+          return startPattern;
+      }
+      /*/!**
+       * The start & end patterns must be pre/post fixed by a quiet zone. This
+       * zone must be at least 10 times the width of a narrow line.  Scan back until
+       * we either get to the start of the barcode or match the necessary number of
+       * quiet zone pixels.
+       *
+       * Note: Its assumed the row is reversed when using this method to find
+       * quiet zone after the end pattern.
+       *
+       * ref: http://www.barcode-1.net/i25code.html
+       *
+       * @param row bit array representing the scanned barcode.
+       * @param startPattern index into row of the start or end pattern.
+       * @throws NotFoundException if the quiet zone cannot be found
+       *!/*/
+      validateQuietZone(row, startPattern) {
+          let quietCount = this.narrowLineWidth * 10; // expect to find this many pixels of quiet zone
+          // if there are not so many pixel at all let's try as many as possible
+          quietCount = quietCount < startPattern ? quietCount : startPattern;
+          for (let i = startPattern - 1; quietCount > 0 && i >= 0; i--) {
+              if (row.get(i)) {
+                  break;
+              }
+              quietCount--;
+          }
+          if (quietCount !== 0) {
+              // Unable to find the necessary number of quiet zone pixels.
+              throw new NotFoundException();
+          }
+      }
+      /*
+      /!**
+       * Skip all whitespace until we get to the first black line.
+       *
+       * @param row row of black/white values to search
+       * @return index of the first black line.
+       * @throws NotFoundException Throws exception if no black lines are found in the row
+       *!/*/
+      static skipWhiteSpace(row) {
+          const width = row.getSize();
+          const endStart = row.getNextSet(0);
+          if (endStart === width) {
+              throw new NotFoundException();
+          }
+          return endStart;
+      }
+      /*/!**
+       * Identify where the end of the middle / payload section ends.
+       *
+       * @param row row of black/white values to search
+       * @return Array, containing index of start of 'end block' and end of 'end
+       *         block'
+       *!/*/
+      decodeEnd(row) {
+          // For convenience, reverse the row and then
+          // search from 'the start' for the end block
+          row.reverse();
+          try {
+              let endStart = ITFReader.skipWhiteSpace(row);
+              let endPattern;
+              try {
+                  endPattern = ITFReader.findGuardPattern(row, endStart, ITFReader.END_PATTERN_REVERSED[0]);
+              }
+              catch (NotFoundException) {
+                  endPattern = ITFReader.findGuardPattern(row, endStart, ITFReader.END_PATTERN_REVERSED[1]);
+              }
+              // The start & end patterns must be pre/post fixed by a quiet zone. This
+              // zone must be at least 10 times the width of a narrow line.
+              // ref: http://www.barcode-1.net/i25code.html
+              this.validateQuietZone(row, endPattern[0]);
+              // Now recalculate the indices of where the 'endblock' starts & stops to
+              // accommodate
+              // the reversed nature of the search
+              let temp = endPattern[0];
+              endPattern[0] = row.getSize() - endPattern[1];
+              endPattern[1] = row.getSize() - temp;
+              return endPattern;
+          }
+          finally {
+              // Put the row back the right way.
+              row.reverse();
+          }
+      }
+      /*
+      /!**
+       * @param row       row of black/white values to search
+       * @param rowOffset position to start search
+       * @param pattern   pattern of counts of number of black and white pixels that are
+       *                  being searched for as a pattern
+       * @return start/end horizontal offset of guard pattern, as an array of two
+       *         ints
+       * @throws NotFoundException if pattern is not found
+       *!/*/
+      static findGuardPattern(row, rowOffset, pattern) {
+          let patternLength = pattern.length;
+          let counters = new Array(patternLength);
+          let width = row.getSize();
+          let isWhite = false;
+          let counterPosition = 0;
+          let patternStart = rowOffset;
+          counters.fill(0);
+          for (let x = rowOffset; x < width; x++) {
+              if (row.get(x) !== isWhite) {
+                  counters[counterPosition]++;
+              }
+              else {
+                  if (counterPosition === patternLength - 1) {
+                      if (OneDReader.patternMatchVariance(counters, pattern, ITFReader.MAX_INDIVIDUAL_VARIANCE) < ITFReader.MAX_AVG_VARIANCE) {
+                          return [patternStart, x];
+                      }
+                      patternStart += counters[0] + counters[1];
+                      System.arraycopy(counters, 2, counters, 0, counterPosition - 1);
+                      counters[counterPosition - 1] = 0;
+                      counters[counterPosition] = 0;
+                      counterPosition--;
+                  }
+                  else {
+                      counterPosition++;
+                  }
+                  counters[counterPosition] = 1;
+                  isWhite = !isWhite;
+              }
+          }
+          throw new NotFoundException();
+      }
+      /*/!**
+       * Attempts to decode a sequence of ITF black/white lines into single
+       * digit.
+       *
+       * @param counters the counts of runs of observed black/white/black/... values
+       * @return The decoded digit
+       * @throws NotFoundException if digit cannot be decoded
+       *!/*/
+      static decodeDigit(counters) {
+          let bestVariance = ITFReader.MAX_AVG_VARIANCE; // worst variance we'll accept
+          let bestMatch = -1;
+          let max = ITFReader.PATTERNS.length;
+          for (let i = 0; i < max; i++) {
+              let pattern = ITFReader.PATTERNS[i];
+              let variance = OneDReader.patternMatchVariance(counters, pattern, ITFReader.MAX_INDIVIDUAL_VARIANCE);
+              if (variance < bestVariance) {
+                  bestVariance = variance;
+                  bestMatch = i;
+              }
+              else if (variance === bestVariance) {
+                  // if we find a second 'best match' with the same variance, we can not reliably report to have a suitable match
+                  bestMatch = -1;
+              }
+          }
+          if (bestMatch >= 0) {
+              return bestMatch % 10;
+          }
+          else {
+              throw new NotFoundException();
+          }
+      }
+  }
+  ITFReader.W = 3; // Pixel width of a 3x wide line
+  ITFReader.w = 2; // Pixel width of a 2x wide line
+  ITFReader.N = 1; // Pixed width of a narrow line
+  ITFReader.PATTERNS = [
+      [1, 1, 2, 2, 1],
+      [2, 1, 1, 1, 2],
+      [1, 2, 1, 1, 2],
+      [2, 2, 1, 1, 1],
+      [1, 1, 2, 1, 2],
+      [2, 1, 2, 1, 1],
+      [1, 2, 2, 1, 1],
+      [1, 1, 1, 2, 2],
+      [2, 1, 1, 2, 1],
+      [1, 2, 1, 2, 1],
+      [1, 1, 3, 3, 1],
+      [3, 1, 1, 1, 3],
+      [1, 3, 1, 1, 3],
+      [3, 3, 1, 1, 1],
+      [1, 1, 3, 1, 3],
+      [3, 1, 3, 1, 1],
+      [1, 3, 3, 1, 1],
+      [1, 1, 1, 3, 3],
+      [3, 1, 1, 3, 1],
+      [1, 3, 1, 3, 1] // 9
+  ];
+  ITFReader.MAX_AVG_VARIANCE = 0.38;
+  ITFReader.MAX_INDIVIDUAL_VARIANCE = 0.5;
+  /* /!** Valid ITF lengths. Anything longer than the largest value is also allowed. *!/*/
+  ITFReader.DEFAULT_ALLOWED_LENGTHS = [6, 8, 10, 12, 14];
+  /*/!**
+   * Start/end guard pattern.
+   *
+   * Note: The end pattern is reversed because the row is reversed before
+   * searching for the END_PATTERN
+   *!/*/
+  ITFReader.START_PATTERN = [1, 1, 1, 1];
+  ITFReader.END_PATTERN_REVERSED = [
+      [1, 1, 2],
+      [1, 1, 3] // 3x
+  ];
+
+  /*
+   * Copyright 2008 ZXing authors
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *      http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  /**
+   * <p>Encapsulates functionality and implementation that is common to UPC and EAN families
+   * of one-dimensional barcodes.</p>
+   *
+   * @author dswitkin@google.com (Daniel Switkin)
+   * @author Sean Owen
+   * @author alasdair@google.com (Alasdair Mackintosh)
+   */
+  class AbstractUPCEANReader extends OneDReader {
+      constructor() {
+          super(...arguments);
+          this.decodeRowStringBuffer = '';
+      }
+      // private final UPCEANExtensionSupport extensionReader;
+      // private final EANManufacturerOrgSupport eanManSupport;
+      /*
+      protected UPCEANReader() {
+          decodeRowStringBuffer = new StringBuilder(20);
+          extensionReader = new UPCEANExtensionSupport();
+          eanManSupport = new EANManufacturerOrgSupport();
+      }
+      */
+      static findStartGuardPattern(row) {
+          let foundStart = false;
+          let startRange = null;
+          let nextStart = 0;
+          let counters = [0, 0, 0];
+          while (!foundStart) {
+              counters = [0, 0, 0];
+              startRange = AbstractUPCEANReader.findGuardPattern(row, nextStart, false, this.START_END_PATTERN, counters);
+              let start = startRange[0];
+              nextStart = startRange[1];
+              let quietStart = start - (nextStart - start);
+              if (quietStart >= 0) {
+                  foundStart = row.isRange(quietStart, start, false);
+              }
+          }
+          return startRange;
+      }
+      static checkChecksum(s) {
+          return AbstractUPCEANReader.checkStandardUPCEANChecksum(s);
+      }
+      static checkStandardUPCEANChecksum(s) {
+          let length = s.length;
+          if (length === 0)
+              return false;
+          let check = parseInt(s.charAt(length - 1), 10);
+          return AbstractUPCEANReader.getStandardUPCEANChecksum(s.substring(0, length - 1)) === check;
+      }
+      static getStandardUPCEANChecksum(s) {
+          let length = s.length;
+          let sum = 0;
+          for (let i = length - 1; i >= 0; i -= 2) {
+              let digit = s.charAt(i).charCodeAt(0) - '0'.charCodeAt(0);
+              if (digit < 0 || digit > 9) {
+                  throw new FormatException();
+              }
+              sum += digit;
+          }
+          sum *= 3;
+          for (let i = length - 2; i >= 0; i -= 2) {
+              let digit = s.charAt(i).charCodeAt(0) - '0'.charCodeAt(0);
+              if (digit < 0 || digit > 9) {
+                  throw new FormatException();
+              }
+              sum += digit;
+          }
+          return (1000 - sum) % 10;
+      }
+      static decodeEnd(row, endStart) {
+          return AbstractUPCEANReader.findGuardPattern(row, endStart, false, AbstractUPCEANReader.START_END_PATTERN, new Array(AbstractUPCEANReader.START_END_PATTERN.length).fill(0));
+      }
+      static findGuardPattern(row, rowOffset, whiteFirst, pattern, counters) {
+          let width = row.getSize();
+          rowOffset = whiteFirst ? row.getNextUnset(rowOffset) : row.getNextSet(rowOffset);
+          let counterPosition = 0;
+          let patternStart = rowOffset;
+          let patternLength = pattern.length;
+          let isWhite = whiteFirst;
+          for (let x = rowOffset; x < width; x++) {
+              if (row.get(x) !== isWhite) {
+                  counters[counterPosition]++;
+              }
+              else {
+                  if (counterPosition === patternLength - 1) {
+                      if (OneDReader.patternMatchVariance(counters, pattern, AbstractUPCEANReader.MAX_INDIVIDUAL_VARIANCE) < AbstractUPCEANReader.MAX_AVG_VARIANCE) {
+                          return [patternStart, x];
+                      }
+                      patternStart += counters[0] + counters[1];
+                      let slice = counters.slice(2, counters.length);
+                      for (let i = 0; i < counterPosition - 1; i++) {
+                          counters[i] = slice[i];
+                      }
+                      counters[counterPosition - 1] = 0;
+                      counters[counterPosition] = 0;
+                      counterPosition--;
+                  }
+                  else {
+                      counterPosition++;
+                  }
+                  counters[counterPosition] = 1;
+                  isWhite = !isWhite;
+              }
+          }
+          throw new NotFoundException();
+      }
+      static decodeDigit(row, counters, rowOffset, patterns) {
+          this.recordPattern(row, rowOffset, counters);
+          let bestVariance = this.MAX_AVG_VARIANCE;
+          let bestMatch = -1;
+          let max = patterns.length;
+          for (let i = 0; i < max; i++) {
+              let pattern = patterns[i];
+              let variance = OneDReader.patternMatchVariance(counters, pattern, AbstractUPCEANReader.MAX_INDIVIDUAL_VARIANCE);
+              if (variance < bestVariance) {
+                  bestVariance = variance;
+                  bestMatch = i;
+              }
+          }
+          if (bestMatch >= 0) {
+              return bestMatch;
+          }
+          else {
+              throw new NotFoundException();
+          }
+      }
+  }
+  // These two values are critical for determining how permissive the decoding will be.
+  // We've arrived at these values through a lot of trial and error. Setting them any higher
+  // lets false positives creep in quickly.
+  AbstractUPCEANReader.MAX_AVG_VARIANCE = 0.48;
+  AbstractUPCEANReader.MAX_INDIVIDUAL_VARIANCE = 0.7;
+  /**
+   * Start/end guard pattern.
+   */
+  AbstractUPCEANReader.START_END_PATTERN = [1, 1, 1];
+  /**
+   * Pattern marking the middle of a UPC/EAN pattern, separating the two halves.
+   */
+  AbstractUPCEANReader.MIDDLE_PATTERN = [1, 1, 1, 1, 1];
+  /**
+   * end guard pattern.
+   */
+  AbstractUPCEANReader.END_PATTERN = [1, 1, 1, 1, 1, 1];
+  /**
+   * "Odd", or "L" patterns used to encode UPC/EAN digits.
+   */
+  AbstractUPCEANReader.L_PATTERNS = [
+      [3, 2, 1, 1],
+      [2, 2, 2, 1],
+      [2, 1, 2, 2],
+      [1, 4, 1, 1],
+      [1, 1, 3, 2],
+      [1, 2, 3, 1],
+      [1, 1, 1, 4],
+      [1, 3, 1, 2],
+      [1, 2, 1, 3],
+      [3, 1, 1, 2],
+  ];
+
+  /*
+   * Copyright (C) 2010 ZXing authors
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *      http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  /**
+   * @see UPCEANExtension2Support
+   */
+  class UPCEANExtension5Support {
+      constructor() {
+          this.CHECK_DIGIT_ENCODINGS = [0x18, 0x14, 0x12, 0x11, 0x0C, 0x06, 0x03, 0x0A, 0x09, 0x05];
+          this.decodeMiddleCounters = [0, 0, 0, 0];
+          this.decodeRowStringBuffer = '';
+      }
+      decodeRow(rowNumber, row, extensionStartRange) {
+          let result = this.decodeRowStringBuffer;
+          let end = this.decodeMiddle(row, extensionStartRange, result);
+          let resultString = result.toString();
+          let extensionData = UPCEANExtension5Support.parseExtensionString(resultString);
+          let resultPoints = [
+              new ResultPoint((extensionStartRange[0] + extensionStartRange[1]) / 2.0, rowNumber),
+              new ResultPoint(end, rowNumber)
+          ];
+          let extensionResult = new Result(resultString, null, 0, resultPoints, BarcodeFormat$1.UPC_EAN_EXTENSION, new Date().getTime());
+          if (extensionData != null) {
+              extensionResult.putAllMetadata(extensionData);
+          }
+          return extensionResult;
+      }
+      decodeMiddle(row, startRange, resultString) {
+          let counters = this.decodeMiddleCounters;
+          counters[0] = 0;
+          counters[1] = 0;
+          counters[2] = 0;
+          counters[3] = 0;
+          let end = row.getSize();
+          let rowOffset = startRange[1];
+          let lgPatternFound = 0;
+          for (let x = 0; x < 5 && rowOffset < end; x++) {
+              let bestMatch = AbstractUPCEANReader.decodeDigit(row, counters, rowOffset, AbstractUPCEANReader.L_AND_G_PATTERNS);
+              resultString += String.fromCharCode(('0'.charCodeAt(0) + bestMatch % 10));
+              for (let counter of counters) {
+                  rowOffset += counter;
+              }
+              if (bestMatch >= 10) {
+                  lgPatternFound |= 1 << (4 - x);
+              }
+              if (x !== 4) {
+                  // Read off separator if not last
+                  rowOffset = row.getNextSet(rowOffset);
+                  rowOffset = row.getNextUnset(rowOffset);
+              }
+          }
+          if (resultString.length !== 5) {
+              throw new NotFoundException();
+          }
+          let checkDigit = this.determineCheckDigit(lgPatternFound);
+          if (UPCEANExtension5Support.extensionChecksum(resultString.toString()) !== checkDigit) {
+              throw new NotFoundException();
+          }
+          return rowOffset;
+      }
+      static extensionChecksum(s) {
+          let length = s.length;
+          let sum = 0;
+          for (let i = length - 2; i >= 0; i -= 2) {
+              sum += s.charAt(i).charCodeAt(0) - '0'.charCodeAt(0);
+          }
+          sum *= 3;
+          for (let i = length - 1; i >= 0; i -= 2) {
+              sum += s.charAt(i).charCodeAt(0) - '0'.charCodeAt(0);
+          }
+          sum *= 3;
+          return sum % 10;
+      }
+      determineCheckDigit(lgPatternFound) {
+          for (let d = 0; d < 10; d++) {
+              if (lgPatternFound === this.CHECK_DIGIT_ENCODINGS[d]) {
+                  return d;
+              }
+          }
+          throw new NotFoundException();
+      }
+      static parseExtensionString(raw) {
+          if (raw.length !== 5) {
+              return null;
+          }
+          let value = UPCEANExtension5Support.parseExtension5String(raw);
+          if (value == null) {
+              return null;
+          }
+          return new Map([[ResultMetadataType$1.SUGGESTED_PRICE, value]]);
+      }
+      static parseExtension5String(raw) {
+          let currency;
+          switch (raw.charAt(0)) {
+              case '0':
+                  currency = '£';
+                  break;
+              case '5':
+                  currency = '$';
+                  break;
+              case '9':
+                  // Reference: http://www.jollytech.com
+                  switch (raw) {
+                      case '90000':
+                          // No suggested retail price
+                          return null;
+                      case '99991':
+                          // Complementary
+                          return '0.00';
+                      case '99990':
+                          return 'Used';
+                  }
+                  // Otherwise... unknown currency?
+                  currency = '';
+                  break;
+              default:
+                  currency = '';
+                  break;
+          }
+          let rawAmount = parseInt(raw.substring(1));
+          let unitsString = (rawAmount / 100).toString();
+          let hundredths = rawAmount % 100;
+          let hundredthsString = hundredths < 10 ? '0' + hundredths : hundredths.toString(); // fixme
+          return currency + unitsString + '.' + hundredthsString;
+      }
+  }
+
+  /*
+   * Copyright (C) 2012 ZXing authors
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *      http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  /**
+   * @see UPCEANExtension5Support
+   */
+  class UPCEANExtension2Support {
+      constructor() {
+          this.decodeMiddleCounters = [0, 0, 0, 0];
+          this.decodeRowStringBuffer = '';
+      }
+      decodeRow(rowNumber, row, extensionStartRange) {
+          let result = this.decodeRowStringBuffer;
+          let end = this.decodeMiddle(row, extensionStartRange, result);
+          let resultString = result.toString();
+          let extensionData = UPCEANExtension2Support.parseExtensionString(resultString);
+          let resultPoints = [
+              new ResultPoint((extensionStartRange[0] + extensionStartRange[1]) / 2.0, rowNumber),
+              new ResultPoint(end, rowNumber)
+          ];
+          let extensionResult = new Result(resultString, null, 0, resultPoints, BarcodeFormat$1.UPC_EAN_EXTENSION, new Date().getTime());
+          if (extensionData != null) {
+              extensionResult.putAllMetadata(extensionData);
+          }
+          return extensionResult;
+      }
+      decodeMiddle(row, startRange, resultString) {
+          let counters = this.decodeMiddleCounters;
+          counters[0] = 0;
+          counters[1] = 0;
+          counters[2] = 0;
+          counters[3] = 0;
+          let end = row.getSize();
+          let rowOffset = startRange[1];
+          let checkParity = 0;
+          for (let x = 0; x < 2 && rowOffset < end; x++) {
+              let bestMatch = AbstractUPCEANReader.decodeDigit(row, counters, rowOffset, AbstractUPCEANReader.L_AND_G_PATTERNS);
+              resultString += String.fromCharCode(('0'.charCodeAt(0) + bestMatch % 10));
+              for (let counter of counters) {
+                  rowOffset += counter;
+              }
+              if (bestMatch >= 10) {
+                  checkParity |= 1 << (1 - x);
+              }
+              if (x !== 1) {
+                  // Read off separator if not last
+                  rowOffset = row.getNextSet(rowOffset);
+                  rowOffset = row.getNextUnset(rowOffset);
+              }
+          }
+          if (resultString.length !== 2) {
+              throw new NotFoundException();
+          }
+          if (parseInt(resultString.toString()) % 4 !== checkParity) {
+              throw new NotFoundException();
+          }
+          return rowOffset;
+      }
+      static parseExtensionString(raw) {
+          if (raw.length !== 2) {
+              return null;
+          }
+          return new Map([[ResultMetadataType$1.ISSUE_NUMBER, parseInt(raw)]]);
+      }
+  }
+
+  /*
+   * Copyright (C) 2010 ZXing authors
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *      http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  class UPCEANExtensionSupport {
+      static decodeRow(rowNumber, row, rowOffset) {
+          let extensionStartRange = AbstractUPCEANReader.findGuardPattern(row, rowOffset, false, this.EXTENSION_START_PATTERN, new Array(this.EXTENSION_START_PATTERN.length).fill(0));
+          try {
+              // return null;
+              let fiveSupport = new UPCEANExtension5Support();
+              return fiveSupport.decodeRow(rowNumber, row, extensionStartRange);
+          }
+          catch (err) {
+              // return null;
+              let twoSupport = new UPCEANExtension2Support();
+              return twoSupport.decodeRow(rowNumber, row, extensionStartRange);
+          }
+      }
+  }
+  UPCEANExtensionSupport.EXTENSION_START_PATTERN = [1, 1, 2];
+
+  /*
+   * Copyright 2008 ZXing authors
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *      http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  /**
+   * <p>Encapsulates functionality and implementation that is common to UPC and EAN families
+   * of one-dimensional barcodes.</p>
+   *
+   * @author dswitkin@google.com (Daniel Switkin)
+   * @author Sean Owen
+   * @author alasdair@google.com (Alasdair Mackintosh)
+   */
+  class UPCEANReader extends AbstractUPCEANReader {
+      constructor() {
+          super();
+          this.decodeRowStringBuffer = '';
+          UPCEANReader.L_AND_G_PATTERNS = UPCEANReader.L_PATTERNS.map(function (arr) {
+              return arr.slice();
+          });
+          for (let i = 10; i < 20; i++) {
+              let widths = UPCEANReader.L_PATTERNS[i - 10];
+              let reversedWidths = new Array(widths.length);
+              for (let j = 0; j < widths.length; j++) {
+                  reversedWidths[j] = widths[widths.length - j - 1];
+              }
+              UPCEANReader.L_AND_G_PATTERNS[i] = reversedWidths;
+          }
+      }
+      decodeRow(rowNumber, row, hints) {
+          let startGuardRange = UPCEANReader.findStartGuardPattern(row);
+          let resultPointCallback = hints == null ? null : hints.get(DecodeHintType$1.NEED_RESULT_POINT_CALLBACK);
+          if (resultPointCallback != null) {
+              const resultPoint = new ResultPoint((startGuardRange[0] + startGuardRange[1]) / 2.0, rowNumber);
+              resultPointCallback.foundPossibleResultPoint(resultPoint);
+          }
+          let budello = this.decodeMiddle(row, startGuardRange, this.decodeRowStringBuffer);
+          let endStart = budello.rowOffset;
+          let result = budello.resultString;
+          if (resultPointCallback != null) {
+              const resultPoint = new ResultPoint(endStart, rowNumber);
+              resultPointCallback.foundPossibleResultPoint(resultPoint);
+          }
+          let endRange = UPCEANReader.decodeEnd(row, endStart);
+          if (resultPointCallback != null) {
+              const resultPoint = new ResultPoint((endRange[0] + endRange[1]) / 2.0, rowNumber);
+              resultPointCallback.foundPossibleResultPoint(resultPoint);
+          }
+          // Make sure there is a quiet zone at least as big as the end pattern after the barcode. The
+          // spec might want more whitespace, but in practice this is the maximum we can count on.
+          let end = endRange[1];
+          let quietEnd = end + (end - endRange[0]);
+          if (quietEnd >= row.getSize() || !row.isRange(end, quietEnd, false)) {
+              throw new NotFoundException();
+          }
+          let resultString = result.toString();
+          // UPC/EAN should never be less than 8 chars anyway
+          if (resultString.length < 8) {
+              throw new FormatException();
+          }
+          if (!UPCEANReader.checkChecksum(resultString)) {
+              throw new ChecksumException();
+          }
+          let left = (startGuardRange[1] + startGuardRange[0]) / 2.0;
+          let right = (endRange[1] + endRange[0]) / 2.0;
+          let format = this.getBarcodeFormat();
+          let resultPoint = [new ResultPoint(left, rowNumber), new ResultPoint(right, rowNumber)];
+          let decodeResult = new Result(resultString, null, 0, resultPoint, format, new Date().getTime());
+          let extensionLength = 0;
+          try {
+              let extensionResult = UPCEANExtensionSupport.decodeRow(rowNumber, row, endRange[1]);
+              decodeResult.putMetadata(ResultMetadataType$1.UPC_EAN_EXTENSION, extensionResult.getText());
+              decodeResult.putAllMetadata(extensionResult.getResultMetadata());
+              decodeResult.addResultPoints(extensionResult.getResultPoints());
+              extensionLength = extensionResult.getText().length;
+          }
+          catch (err) {
+          }
+          let allowedExtensions = hints == null ? null : hints.get(DecodeHintType$1.ALLOWED_EAN_EXTENSIONS);
+          if (allowedExtensions != null) {
+              let valid = false;
+              for (let length in allowedExtensions) {
+                  if (extensionLength.toString() === length) { // check me
+                      valid = true;
+                      break;
+                  }
+              }
+              if (!valid) {
+                  throw new NotFoundException();
+              }
+          }
+          if (format === BarcodeFormat$1.EAN_13 || format === BarcodeFormat$1.UPC_A) ;
+          return decodeResult;
+      }
+      static checkChecksum(s) {
+          return UPCEANReader.checkStandardUPCEANChecksum(s);
+      }
+      static checkStandardUPCEANChecksum(s) {
+          let length = s.length;
+          if (length === 0)
+              return false;
+          let check = parseInt(s.charAt(length - 1), 10);
+          return UPCEANReader.getStandardUPCEANChecksum(s.substring(0, length - 1)) === check;
+      }
+      static getStandardUPCEANChecksum(s) {
+          let length = s.length;
+          let sum = 0;
+          for (let i = length - 1; i >= 0; i -= 2) {
+              let digit = s.charAt(i).charCodeAt(0) - '0'.charCodeAt(0);
+              if (digit < 0 || digit > 9) {
+                  throw new FormatException();
+              }
+              sum += digit;
+          }
+          sum *= 3;
+          for (let i = length - 2; i >= 0; i -= 2) {
+              let digit = s.charAt(i).charCodeAt(0) - '0'.charCodeAt(0);
+              if (digit < 0 || digit > 9) {
+                  throw new FormatException();
+              }
+              sum += digit;
+          }
+          return (1000 - sum) % 10;
+      }
+      static decodeEnd(row, endStart) {
+          return UPCEANReader.findGuardPattern(row, endStart, false, UPCEANReader.START_END_PATTERN, new Array(UPCEANReader.START_END_PATTERN.length).fill(0));
+      }
+  }
+
+  /*
+   * Copyright 2008 ZXing authors
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *      http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  /**
+   * <p>Implements decoding of the EAN-13 format.</p>
+   *
+   * @author dswitkin@google.com (Daniel Switkin)
+   * @author Sean Owen
+   * @author alasdair@google.com (Alasdair Mackintosh)
+   */
+  class EAN13Reader extends UPCEANReader {
+      constructor() {
+          super();
+          this.decodeMiddleCounters = [0, 0, 0, 0];
+      }
+      decodeMiddle(row, startRange, resultString) {
+          let counters = this.decodeMiddleCounters;
+          counters[0] = 0;
+          counters[1] = 0;
+          counters[2] = 0;
+          counters[3] = 0;
+          let end = row.getSize();
+          let rowOffset = startRange[1];
+          let lgPatternFound = 0;
+          for (let x = 0; x < 6 && rowOffset < end; x++) {
+              let bestMatch = UPCEANReader.decodeDigit(row, counters, rowOffset, UPCEANReader.L_AND_G_PATTERNS);
+              resultString += String.fromCharCode(('0'.charCodeAt(0) + bestMatch % 10));
+              for (let counter of counters) {
+                  rowOffset += counter;
+              }
+              if (bestMatch >= 10) {
+                  lgPatternFound |= 1 << (5 - x);
+              }
+          }
+          resultString = EAN13Reader.determineFirstDigit(resultString, lgPatternFound);
+          let middleRange = UPCEANReader.findGuardPattern(row, rowOffset, true, UPCEANReader.MIDDLE_PATTERN, new Array(UPCEANReader.MIDDLE_PATTERN.length).fill(0));
+          rowOffset = middleRange[1];
+          for (let x = 0; x < 6 && rowOffset < end; x++) {
+              let bestMatch = UPCEANReader.decodeDigit(row, counters, rowOffset, UPCEANReader.L_PATTERNS);
+              resultString += String.fromCharCode(('0'.charCodeAt(0) + bestMatch));
+              for (let counter of counters) {
+                  rowOffset += counter;
+              }
+          }
+          return { rowOffset, resultString };
+      }
+      getBarcodeFormat() {
+          return BarcodeFormat$1.EAN_13;
+      }
+      static determineFirstDigit(resultString, lgPatternFound) {
+          for (let d = 0; d < 10; d++) {
+              if (lgPatternFound === this.FIRST_DIGIT_ENCODINGS[d]) {
+                  resultString = String.fromCharCode(('0'.charCodeAt(0) + d)) + resultString;
+                  return resultString;
+              }
+          }
+          throw new NotFoundException();
+      }
+  }
+  EAN13Reader.FIRST_DIGIT_ENCODINGS = [0x00, 0x0B, 0x0D, 0xE, 0x13, 0x19, 0x1C, 0x15, 0x16, 0x1A];
+
+  /*
+   * Copyright 2008 ZXing authors
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *      http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  /**
+   * <p>Implements decoding of the EAN-8 format.</p>
+   *
+   * @author Sean Owen
+   */
+  class EAN8Reader extends UPCEANReader {
+      constructor() {
+          super();
+          this.decodeMiddleCounters = [0, 0, 0, 0];
+      }
+      decodeMiddle(row, startRange, resultString) {
+          let counters = this.decodeMiddleCounters;
+          counters[0] = 0;
+          counters[1] = 0;
+          counters[2] = 0;
+          counters[3] = 0;
+          let end = row.getSize();
+          let rowOffset = startRange[1];
+          for (let x = 0; x < 4 && rowOffset < end; x++) {
+              let bestMatch = UPCEANReader.decodeDigit(row, counters, rowOffset, UPCEANReader.L_PATTERNS);
+              resultString += String.fromCharCode(('0'.charCodeAt(0) + bestMatch));
+              for (let counter of counters) {
+                  rowOffset += counter;
+              }
+          }
+          let middleRange = UPCEANReader.findGuardPattern(row, rowOffset, true, UPCEANReader.MIDDLE_PATTERN, new Array(UPCEANReader.MIDDLE_PATTERN.length).fill(0));
+          rowOffset = middleRange[1];
+          for (let x = 0; x < 4 && rowOffset < end; x++) {
+              let bestMatch = UPCEANReader.decodeDigit(row, counters, rowOffset, UPCEANReader.L_PATTERNS);
+              resultString += String.fromCharCode(('0'.charCodeAt(0) + bestMatch));
+              for (let counter of counters) {
+                  rowOffset += counter;
+              }
+          }
+          return { rowOffset, resultString };
+      }
+      getBarcodeFormat() {
+          return BarcodeFormat$1.EAN_8;
+      }
+  }
+
+  /*
+   * Copyright 2008 ZXing authors
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *      http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  /**
+   * <p>A reader that can read all available UPC/EAN formats. If a caller wants to try to
+   * read all such formats, it is most efficient to use this implementation rather than invoke
+   * individual readers.</p>
+   *
+   * @author Sean Owen
+   */
+  class MultiFormatUPCEANReader extends OneDReader {
+      constructor(hints) {
+          super();
+          let possibleFormats = hints == null ? null : hints.get(DecodeHintType$1.POSSIBLE_FORMATS);
+          let readers = [];
+          if (possibleFormats != null) {
+              if (possibleFormats.indexOf(BarcodeFormat$1.EAN_13) > -1) {
+                  readers.push(new EAN13Reader());
+              }
+              if (possibleFormats.indexOf(BarcodeFormat$1.EAN_8) > -1) {
+                  readers.push(new EAN8Reader());
+              }
+              // todo add UPC_A, UPC_E
+          }
+          if (readers.length === 0) {
+              readers.push(new EAN13Reader());
+              readers.push(new EAN8Reader());
+              // todo add UPC_A, UPC_E
+          }
+          this.readers = readers;
+      }
+      decodeRow(rowNumber, row, hints) {
+          for (let reader of this.readers) {
+              try {
+                  return reader.decodeRow(rowNumber, row, hints);
+                  // TODO ean13MayBeUPCA
+              }
+              catch (err) {
+                  // continue;
+              }
+          }
+          throw new NotFoundException();
+      }
+      reset() {
+          for (let reader of this.readers) {
+              reader.reset();
+          }
+      }
+  }
 
   /*
    * Copyright 2008 ZXing authors
@@ -11332,11 +9209,15 @@
           const useCode39CheckDigit = hints && hints.get(DecodeHintType$1.ASSUME_CODE_39_CHECK_DIGIT) !== undefined;
           if (possibleFormats) {
               if (possibleFormats.includes(BarcodeFormat$1.EAN_13) ||
-                  possibleFormats.includes(BarcodeFormat$1.UPC_A) ||
-                  possibleFormats.includes(BarcodeFormat$1.EAN_8) ||
-                  possibleFormats.includes(BarcodeFormat$1.UPC_E)) {
+                  possibleFormats.includes(BarcodeFormat$1.EAN_8)) {
                   this.readers.push(new MultiFormatUPCEANReader(hints));
               }
+              // if (possibleFormats.includes(BarcodeFormat.EAN_13) ||
+              //     possibleFormats.includes(BarcodeFormat.UPC_A) ||
+              //     possibleFormats.includes(BarcodeFormat.EAN_8) ||
+              //     possibleFormats.includes(BarcodeFormat.UPC_E)) {
+              //   readers.push(new MultiFormatUPCEANReader(hints));
+              // }
               if (possibleFormats.includes(BarcodeFormat$1.CODE_39)) {
                   this.readers.push(new Code39Reader(useCode39CheckDigit));
               }
@@ -11355,12 +9236,12 @@
               if (possibleFormats.includes(BarcodeFormat$1.RSS_14)) {
                   this.readers.push(new RSS14Reader());
               }
-              if (possibleFormats.includes(BarcodeFormat$1.RSS_EXPANDED)) {
-                  this.readers.push(new RSSExpandedReader());
-              }
+              // if (possibleFormats.includes(BarcodeFormat.RSS_EXPANDED)) {
+              //   this.readers.push(new RSSExpandedReader());
+              // }
           }
           if (this.readers.length === 0) {
-              this.readers.push(new MultiFormatUPCEANReader(hints));
+              // this.readers.push(new MultiFormatUPCEANReader(hints));
               this.readers.push(new Code39Reader());
               // this.readers.push(new CodaBarReader());
               // this.readers.push(new Code93Reader());
@@ -11368,7 +9249,7 @@
               this.readers.push(new Code128Reader());
               this.readers.push(new ITFReader());
               this.readers.push(new RSS14Reader());
-              this.readers.push(new RSSExpandedReader());
+              // this.readers.push(new RSSExpandedReader());
           }
       }
       // @Override
@@ -12744,7 +10625,7 @@
        * @throws ChecksumException if error correction fails
        */
       correctErrors(codewordBytes, numDataCodewords) {
-          // const numCodewords = codewordBytes.length;
+          const numCodewords = codewordBytes.length;
           // First read into an array of ints
           const codewordsInts = new Int32Array(codewordBytes);
           // for (let i = 0; i < numCodewords; i++) {
@@ -13984,6 +11865,53 @@
   }
 
   /*
+   * Copyright 2013 ZXing authors
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *      http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  /**
+   * Meta-data container for QR Code decoding. Instances of this class may be used to convey information back to the
+   * decoding caller. Callers are expected to process this.
+   *
+   * @see com.google.zxing.common.DecoderResult#getOther()
+   */
+  class QRCodeDecoderMetaData {
+      constructor(mirrored) {
+          this.mirrored = mirrored;
+      }
+      /**
+       * @return true if the QR Code was mirrored.
+       */
+      isMirrored() {
+          return this.mirrored;
+      }
+      /**
+       * Apply the result points' order correction due to mirroring.
+       *
+       * @param points Array of points to apply mirror correction to.
+       */
+      applyMirroredCorrection(points) {
+          if (!this.mirrored || points === null || points.length < 3) {
+              return;
+          }
+          const bottomLeft = points[0];
+          points[0] = points[2];
+          points[2] = bottomLeft;
+          // No need to 'fix' top-left and alignment pattern.
+      }
+  }
+
+  /*
    * Copyright 2007 ZXing authors
    *
    * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14515,61 +12443,6 @@
    */
   DecodedBitStreamParser$1.ALPHANUMERIC_CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:';
   DecodedBitStreamParser$1.GB2312_SUBSET = 1;
-  // function Uint8ArrayToString(a: Uint8Array): string {
-  //     const CHUNK_SZ = 0x8000;
-  //     const c = new StringBuilder();
-  //     for (let i = 0, length = a.length; i < length; i += CHUNK_SZ) {
-  //         c.append(String.fromCharCode.apply(null, a.subarray(i, i + CHUNK_SZ)));
-  //     }
-  //     return c.toString();
-  // }
-
-  /*
-   * Copyright 2013 ZXing authors
-   *
-   * Licensed under the Apache License, Version 2.0 (the "License");
-   * you may not use this file except in compliance with the License.
-   * You may obtain a copy of the License at
-   *
-   *      http://www.apache.org/licenses/LICENSE-2.0
-   *
-   * Unless required by applicable law or agreed to in writing, software
-   * distributed under the License is distributed on an "AS IS" BASIS,
-   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   * See the License for the specific language governing permissions and
-   * limitations under the License.
-   */
-  /**
-   * Meta-data container for QR Code decoding. Instances of this class may be used to convey information back to the
-   * decoding caller. Callers are expected to process this.
-   *
-   * @see com.google.zxing.common.DecoderResult#getOther()
-   */
-  class QRCodeDecoderMetaData {
-      constructor(mirrored) {
-          this.mirrored = mirrored;
-      }
-      /**
-       * @return true if the QR Code was mirrored.
-       */
-      isMirrored() {
-          return this.mirrored;
-      }
-      /**
-       * Apply the result points' order correction due to mirroring.
-       *
-       * @param points Array of points to apply mirror correction to.
-       */
-      applyMirroredCorrection(points) {
-          if (!this.mirrored || points === null || points.length < 3) {
-              return;
-          }
-          const bottomLeft = points[0];
-          points[0] = points[2];
-          points[2] = bottomLeft;
-          // No need to 'fix' top-left and alignment pattern.
-      }
-  }
 
   /*
    * Copyright 2007 ZXing authors
@@ -14700,7 +12573,7 @@
        * @throws ChecksumException if error correction fails
        */
       correctErrors(codewordBytes, numDataCodewords /*int*/) {
-          // const numCodewords = codewordBytes.length;
+          const numCodewords = codewordBytes.length;
           // First read into an array of ints
           const codewordsInts = new Int32Array(codewordBytes);
           // TYPESCRIPTPORT: not realy necessary to transform to ints? could redesign everything to work with unsigned bytes?
@@ -14719,299 +12592,6 @@
           for (let i = 0; i < numDataCodewords; i++) {
               codewordBytes[i] = /*(byte) */ codewordsInts[i];
           }
-      }
-  }
-
-  /*
-   * Copyright 2007 ZXing authors
-   *
-   * Licensed under the Apache License, Version 2.0 (the "License");
-   * you may not use this file except in compliance with the License.
-   * You may obtain a copy of the License at
-   *
-   *      http://www.apache.org/licenses/LICENSE-2.0
-   *
-   * Unless required by applicable law or agreed to in writing, software
-   * distributed under the License is distributed on an "AS IS" BASIS,
-   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   * See the License for the specific language governing permissions and
-   * limitations under the License.
-   */
-  /**
-   * <p>Encapsulates an alignment pattern, which are the smaller square patterns found in
-   * all but the simplest QR Codes.</p>
-   *
-   * @author Sean Owen
-   */
-  class AlignmentPattern extends ResultPoint {
-      constructor(posX /*float*/, posY /*float*/, estimatedModuleSize /*float*/) {
-          super(posX, posY);
-          this.estimatedModuleSize = estimatedModuleSize;
-      }
-      /**
-       * <p>Determines if this alignment pattern "about equals" an alignment pattern at the stated
-       * position and size -- meaning, it is at nearly the same center with nearly the same size.</p>
-       */
-      aboutEquals(moduleSize /*float*/, i /*float*/, j /*float*/) {
-          if (Math.abs(i - this.getY()) <= moduleSize && Math.abs(j - this.getX()) <= moduleSize) {
-              const moduleSizeDiff = Math.abs(moduleSize - this.estimatedModuleSize);
-              return moduleSizeDiff <= 1.0 || moduleSizeDiff <= this.estimatedModuleSize;
-          }
-          return false;
-      }
-      /**
-       * Combines this object's current estimate of a finder pattern position and module size
-       * with a new estimate. It returns a new {@code FinderPattern} containing an average of the two.
-       */
-      combineEstimate(i /*float*/, j /*float*/, newModuleSize /*float*/) {
-          const combinedX = (this.getX() + j) / 2.0;
-          const combinedY = (this.getY() + i) / 2.0;
-          const combinedModuleSize = (this.estimatedModuleSize + newModuleSize) / 2.0;
-          return new AlignmentPattern(combinedX, combinedY, combinedModuleSize);
-      }
-  }
-
-  /*
-   * Copyright 2007 ZXing authors
-   *
-   * Licensed under the Apache License, Version 2.0 (the "License");
-   * you may not use this file except in compliance with the License.
-   * You may obtain a copy of the License at
-   *
-   *      http://www.apache.org/licenses/LICENSE-2.0
-   *
-   * Unless required by applicable law or agreed to in writing, software
-   * distributed under the License is distributed on an "AS IS" BASIS,
-   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   * See the License for the specific language governing permissions and
-   * limitations under the License.
-   */
-  /*import java.util.ArrayList;*/
-  /*import java.util.List;*/
-  /**
-   * <p>This class attempts to find alignment patterns in a QR Code. Alignment patterns look like finder
-   * patterns but are smaller and appear at regular intervals throughout the image.</p>
-   *
-   * <p>At the moment this only looks for the bottom-right alignment pattern.</p>
-   *
-   * <p>This is mostly a simplified copy of {@link FinderPatternFinder}. It is copied,
-   * pasted and stripped down here for maximum performance but does unfortunately duplicate
-   * some code.</p>
-   *
-   * <p>This class is thread-safe but not reentrant. Each thread must allocate its own object.</p>
-   *
-   * @author Sean Owen
-   */
-  class AlignmentPatternFinder {
-      /**
-       * <p>Creates a finder that will look in a portion of the whole image.</p>
-       *
-       * @param image image to search
-       * @param startX left column from which to start searching
-       * @param startY top row from which to start searching
-       * @param width width of region to search
-       * @param height height of region to search
-       * @param moduleSize estimated module size so far
-       */
-      constructor(image, startX /*int*/, startY /*int*/, width /*int*/, height /*int*/, moduleSize /*float*/, resultPointCallback) {
-          this.image = image;
-          this.startX = startX;
-          this.startY = startY;
-          this.width = width;
-          this.height = height;
-          this.moduleSize = moduleSize;
-          this.resultPointCallback = resultPointCallback;
-          this.possibleCenters = []; // new Array<any>(5))
-          // TYPESCRIPTPORT: array initialization without size as the length is checked below
-          this.crossCheckStateCount = new Int32Array(3);
-      }
-      /**
-       * <p>This method attempts to find the bottom-right alignment pattern in the image. It is a bit messy since
-       * it's pretty performance-critical and so is written to be fast foremost.</p>
-       *
-       * @return {@link AlignmentPattern} if found
-       * @throws NotFoundException if not found
-       */
-      find() {
-          const startX = this.startX;
-          const height = this.height;
-          const width = this.width;
-          const maxJ = startX + width;
-          const middleI = this.startY + (height / 2);
-          // We are looking for black/white/black modules in 1:1:1 ratio
-          // this tracks the number of black/white/black modules seen so far
-          const stateCount = new Int32Array(3);
-          const image = this.image;
-          for (let iGen = 0; iGen < height; iGen++) {
-              // Search from middle outwards
-              const i = middleI + ((iGen & 0x01) === 0 ? Math.floor((iGen + 1) / 2) : -Math.floor((iGen + 1) / 2));
-              stateCount[0] = 0;
-              stateCount[1] = 0;
-              stateCount[2] = 0;
-              let j = startX;
-              // Burn off leading white pixels before anything else; if we start in the middle of
-              // a white run, it doesn't make sense to count its length, since we don't know if the
-              // white run continued to the left of the start point
-              while (j < maxJ && !image.get(j, i)) {
-                  j++;
-              }
-              let currentState = 0;
-              while (j < maxJ) {
-                  if (image.get(j, i)) {
-                      // Black pixel
-                      if (currentState === 1) { // Counting black pixels
-                          stateCount[1]++;
-                      }
-                      else { // Counting white pixels
-                          if (currentState === 2) { // A winner?
-                              if (this.foundPatternCross(stateCount)) { // Yes
-                                  const confirmed = this.handlePossibleCenter(stateCount, i, j);
-                                  if (confirmed !== null) {
-                                      return confirmed;
-                                  }
-                              }
-                              stateCount[0] = stateCount[2];
-                              stateCount[1] = 1;
-                              stateCount[2] = 0;
-                              currentState = 1;
-                          }
-                          else {
-                              stateCount[++currentState]++;
-                          }
-                      }
-                  }
-                  else { // White pixel
-                      if (currentState === 1) { // Counting black pixels
-                          currentState++;
-                      }
-                      stateCount[currentState]++;
-                  }
-                  j++;
-              }
-              if (this.foundPatternCross(stateCount)) {
-                  const confirmed = this.handlePossibleCenter(stateCount, i, maxJ);
-                  if (confirmed !== null) {
-                      return confirmed;
-                  }
-              }
-          }
-          // Hmm, nothing we saw was observed and confirmed twice. If we had
-          // any guess at all, return it.
-          if (this.possibleCenters.length !== 0) {
-              return this.possibleCenters[0];
-          }
-          throw new NotFoundException();
-      }
-      /**
-       * Given a count of black/white/black pixels just seen and an end position,
-       * figures the location of the center of this black/white/black run.
-       */
-      static centerFromEnd(stateCount, end /*int*/) {
-          return (end - stateCount[2]) - stateCount[1] / 2.0;
-      }
-      /**
-       * @param stateCount count of black/white/black pixels just read
-       * @return true iff the proportions of the counts is close enough to the 1/1/1 ratios
-       *         used by alignment patterns to be considered a match
-       */
-      foundPatternCross(stateCount) {
-          const moduleSize = this.moduleSize;
-          const maxVariance = moduleSize / 2.0;
-          for (let i = 0; i < 3; i++) {
-              if (Math.abs(moduleSize - stateCount[i]) >= maxVariance) {
-                  return false;
-              }
-          }
-          return true;
-      }
-      /**
-       * <p>After a horizontal scan finds a potential alignment pattern, this method
-       * "cross-checks" by scanning down vertically through the center of the possible
-       * alignment pattern to see if the same proportion is detected.</p>
-       *
-       * @param startI row where an alignment pattern was detected
-       * @param centerJ center of the section that appears to cross an alignment pattern
-       * @param maxCount maximum reasonable number of modules that should be
-       * observed in any reading state, based on the results of the horizontal scan
-       * @return vertical center of alignment pattern, or {@link Float#NaN} if not found
-       */
-      crossCheckVertical(startI /*int*/, centerJ /*int*/, maxCount /*int*/, originalStateCountTotal /*int*/) {
-          const image = this.image;
-          const maxI = image.getHeight();
-          const stateCount = this.crossCheckStateCount;
-          stateCount[0] = 0;
-          stateCount[1] = 0;
-          stateCount[2] = 0;
-          // Start counting up from center
-          let i = startI;
-          while (i >= 0 && image.get(centerJ, i) && stateCount[1] <= maxCount) {
-              stateCount[1]++;
-              i--;
-          }
-          // If already too many modules in this state or ran off the edge:
-          if (i < 0 || stateCount[1] > maxCount) {
-              return NaN;
-          }
-          while (i >= 0 && !image.get(centerJ, i) && stateCount[0] <= maxCount) {
-              stateCount[0]++;
-              i--;
-          }
-          if (stateCount[0] > maxCount) {
-              return NaN;
-          }
-          // Now also count down from center
-          i = startI + 1;
-          while (i < maxI && image.get(centerJ, i) && stateCount[1] <= maxCount) {
-              stateCount[1]++;
-              i++;
-          }
-          if (i === maxI || stateCount[1] > maxCount) {
-              return NaN;
-          }
-          while (i < maxI && !image.get(centerJ, i) && stateCount[2] <= maxCount) {
-              stateCount[2]++;
-              i++;
-          }
-          if (stateCount[2] > maxCount) {
-              return NaN;
-          }
-          const stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2];
-          if (5 * Math.abs(stateCountTotal - originalStateCountTotal) >= 2 * originalStateCountTotal) {
-              return NaN;
-          }
-          return this.foundPatternCross(stateCount) ? AlignmentPatternFinder.centerFromEnd(stateCount, i) : NaN;
-      }
-      /**
-       * <p>This is called when a horizontal scan finds a possible alignment pattern. It will
-       * cross check with a vertical scan, and if successful, will see if this pattern had been
-       * found on a previous horizontal scan. If so, we consider it confirmed and conclude we have
-       * found the alignment pattern.</p>
-       *
-       * @param stateCount reading state module counts from horizontal scan
-       * @param i row where alignment pattern may be found
-       * @param j end of possible alignment pattern in row
-       * @return {@link AlignmentPattern} if we have found the same pattern twice, or null if not
-       */
-      handlePossibleCenter(stateCount, i /*int*/, j /*int*/) {
-          const stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2];
-          const centerJ = AlignmentPatternFinder.centerFromEnd(stateCount, j);
-          const centerI = this.crossCheckVertical(i, /*(int) */ centerJ, 2 * stateCount[1], stateCountTotal);
-          if (!isNaN(centerI)) {
-              const estimatedModuleSize = (stateCount[0] + stateCount[1] + stateCount[2]) / 3.0;
-              for (const center of this.possibleCenters) {
-                  // Look for about the same center and module size:
-                  if (center.aboutEquals(estimatedModuleSize, centerI, centerJ)) {
-                      return center.combineEstimate(centerI, centerJ, estimatedModuleSize);
-                  }
-              }
-              // Hadn't found this before; save it
-              const point = new AlignmentPattern(centerJ, centerI, estimatedModuleSize);
-              this.possibleCenters.push(point);
-              if (this.resultPointCallback !== null && this.resultPointCallback !== undefined) {
-                  this.resultPointCallback.foundPossibleResultPoint(point);
-              }
-          }
-          return null;
       }
   }
 
@@ -15728,6 +13308,299 @@
   FinderPatternFinder.CENTER_QUORUM = 2;
   FinderPatternFinder.MIN_SKIP = 3; // 1 pixel/module times 3 modules/center
   FinderPatternFinder.MAX_MODULES = 57; // support up to version 10 for mobile clients
+
+  /*
+   * Copyright 2007 ZXing authors
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *      http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  /**
+   * <p>Encapsulates an alignment pattern, which are the smaller square patterns found in
+   * all but the simplest QR Codes.</p>
+   *
+   * @author Sean Owen
+   */
+  class AlignmentPattern extends ResultPoint {
+      constructor(posX /*float*/, posY /*float*/, estimatedModuleSize /*float*/) {
+          super(posX, posY);
+          this.estimatedModuleSize = estimatedModuleSize;
+      }
+      /**
+       * <p>Determines if this alignment pattern "about equals" an alignment pattern at the stated
+       * position and size -- meaning, it is at nearly the same center with nearly the same size.</p>
+       */
+      aboutEquals(moduleSize /*float*/, i /*float*/, j /*float*/) {
+          if (Math.abs(i - this.getY()) <= moduleSize && Math.abs(j - this.getX()) <= moduleSize) {
+              const moduleSizeDiff = Math.abs(moduleSize - this.estimatedModuleSize);
+              return moduleSizeDiff <= 1.0 || moduleSizeDiff <= this.estimatedModuleSize;
+          }
+          return false;
+      }
+      /**
+       * Combines this object's current estimate of a finder pattern position and module size
+       * with a new estimate. It returns a new {@code FinderPattern} containing an average of the two.
+       */
+      combineEstimate(i /*float*/, j /*float*/, newModuleSize /*float*/) {
+          const combinedX = (this.getX() + j) / 2.0;
+          const combinedY = (this.getY() + i) / 2.0;
+          const combinedModuleSize = (this.estimatedModuleSize + newModuleSize) / 2.0;
+          return new AlignmentPattern(combinedX, combinedY, combinedModuleSize);
+      }
+  }
+
+  /*
+   * Copyright 2007 ZXing authors
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *      http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  /*import java.util.ArrayList;*/
+  /*import java.util.List;*/
+  /**
+   * <p>This class attempts to find alignment patterns in a QR Code. Alignment patterns look like finder
+   * patterns but are smaller and appear at regular intervals throughout the image.</p>
+   *
+   * <p>At the moment this only looks for the bottom-right alignment pattern.</p>
+   *
+   * <p>This is mostly a simplified copy of {@link FinderPatternFinder}. It is copied,
+   * pasted and stripped down here for maximum performance but does unfortunately duplicate
+   * some code.</p>
+   *
+   * <p>This class is thread-safe but not reentrant. Each thread must allocate its own object.</p>
+   *
+   * @author Sean Owen
+   */
+  class AlignmentPatternFinder {
+      /**
+       * <p>Creates a finder that will look in a portion of the whole image.</p>
+       *
+       * @param image image to search
+       * @param startX left column from which to start searching
+       * @param startY top row from which to start searching
+       * @param width width of region to search
+       * @param height height of region to search
+       * @param moduleSize estimated module size so far
+       */
+      constructor(image, startX /*int*/, startY /*int*/, width /*int*/, height /*int*/, moduleSize /*float*/, resultPointCallback) {
+          this.image = image;
+          this.startX = startX;
+          this.startY = startY;
+          this.width = width;
+          this.height = height;
+          this.moduleSize = moduleSize;
+          this.resultPointCallback = resultPointCallback;
+          this.possibleCenters = []; // new Array<any>(5))
+          // TYPESCRIPTPORT: array initialization without size as the length is checked below
+          this.crossCheckStateCount = new Int32Array(3);
+      }
+      /**
+       * <p>This method attempts to find the bottom-right alignment pattern in the image. It is a bit messy since
+       * it's pretty performance-critical and so is written to be fast foremost.</p>
+       *
+       * @return {@link AlignmentPattern} if found
+       * @throws NotFoundException if not found
+       */
+      find() {
+          const startX = this.startX;
+          const height = this.height;
+          const width = this.width;
+          const maxJ = startX + width;
+          const middleI = this.startY + (height / 2);
+          // We are looking for black/white/black modules in 1:1:1 ratio
+          // this tracks the number of black/white/black modules seen so far
+          const stateCount = new Int32Array(3);
+          const image = this.image;
+          for (let iGen = 0; iGen < height; iGen++) {
+              // Search from middle outwards
+              const i = middleI + ((iGen & 0x01) === 0 ? Math.floor((iGen + 1) / 2) : -Math.floor((iGen + 1) / 2));
+              stateCount[0] = 0;
+              stateCount[1] = 0;
+              stateCount[2] = 0;
+              let j = startX;
+              // Burn off leading white pixels before anything else; if we start in the middle of
+              // a white run, it doesn't make sense to count its length, since we don't know if the
+              // white run continued to the left of the start point
+              while (j < maxJ && !image.get(j, i)) {
+                  j++;
+              }
+              let currentState = 0;
+              while (j < maxJ) {
+                  if (image.get(j, i)) {
+                      // Black pixel
+                      if (currentState === 1) { // Counting black pixels
+                          stateCount[1]++;
+                      }
+                      else { // Counting white pixels
+                          if (currentState === 2) { // A winner?
+                              if (this.foundPatternCross(stateCount)) { // Yes
+                                  const confirmed = this.handlePossibleCenter(stateCount, i, j);
+                                  if (confirmed !== null) {
+                                      return confirmed;
+                                  }
+                              }
+                              stateCount[0] = stateCount[2];
+                              stateCount[1] = 1;
+                              stateCount[2] = 0;
+                              currentState = 1;
+                          }
+                          else {
+                              stateCount[++currentState]++;
+                          }
+                      }
+                  }
+                  else { // White pixel
+                      if (currentState === 1) { // Counting black pixels
+                          currentState++;
+                      }
+                      stateCount[currentState]++;
+                  }
+                  j++;
+              }
+              if (this.foundPatternCross(stateCount)) {
+                  const confirmed = this.handlePossibleCenter(stateCount, i, maxJ);
+                  if (confirmed !== null) {
+                      return confirmed;
+                  }
+              }
+          }
+          // Hmm, nothing we saw was observed and confirmed twice. If we had
+          // any guess at all, return it.
+          if (this.possibleCenters.length !== 0) {
+              return this.possibleCenters[0];
+          }
+          throw new NotFoundException();
+      }
+      /**
+       * Given a count of black/white/black pixels just seen and an end position,
+       * figures the location of the center of this black/white/black run.
+       */
+      static centerFromEnd(stateCount, end /*int*/) {
+          return (end - stateCount[2]) - stateCount[1] / 2.0;
+      }
+      /**
+       * @param stateCount count of black/white/black pixels just read
+       * @return true iff the proportions of the counts is close enough to the 1/1/1 ratios
+       *         used by alignment patterns to be considered a match
+       */
+      foundPatternCross(stateCount) {
+          const moduleSize = this.moduleSize;
+          const maxVariance = moduleSize / 2.0;
+          for (let i = 0; i < 3; i++) {
+              if (Math.abs(moduleSize - stateCount[i]) >= maxVariance) {
+                  return false;
+              }
+          }
+          return true;
+      }
+      /**
+       * <p>After a horizontal scan finds a potential alignment pattern, this method
+       * "cross-checks" by scanning down vertically through the center of the possible
+       * alignment pattern to see if the same proportion is detected.</p>
+       *
+       * @param startI row where an alignment pattern was detected
+       * @param centerJ center of the section that appears to cross an alignment pattern
+       * @param maxCount maximum reasonable number of modules that should be
+       * observed in any reading state, based on the results of the horizontal scan
+       * @return vertical center of alignment pattern, or {@link Float#NaN} if not found
+       */
+      crossCheckVertical(startI /*int*/, centerJ /*int*/, maxCount /*int*/, originalStateCountTotal /*int*/) {
+          const image = this.image;
+          const maxI = image.getHeight();
+          const stateCount = this.crossCheckStateCount;
+          stateCount[0] = 0;
+          stateCount[1] = 0;
+          stateCount[2] = 0;
+          // Start counting up from center
+          let i = startI;
+          while (i >= 0 && image.get(centerJ, i) && stateCount[1] <= maxCount) {
+              stateCount[1]++;
+              i--;
+          }
+          // If already too many modules in this state or ran off the edge:
+          if (i < 0 || stateCount[1] > maxCount) {
+              return NaN;
+          }
+          while (i >= 0 && !image.get(centerJ, i) && stateCount[0] <= maxCount) {
+              stateCount[0]++;
+              i--;
+          }
+          if (stateCount[0] > maxCount) {
+              return NaN;
+          }
+          // Now also count down from center
+          i = startI + 1;
+          while (i < maxI && image.get(centerJ, i) && stateCount[1] <= maxCount) {
+              stateCount[1]++;
+              i++;
+          }
+          if (i === maxI || stateCount[1] > maxCount) {
+              return NaN;
+          }
+          while (i < maxI && !image.get(centerJ, i) && stateCount[2] <= maxCount) {
+              stateCount[2]++;
+              i++;
+          }
+          if (stateCount[2] > maxCount) {
+              return NaN;
+          }
+          const stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2];
+          if (5 * Math.abs(stateCountTotal - originalStateCountTotal) >= 2 * originalStateCountTotal) {
+              return NaN;
+          }
+          return this.foundPatternCross(stateCount) ? AlignmentPatternFinder.centerFromEnd(stateCount, i) : NaN;
+      }
+      /**
+       * <p>This is called when a horizontal scan finds a possible alignment pattern. It will
+       * cross check with a vertical scan, and if successful, will see if this pattern had been
+       * found on a previous horizontal scan. If so, we consider it confirmed and conclude we have
+       * found the alignment pattern.</p>
+       *
+       * @param stateCount reading state module counts from horizontal scan
+       * @param i row where alignment pattern may be found
+       * @param j end of possible alignment pattern in row
+       * @return {@link AlignmentPattern} if we have found the same pattern twice, or null if not
+       */
+      handlePossibleCenter(stateCount, i /*int*/, j /*int*/) {
+          const stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2];
+          const centerJ = AlignmentPatternFinder.centerFromEnd(stateCount, j);
+          const centerI = this.crossCheckVertical(i, /*(int) */ centerJ, 2 * stateCount[1], stateCountTotal);
+          if (!isNaN(centerI)) {
+              const estimatedModuleSize = (stateCount[0] + stateCount[1] + stateCount[2]) / 3.0;
+              for (const center of this.possibleCenters) {
+                  // Look for about the same center and module size:
+                  if (center.aboutEquals(estimatedModuleSize, centerI, centerJ)) {
+                      return center.combineEstimate(centerI, centerJ, estimatedModuleSize);
+                  }
+              }
+              // Hadn't found this before; save it
+              const point = new AlignmentPattern(centerJ, centerI, estimatedModuleSize);
+              this.possibleCenters.push(point);
+              if (this.resultPointCallback !== null && this.resultPointCallback !== undefined) {
+                  this.resultPointCallback.foundPossibleResultPoint(point);
+              }
+          }
+          return null;
+      }
+  }
 
   /*
    * Copyright 2007 ZXing authors
@@ -18781,7 +16654,6 @@
    */
   class NullPointerException extends Exception {
   }
-  NullPointerException.kind = 'NullPointerException';
 
   /*
    * Copyright (c) 1994, 2004, Oracle and/or its affiliates. All rights reserved.
@@ -20660,7 +18532,6 @@
    */
   class ReaderException extends Exception {
   }
-  ReaderException.kind = 'ReaderException';
 
   /*
    * Copyright 2009 ZXing authors
@@ -21461,7 +19332,6 @@
    */
   class WriterException extends Exception {
   }
-  WriterException.kind = 'WriterException';
 
   /*
    * Copyright 2008 ZXing authors
@@ -24118,6 +21988,1815 @@
           return output;
       }
   }
+
+  class DecodedObject {
+      constructor(newPosition) {
+          this.newPosition = newPosition;
+      }
+      getNewPosition() {
+          return this.newPosition;
+      }
+  }
+
+  class DecodedChar extends DecodedObject {
+      constructor(newPosition, value) {
+          super(newPosition);
+          this.value = value;
+      }
+      getValue() {
+          return this.value;
+      }
+      isFNC1() {
+          return this.value === DecodedChar.FNC1;
+      }
+  }
+  DecodedChar.FNC1 = '$';
+
+  class DecodedNumeric extends DecodedObject {
+      constructor(newPosition, firstDigit, secondDigit) {
+          super(newPosition);
+          if (firstDigit < 0 || firstDigit > 10 || secondDigit < 0 || secondDigit > 10) {
+              throw new FormatException();
+          }
+          this.firstDigit = firstDigit;
+          this.secondDigit = secondDigit;
+      }
+      getFirstDigit() {
+          return this.firstDigit;
+      }
+      getSecondDigit() {
+          return this.secondDigit;
+      }
+      getValue() {
+          return this.firstDigit * 10 + this.secondDigit;
+      }
+      isFirstDigitFNC1() {
+          return this.firstDigit == DecodedNumeric.FNC1;
+      }
+      isSecondDigitFNC1() {
+          return this.secondDigit == DecodedNumeric.FNC1;
+      }
+      isAnyFNC1() {
+          return this.firstDigit === DecodedNumeric.FNC1 || this.secondDigit === DecodedNumeric.FNC1;
+      }
+  }
+  DecodedNumeric.FNC1 = 10;
+
+  class DecodedInformation extends DecodedObject {
+      constructor(newPosition, newString, remainingValue) {
+          super(newPosition);
+          if (remainingValue) {
+              this.remaining = true;
+              this.remainingValue = this.remainingValue;
+          }
+          else {
+              this.remaining = false;
+              this.remainingValue = 0;
+          }
+          this.newString = newString;
+      }
+      getNewString() {
+          return this.newString;
+      }
+      isRemaining() {
+          return this.remaining;
+      }
+      getRemainingValue() {
+          return this.remainingValue;
+      }
+  }
+
+  class FieldParser {
+      constructor() {
+      }
+      static parseFieldsInGeneralPurpose(rawInformation) {
+          if (!rawInformation) {
+              return null;
+          }
+          // Processing 2-digit AIs
+          if (rawInformation.length < 2) {
+              throw new NotFoundException();
+          }
+          let firstTwoDigits = rawInformation.substring(0, 2);
+          for (let dataLength of FieldParser.TWO_DIGIT_DATA_LENGTH) {
+              if (dataLength[0] === firstTwoDigits) {
+                  if (dataLength[1] === FieldParser.VARIABLE_LENGTH) {
+                      return FieldParser.processVariableAI(2, dataLength[2], rawInformation);
+                  }
+                  return FieldParser.processFixedAI(2, dataLength[1], rawInformation);
+              }
+          }
+          if (rawInformation.length < 3) {
+              throw new NotFoundException();
+          }
+          let firstThreeDigits = rawInformation.substring(0, 3);
+          for (let dataLength of FieldParser.THREE_DIGIT_DATA_LENGTH) {
+              if (dataLength[0] === firstThreeDigits) {
+                  if (dataLength[1] === FieldParser.VARIABLE_LENGTH) {
+                      return FieldParser.processVariableAI(3, dataLength[2], rawInformation);
+                  }
+                  return FieldParser.processFixedAI(3, dataLength[1], rawInformation);
+              }
+          }
+          for (let dataLength of FieldParser.THREE_DIGIT_PLUS_DIGIT_DATA_LENGTH) {
+              if (dataLength[0] === firstThreeDigits) {
+                  if (dataLength[1] === FieldParser.VARIABLE_LENGTH) {
+                      return FieldParser.processVariableAI(4, dataLength[2], rawInformation);
+                  }
+                  return FieldParser.processFixedAI(4, dataLength[1], rawInformation);
+              }
+          }
+          if (rawInformation.length < 4) {
+              throw new NotFoundException();
+          }
+          let firstFourDigits = rawInformation.substring(0, 4);
+          for (let dataLength of FieldParser.FOUR_DIGIT_DATA_LENGTH) {
+              if (dataLength[0] === firstFourDigits) {
+                  if (dataLength[1] === FieldParser.VARIABLE_LENGTH) {
+                      return FieldParser.processVariableAI(4, dataLength[2], rawInformation);
+                  }
+                  return FieldParser.processFixedAI(4, dataLength[1], rawInformation);
+              }
+          }
+          throw new NotFoundException();
+      }
+      static processFixedAI(aiSize, fieldSize, rawInformation) {
+          if (rawInformation.length < aiSize) {
+              throw new NotFoundException();
+          }
+          let ai = rawInformation.substring(0, aiSize);
+          if (rawInformation.length < aiSize + fieldSize) {
+              throw new NotFoundException();
+          }
+          let field = rawInformation.substring(aiSize, aiSize + fieldSize);
+          let remaining = rawInformation.substring(aiSize + fieldSize);
+          let result = '(' + ai + ')' + field;
+          let parsedAI = FieldParser.parseFieldsInGeneralPurpose(remaining);
+          return parsedAI == null ? result : result + parsedAI;
+      }
+      static processVariableAI(aiSize, variableFieldSize, rawInformation) {
+          let ai = rawInformation.substring(0, aiSize);
+          let maxSize;
+          if (rawInformation.length < aiSize + variableFieldSize) {
+              maxSize = rawInformation.length;
+          }
+          else {
+              maxSize = aiSize + variableFieldSize;
+          }
+          let field = rawInformation.substring(aiSize, maxSize);
+          let remaining = rawInformation.substring(maxSize);
+          let result = '(' + ai + ')' + field;
+          let parsedAI = FieldParser.parseFieldsInGeneralPurpose(remaining);
+          return parsedAI == null ? result : result + parsedAI;
+      }
+  }
+  FieldParser.VARIABLE_LENGTH = [];
+  FieldParser.TWO_DIGIT_DATA_LENGTH = [
+      ["00", 18],
+      ["01", 14],
+      ["02", 14],
+      ["10", FieldParser.VARIABLE_LENGTH, 20],
+      ["11", 6],
+      ["12", 6],
+      ["13", 6],
+      ["15", 6],
+      ["17", 6],
+      ["20", 2],
+      ["21", FieldParser.VARIABLE_LENGTH, 20],
+      ["22", FieldParser.VARIABLE_LENGTH, 29],
+      ["30", FieldParser.VARIABLE_LENGTH, 8],
+      ["37", FieldParser.VARIABLE_LENGTH, 8],
+      //internal company codes
+      ["90", FieldParser.VARIABLE_LENGTH, 30],
+      ["91", FieldParser.VARIABLE_LENGTH, 30],
+      ["92", FieldParser.VARIABLE_LENGTH, 30],
+      ["93", FieldParser.VARIABLE_LENGTH, 30],
+      ["94", FieldParser.VARIABLE_LENGTH, 30],
+      ["95", FieldParser.VARIABLE_LENGTH, 30],
+      ["96", FieldParser.VARIABLE_LENGTH, 30],
+      ["97", FieldParser.VARIABLE_LENGTH, 3],
+      ["98", FieldParser.VARIABLE_LENGTH, 30],
+      ["99", FieldParser.VARIABLE_LENGTH, 30],
+  ];
+  FieldParser.THREE_DIGIT_DATA_LENGTH = [
+      // Same format as above
+      ["240", FieldParser.VARIABLE_LENGTH, 30],
+      ["241", FieldParser.VARIABLE_LENGTH, 30],
+      ["242", FieldParser.VARIABLE_LENGTH, 6],
+      ["250", FieldParser.VARIABLE_LENGTH, 30],
+      ["251", FieldParser.VARIABLE_LENGTH, 30],
+      ["253", FieldParser.VARIABLE_LENGTH, 17],
+      ["254", FieldParser.VARIABLE_LENGTH, 20],
+      ["400", FieldParser.VARIABLE_LENGTH, 30],
+      ["401", FieldParser.VARIABLE_LENGTH, 30],
+      ["402", 17],
+      ["403", FieldParser.VARIABLE_LENGTH, 30],
+      ["410", 13],
+      ["411", 13],
+      ["412", 13],
+      ["413", 13],
+      ["414", 13],
+      ["420", FieldParser.VARIABLE_LENGTH, 20],
+      ["421", FieldParser.VARIABLE_LENGTH, 15],
+      ["422", 3],
+      ["423", FieldParser.VARIABLE_LENGTH, 15],
+      ["424", 3],
+      ["425", 3],
+      ["426", 3],
+  ];
+  FieldParser.THREE_DIGIT_PLUS_DIGIT_DATA_LENGTH = [
+      // Same format as above
+      ["310", 6],
+      ["311", 6],
+      ["312", 6],
+      ["313", 6],
+      ["314", 6],
+      ["315", 6],
+      ["316", 6],
+      ["320", 6],
+      ["321", 6],
+      ["322", 6],
+      ["323", 6],
+      ["324", 6],
+      ["325", 6],
+      ["326", 6],
+      ["327", 6],
+      ["328", 6],
+      ["329", 6],
+      ["330", 6],
+      ["331", 6],
+      ["332", 6],
+      ["333", 6],
+      ["334", 6],
+      ["335", 6],
+      ["336", 6],
+      ["340", 6],
+      ["341", 6],
+      ["342", 6],
+      ["343", 6],
+      ["344", 6],
+      ["345", 6],
+      ["346", 6],
+      ["347", 6],
+      ["348", 6],
+      ["349", 6],
+      ["350", 6],
+      ["351", 6],
+      ["352", 6],
+      ["353", 6],
+      ["354", 6],
+      ["355", 6],
+      ["356", 6],
+      ["357", 6],
+      ["360", 6],
+      ["361", 6],
+      ["362", 6],
+      ["363", 6],
+      ["364", 6],
+      ["365", 6],
+      ["366", 6],
+      ["367", 6],
+      ["368", 6],
+      ["369", 6],
+      ["390", FieldParser.VARIABLE_LENGTH, 15],
+      ["391", FieldParser.VARIABLE_LENGTH, 18],
+      ["392", FieldParser.VARIABLE_LENGTH, 15],
+      ["393", FieldParser.VARIABLE_LENGTH, 18],
+      ["703", FieldParser.VARIABLE_LENGTH, 30],
+  ];
+  FieldParser.FOUR_DIGIT_DATA_LENGTH = [
+      // Same format as above
+      ["7001", 13],
+      ["7002", FieldParser.VARIABLE_LENGTH, 30],
+      ["7003", 10],
+      ["8001", 14],
+      ["8002", FieldParser.VARIABLE_LENGTH, 20],
+      ["8003", FieldParser.VARIABLE_LENGTH, 30],
+      ["8004", FieldParser.VARIABLE_LENGTH, 30],
+      ["8005", 6],
+      ["8006", 18],
+      ["8007", FieldParser.VARIABLE_LENGTH, 30],
+      ["8008", FieldParser.VARIABLE_LENGTH, 12],
+      ["8018", 18],
+      ["8020", FieldParser.VARIABLE_LENGTH, 25],
+      ["8100", 6],
+      ["8101", 10],
+      ["8102", 2],
+      ["8110", FieldParser.VARIABLE_LENGTH, 70],
+      ["8200", FieldParser.VARIABLE_LENGTH, 70],
+  ];
+
+  class BlockParsedResult {
+      constructor(finished, decodedInformation) {
+          if (decodedInformation) {
+              this.decodedInformation = null;
+          }
+          else {
+              this.finished = finished;
+              this.decodedInformation = decodedInformation;
+          }
+      }
+      getDecodedInformation() {
+          return this.decodedInformation;
+      }
+      isFinished() {
+          return this.finished;
+      }
+  }
+
+  class GeneralAppIdDecoder {
+      constructor(information) {
+          this.buffer = new StringBuilder();
+          this.information = information;
+      }
+      decodeAllCodes(buff, initialPosition) {
+          let currentPosition = initialPosition;
+          let remaining = null;
+          do {
+              let info = this.decodeGeneralPurposeField(currentPosition, remaining);
+              let parsedFields = FieldParser.parseFieldsInGeneralPurpose(info.getNewString());
+              if (parsedFields != null) {
+                  buff.append(parsedFields);
+              }
+              if (info.isRemaining()) {
+                  remaining = "" + info.getRemainingValue();
+              }
+              else {
+                  remaining = null;
+              }
+              if (currentPosition == info.getNewPosition()) { // No step forward!
+                  break;
+              }
+              currentPosition = info.getNewPosition();
+          } while (true);
+          return buff.toString();
+      }
+      isStillNumeric(pos) {
+          // It's numeric if it still has 7 positions
+          // and one of the first 4 bits is "1".
+          if (pos + 7 > this.information.getSize()) {
+              return pos + 4 <= this.information.getSize();
+          }
+          for (let i = pos; i < pos + 3; ++i) {
+              if (this.information.get(i)) {
+                  return true;
+              }
+          }
+          return this.information.get(pos + 3);
+      }
+      decodeNumeric(pos) {
+          if (pos + 7 > this.information.getSize()) {
+              let numeric = this.extractNumericValueFromBitArray(pos, 4);
+              if (numeric == 0) {
+                  return new DecodedNumeric(this.information.getSize(), DecodedNumeric.FNC1, DecodedNumeric.FNC1);
+              }
+              return new DecodedNumeric(this.information.getSize(), numeric - 1, DecodedNumeric.FNC1);
+          }
+          let numeric = this.extractNumericValueFromBitArray(pos, 7);
+          let digit1 = (numeric - 8) / 11;
+          let digit2 = (numeric - 8) % 11;
+          return new DecodedNumeric(pos + 7, digit1, digit2);
+      }
+      extractNumericValueFromBitArray(pos, bits) {
+          return GeneralAppIdDecoder.extractNumericValueFromBitArray(this.information, pos, bits);
+      }
+      static extractNumericValueFromBitArray(information, pos, bits) {
+          let value = 0;
+          for (let i = 0; i < bits; ++i) {
+              if (information.get(pos + i)) {
+                  value |= 1 << (bits - i - 1);
+              }
+          }
+          return value;
+      }
+      decodeGeneralPurposeField(pos, remaining) {
+          //this.buffer.setLength(0);
+          this.buffer.setLengthToZero();
+          if (remaining != null) {
+              this.buffer.append(remaining);
+          }
+          this.current.setPosition(pos);
+          let lastDecoded = this.parseBlocks();
+          if (lastDecoded != null && lastDecoded.isRemaining()) {
+              return new DecodedInformation(this.current.getPosition(), this.buffer.toString(), lastDecoded.getRemainingValue());
+          }
+          return new DecodedInformation(this.current.getPosition(), this.buffer.toString());
+      }
+      parseBlocks() {
+          let isFinished;
+          let result;
+          do {
+              let initialPosition = this.current.getPosition();
+              if (this.current.isAlpha()) {
+                  result = this.parseAlphaBlock();
+                  isFinished = result.isFinished();
+              }
+              else if (this.current.isIsoIec646()) {
+                  result = this.parseIsoIec646Block();
+                  isFinished = result.isFinished();
+              }
+              else { // it must be numeric
+                  result = this.parseNumericBlock();
+                  isFinished = result.isFinished();
+              }
+              let positionChanged = initialPosition != this.current.getPosition();
+              if (!positionChanged && !isFinished) {
+                  break;
+              }
+          } while (!isFinished);
+          return result.getDecodedInformation();
+      }
+      parseNumericBlock() {
+          while (this.isStillNumeric(this.current.getPosition())) {
+              let numeric = this.decodeNumeric(this.current.getPosition());
+              this.current.setPosition(numeric.getNewPosition());
+              if (numeric.isFirstDigitFNC1()) {
+                  let information;
+                  if (numeric.isSecondDigitFNC1()) {
+                      information = new DecodedInformation(this.current.getPosition(), this.buffer.toString());
+                  }
+                  else {
+                      information = new DecodedInformation(this.current.getPosition(), this.buffer.toString(), numeric.getSecondDigit());
+                  }
+                  return new BlockParsedResult(true, information);
+              }
+              this.buffer.append(numeric.getFirstDigit());
+              if (numeric.isSecondDigitFNC1()) {
+                  let information = new DecodedInformation(this.current.getPosition(), this.buffer.toString());
+                  return new BlockParsedResult(true, information);
+              }
+              this.buffer.append(numeric.getSecondDigit());
+          }
+          if (this.isNumericToAlphaNumericLatch(this.current.getPosition())) {
+              this.current.setAlpha();
+              this.current.incrementPosition(4);
+          }
+          return new BlockParsedResult(false);
+      }
+      parseIsoIec646Block() {
+          while (this.isStillIsoIec646(this.current.getPosition())) {
+              let iso = this.decodeIsoIec646(this.current.getPosition());
+              this.current.setPosition(iso.getNewPosition());
+              if (iso.isFNC1()) {
+                  let information = new DecodedInformation(this.current.getPosition(), this.buffer.toString());
+                  return new BlockParsedResult(true, information);
+              }
+              this.buffer.append(iso.getValue());
+          }
+          if (this.isAlphaOr646ToNumericLatch(this.current.getPosition())) {
+              this.current.incrementPosition(3);
+              this.current.setNumeric();
+          }
+          else if (this.isAlphaTo646ToAlphaLatch(this.current.getPosition())) {
+              if (this.current.getPosition() + 5 < this.information.getSize()) {
+                  this.current.incrementPosition(5);
+              }
+              else {
+                  this.current.setPosition(this.information.getSize());
+              }
+              this.current.setAlpha();
+          }
+          return new BlockParsedResult(false);
+      }
+      parseAlphaBlock() {
+          while (this.isStillAlpha(this.current.getPosition())) {
+              let alpha = this.decodeAlphanumeric(this.current.getPosition());
+              this.current.setPosition(alpha.getNewPosition());
+              if (alpha.isFNC1()) {
+                  let information = new DecodedInformation(this.current.getPosition(), this.buffer.toString());
+                  return new BlockParsedResult(true, information); //end of the char block
+              }
+              this.buffer.append(alpha.getValue());
+          }
+          if (this.isAlphaOr646ToNumericLatch(this.current.getPosition())) {
+              this.current.incrementPosition(3);
+              this.current.setNumeric();
+          }
+          else if (this.isAlphaTo646ToAlphaLatch(this.current.getPosition())) {
+              if (this.current.getPosition() + 5 < this.information.getSize()) {
+                  this.current.incrementPosition(5);
+              }
+              else {
+                  this.current.setPosition(this.information.getSize());
+              }
+              this.current.setIsoIec646();
+          }
+          return new BlockParsedResult(false);
+      }
+      isStillIsoIec646(pos) {
+          if (pos + 5 > this.information.getSize()) {
+              return false;
+          }
+          let fiveBitValue = this.extractNumericValueFromBitArray(pos, 5);
+          if (fiveBitValue >= 5 && fiveBitValue < 16) {
+              return true;
+          }
+          if (pos + 7 > this.information.getSize()) {
+              return false;
+          }
+          let sevenBitValue = this.extractNumericValueFromBitArray(pos, 7);
+          if (sevenBitValue >= 64 && sevenBitValue < 116) {
+              return true;
+          }
+          if (pos + 8 > this.information.getSize()) {
+              return false;
+          }
+          let eightBitValue = this.extractNumericValueFromBitArray(pos, 8);
+          return eightBitValue >= 232 && eightBitValue < 253;
+      }
+      decodeIsoIec646(pos) {
+          let fiveBitValue = this.extractNumericValueFromBitArray(pos, 5);
+          if (fiveBitValue == 15) {
+              return new DecodedChar(pos + 5, DecodedChar.FNC1);
+          }
+          if (fiveBitValue >= 5 && fiveBitValue < 15) {
+              return new DecodedChar(pos + 5, ('0' + (fiveBitValue - 5)));
+          }
+          let sevenBitValue = this.extractNumericValueFromBitArray(pos, 7);
+          if (sevenBitValue >= 64 && sevenBitValue < 90) {
+              return new DecodedChar(pos + 7, ("" + (sevenBitValue + 1)));
+          }
+          if (sevenBitValue >= 90 && sevenBitValue < 116) {
+              return new DecodedChar(pos + 7, ("" + (sevenBitValue + 7)));
+          }
+          let eightBitValue = this.extractNumericValueFromBitArray(pos, 8);
+          let c;
+          switch (eightBitValue) {
+              case 232:
+                  c = '!';
+                  break;
+              case 233:
+                  c = '"';
+                  break;
+              case 234:
+                  c = '%';
+                  break;
+              case 235:
+                  c = '&';
+                  break;
+              case 236:
+                  c = '\'';
+                  break;
+              case 237:
+                  c = '(';
+                  break;
+              case 238:
+                  c = ')';
+                  break;
+              case 239:
+                  c = '*';
+                  break;
+              case 240:
+                  c = '+';
+                  break;
+              case 241:
+                  c = ',';
+                  break;
+              case 242:
+                  c = '-';
+                  break;
+              case 243:
+                  c = '.';
+                  break;
+              case 244:
+                  c = '/';
+                  break;
+              case 245:
+                  c = ':';
+                  break;
+              case 246:
+                  c = ';';
+                  break;
+              case 247:
+                  c = '<';
+                  break;
+              case 248:
+                  c = '=';
+                  break;
+              case 249:
+                  c = '>';
+                  break;
+              case 250:
+                  c = '?';
+                  break;
+              case 251:
+                  c = '_';
+                  break;
+              case 252:
+                  c = ' ';
+                  break;
+              default:
+                  throw new FormatException();
+          }
+          return new DecodedChar(pos + 8, c);
+      }
+      isStillAlpha(pos) {
+          if (pos + 5 > this.information.getSize()) {
+              return false;
+          }
+          // We now check if it's a valid 5-bit value (0..9 and FNC1)
+          let fiveBitValue = this.extractNumericValueFromBitArray(pos, 5);
+          if (fiveBitValue >= 5 && fiveBitValue < 16) {
+              return true;
+          }
+          if (pos + 6 > this.information.getSize()) {
+              return false;
+          }
+          let sixBitValue = this.extractNumericValueFromBitArray(pos, 6);
+          return sixBitValue >= 16 && sixBitValue < 63; // 63 not included
+      }
+      decodeAlphanumeric(pos) {
+          let fiveBitValue = this.extractNumericValueFromBitArray(pos, 5);
+          if (fiveBitValue == 15) {
+              return new DecodedChar(pos + 5, DecodedChar.FNC1);
+          }
+          if (fiveBitValue >= 5 && fiveBitValue < 15) {
+              return new DecodedChar(pos + 5, ('0' + (fiveBitValue - 5)));
+          }
+          let sixBitValue = this.extractNumericValueFromBitArray(pos, 6);
+          if (sixBitValue >= 32 && sixBitValue < 58) {
+              return new DecodedChar(pos + 6, ('' + (sixBitValue + 33)));
+          }
+          let c;
+          switch (sixBitValue) {
+              case 58:
+                  c = '*';
+                  break;
+              case 59:
+                  c = ',';
+                  break;
+              case 60:
+                  c = '-';
+                  break;
+              case 61:
+                  c = '.';
+                  break;
+              case 62:
+                  c = '/';
+                  break;
+              default:
+                  throw new IllegalStateException("Decoding invalid alphanumeric value: " + sixBitValue);
+          }
+          return new DecodedChar(pos + 6, c);
+      }
+      isAlphaTo646ToAlphaLatch(pos) {
+          if (pos + 1 > this.information.getSize()) {
+              return false;
+          }
+          for (let i = 0; i < 5 && i + pos < this.information.getSize(); ++i) {
+              if (i == 2) {
+                  if (!this.information.get(pos + 2)) {
+                      return false;
+                  }
+              }
+              else if (this.information.get(pos + i)) {
+                  return false;
+              }
+          }
+          return true;
+      }
+      isAlphaOr646ToNumericLatch(pos) {
+          // Next is alphanumeric if there are 3 positions and they are all zeros
+          if (pos + 3 > this.information.getSize()) {
+              return false;
+          }
+          for (let i = pos; i < pos + 3; ++i) {
+              if (this.information.get(i)) {
+                  return false;
+              }
+          }
+          return true;
+      }
+      isNumericToAlphaNumericLatch(pos) {
+          // Next is alphanumeric if there are 4 positions and they are all zeros, or
+          // if there is a subset of this just before the end of the symbol
+          if (pos + 1 > this.information.getSize()) {
+              return false;
+          }
+          for (let i = 0; i < 4 && i + pos < this.information.getSize(); ++i) {
+              if (this.information.get(pos + i)) {
+                  return false;
+              }
+          }
+          return true;
+      }
+  }
+
+  class AbstractExpandedDecoder {
+      constructor(information) {
+          this.information = information;
+          this.generalDecoder = new GeneralAppIdDecoder(information);
+      }
+      getInformation() {
+          return this.information;
+      }
+      getGeneralDecoder() {
+          return this.generalDecoder;
+      }
+  }
+
+  class AI01decoder extends AbstractExpandedDecoder {
+      constructor(information) {
+          super(information);
+      }
+      encodeCompressedGtin(buf, currentPos) {
+          buf.append("(01)");
+          let initialPosition = buf.length();
+          buf.append('9');
+          this.encodeCompressedGtinWithoutAI(buf, currentPos, initialPosition);
+      }
+      encodeCompressedGtinWithoutAI(buf, currentPos, initialBufferPosition) {
+          for (let i = 0; i < 4; ++i) {
+              let currentBlock = this.getGeneralDecoder().extractNumericValueFromBitArray(currentPos + 10 * i, 10);
+              if (currentBlock / 100 == 0) {
+                  buf.append('0');
+              }
+              if (currentBlock / 10 == 0) {
+                  buf.append('0');
+              }
+              buf.append(currentBlock);
+          }
+          AI01decoder.appendCheckDigit(buf, initialBufferPosition);
+      }
+      static appendCheckDigit(buf, currentPos) {
+          let checkDigit = 0;
+          for (let i = 0; i < 13; i++) {
+              //let digit = buf.charAt(i + currentPos) - '0';
+              //To be checked
+              let digit = buf.charAt(i + currentPos).charCodeAt(0) - '0'.charCodeAt(0);
+              checkDigit += (i & 0x01) == 0 ? 3 * digit : digit;
+          }
+          checkDigit = 10 - (checkDigit % 10);
+          if (checkDigit == 10) {
+              checkDigit = 0;
+          }
+          buf.append(checkDigit);
+      }
+  }
+  AI01decoder.GTIN_SIZE = 40;
+
+  class AI01AndOtherAIs extends AI01decoder {
+      //the second one is the encodation method, and the other two are for the variable length
+      constructor(information) {
+          super(information);
+      }
+      parseInformation() {
+          let buff = new StringBuilder();
+          buff.append("(01)");
+          let initialGtinPosition = buff.length();
+          let firstGtinDigit = this.getGeneralDecoder().extractNumericValueFromBitArray(AI01AndOtherAIs.HEADER_SIZE, 4);
+          buff.append(firstGtinDigit);
+          this.encodeCompressedGtinWithoutAI(buff, AI01AndOtherAIs.HEADER_SIZE + 4, initialGtinPosition);
+          return this.getGeneralDecoder().decodeAllCodes(buff, AI01AndOtherAIs.HEADER_SIZE + 44);
+      }
+  }
+  AI01AndOtherAIs.HEADER_SIZE = 1 + 1 + 2; //first bit encodes the linkage flag,
+
+  class AnyAIDecoder extends AbstractExpandedDecoder {
+      constructor(information) {
+          super(information);
+      }
+      parseInformation() {
+          let buf = new StringBuilder();
+          return this.getGeneralDecoder().decodeAllCodes(buf, AnyAIDecoder.HEADER_SIZE);
+      }
+  }
+  AnyAIDecoder.HEADER_SIZE = 2 + 1 + 2;
+
+  class AI01weightDecoder extends AI01decoder {
+      constructor(information) {
+          super(information);
+      }
+      encodeCompressedWeight(buf, currentPos, weightSize) {
+          let originalWeightNumeric = this.getGeneralDecoder().extractNumericValueFromBitArray(currentPos, weightSize);
+          this.addWeightCode(buf, originalWeightNumeric);
+          let weightNumeric = this.checkWeight(originalWeightNumeric);
+          let currentDivisor = 100000;
+          for (let i = 0; i < 5; ++i) {
+              if (weightNumeric / currentDivisor == 0) {
+                  buf.append('0');
+              }
+              currentDivisor /= 10;
+          }
+          buf.append(weightNumeric);
+      }
+  }
+
+  class AI013x0xDecoder extends AI01weightDecoder {
+      constructor(information) {
+          super(information);
+      }
+      parseInformation() {
+          if (this.getInformation().getSize() != AI013x0xDecoder.HEADER_SIZE + AI01weightDecoder.GTIN_SIZE + AI013x0xDecoder.WEIGHT_SIZE) {
+              throw new NotFoundException();
+          }
+          let buf = new StringBuilder();
+          this.encodeCompressedGtin(buf, AI013x0xDecoder.HEADER_SIZE);
+          this.encodeCompressedWeight(buf, AI013x0xDecoder.HEADER_SIZE + AI01weightDecoder.GTIN_SIZE, AI013x0xDecoder.WEIGHT_SIZE);
+          return buf.toString();
+      }
+  }
+  AI013x0xDecoder.HEADER_SIZE = 4 + 1;
+  AI013x0xDecoder.WEIGHT_SIZE = 15;
+
+  class AI013103decoder extends AI013x0xDecoder {
+      constructor(information) {
+          super(information);
+      }
+      addWeightCode(buf, weight) {
+          buf.append("(3103)");
+      }
+      checkWeight(weight) {
+          return weight;
+      }
+  }
+
+  class AI01320xDecoder extends AI013x0xDecoder {
+      constructor(information) {
+          super(information);
+      }
+      addWeightCode(buf, weight) {
+          if (weight < 10000) {
+              buf.append("(3202)");
+          }
+          else {
+              buf.append("(3203)");
+          }
+      }
+      checkWeight(weight) {
+          if (weight < 10000) {
+              return weight;
+          }
+          return weight - 10000;
+      }
+  }
+
+  class AI01392xDecoder extends AI01decoder {
+      constructor(information) {
+          super(information);
+      }
+      parseInformation() {
+          if (this.getInformation().getSize() < AI01392xDecoder.HEADER_SIZE + AI01decoder.GTIN_SIZE) {
+              throw new NotFoundException();
+          }
+          let buf = new StringBuilder();
+          this.encodeCompressedGtin(buf, AI01392xDecoder.HEADER_SIZE);
+          let lastAIdigit = this.getGeneralDecoder().extractNumericValueFromBitArray(AI01392xDecoder.HEADER_SIZE + AI01decoder.GTIN_SIZE, AI01392xDecoder.LAST_DIGIT_SIZE);
+          buf.append("(392");
+          buf.append(lastAIdigit);
+          buf.append(')');
+          let decodedInformation = this.getGeneralDecoder().decodeGeneralPurposeField(AI01392xDecoder.HEADER_SIZE + AI01decoder.GTIN_SIZE + AI01392xDecoder.LAST_DIGIT_SIZE, null);
+          buf.append(decodedInformation.getNewString());
+          return buf.toString();
+      }
+  }
+  AI01392xDecoder.HEADER_SIZE = 5 + 1 + 2;
+  AI01392xDecoder.LAST_DIGIT_SIZE = 2;
+
+  class AI01393xDecoder extends AI01decoder {
+      constructor(information) {
+          super(information);
+      }
+      parseInformation() {
+          if (this.getInformation().getSize() < AI01393xDecoder.HEADER_SIZE + AI01decoder.GTIN_SIZE) {
+              throw new NotFoundException();
+          }
+          let buf = new StringBuilder();
+          this.encodeCompressedGtin(buf, AI01393xDecoder.HEADER_SIZE);
+          let lastAIdigit = this.getGeneralDecoder().extractNumericValueFromBitArray(AI01393xDecoder.HEADER_SIZE + AI01decoder.GTIN_SIZE, AI01393xDecoder.LAST_DIGIT_SIZE);
+          buf.append("(393");
+          buf.append(lastAIdigit);
+          buf.append(')');
+          let firstThreeDigits = this.getGeneralDecoder().extractNumericValueFromBitArray(AI01393xDecoder.HEADER_SIZE + AI01decoder.GTIN_SIZE + AI01393xDecoder.LAST_DIGIT_SIZE, AI01393xDecoder.FIRST_THREE_DIGITS_SIZE);
+          if (firstThreeDigits / 100 == 0) {
+              buf.append('0');
+          }
+          if (firstThreeDigits / 10 == 0) {
+              buf.append('0');
+          }
+          buf.append(firstThreeDigits);
+          let generalInformation = this.getGeneralDecoder().decodeGeneralPurposeField(AI01393xDecoder.HEADER_SIZE + AI01decoder.GTIN_SIZE + AI01393xDecoder.LAST_DIGIT_SIZE + AI01393xDecoder.FIRST_THREE_DIGITS_SIZE, null);
+          buf.append(generalInformation.getNewString());
+          return buf.toString();
+      }
+  }
+  AI01393xDecoder.HEADER_SIZE = 5 + 1 + 2;
+  AI01393xDecoder.LAST_DIGIT_SIZE = 2;
+  AI01393xDecoder.FIRST_THREE_DIGITS_SIZE = 10;
+
+  class AI013x0x1xDecoder extends AI01weightDecoder {
+      constructor(information, firstAIdigits, dateCode) {
+          super(information);
+          this.dateCode = dateCode;
+          this.firstAIdigits = firstAIdigits;
+      }
+      parseInformation() {
+          if (this.getInformation().getSize() != AI013x0x1xDecoder.HEADER_SIZE + AI013x0x1xDecoder.GTIN_SIZE + AI013x0x1xDecoder.WEIGHT_SIZE + AI013x0x1xDecoder.DATE_SIZE) {
+              throw new NotFoundException();
+          }
+          let buf = new StringBuilder();
+          this.encodeCompressedGtin(buf, AI013x0x1xDecoder.HEADER_SIZE);
+          this.encodeCompressedWeight(buf, AI013x0x1xDecoder.HEADER_SIZE + AI013x0x1xDecoder.GTIN_SIZE, AI013x0x1xDecoder.WEIGHT_SIZE);
+          this.encodeCompressedDate(buf, AI013x0x1xDecoder.HEADER_SIZE + AI013x0x1xDecoder.GTIN_SIZE + AI013x0x1xDecoder.WEIGHT_SIZE);
+          return buf.toString();
+      }
+      encodeCompressedDate(buf, currentPos) {
+          let numericDate = this.getGeneralDecoder().extractNumericValueFromBitArray(currentPos, AI013x0x1xDecoder.DATE_SIZE);
+          if (numericDate == 38400) {
+              return;
+          }
+          buf.append('(');
+          buf.append(this.dateCode);
+          buf.append(')');
+          let day = numericDate % 32;
+          numericDate /= 32;
+          let month = numericDate % 12 + 1;
+          numericDate /= 12;
+          let year = numericDate;
+          if (year / 10 == 0) {
+              buf.append('0');
+          }
+          buf.append(year);
+          if (month / 10 == 0) {
+              buf.append('0');
+          }
+          buf.append(month);
+          if (day / 10 == 0) {
+              buf.append('0');
+          }
+          buf.append(day);
+      }
+      addWeightCode(buf, weight) {
+          buf.append('(');
+          buf.append(this.firstAIdigits);
+          buf.append(weight / 100000);
+          buf.append(')');
+      }
+      checkWeight(weight) {
+          return weight % 100000;
+      }
+  }
+  AI013x0x1xDecoder.HEADER_SIZE = 7 + 1;
+  AI013x0x1xDecoder.WEIGHT_SIZE = 20;
+  AI013x0x1xDecoder.DATE_SIZE = 16;
+
+  function createDecoder(information) {
+      try {
+          if (information.get(1)) {
+              return new AI01AndOtherAIs(information);
+          }
+          if (!information.get(2)) {
+              return new AnyAIDecoder(information);
+          }
+          let fourBitEncodationMethod = GeneralAppIdDecoder.extractNumericValueFromBitArray(information, 1, 4);
+          switch (fourBitEncodationMethod) {
+              case 4: return new AI013103decoder(information);
+              case 5: return new AI01320xDecoder(information);
+          }
+          let fiveBitEncodationMethod = GeneralAppIdDecoder.extractNumericValueFromBitArray(information, 1, 5);
+          switch (fiveBitEncodationMethod) {
+              case 12: return new AI01392xDecoder(information);
+              case 13: return new AI01393xDecoder(information);
+          }
+          let sevenBitEncodationMethod = GeneralAppIdDecoder.extractNumericValueFromBitArray(information, 1, 7);
+          switch (sevenBitEncodationMethod) {
+              case 56: return new AI013x0x1xDecoder(information, '310', '11');
+              case 57: return new AI013x0x1xDecoder(information, '320', '11');
+              case 58: return new AI013x0x1xDecoder(information, '310', '13');
+              case 59: return new AI013x0x1xDecoder(information, '320', '13');
+              case 60: return new AI013x0x1xDecoder(information, '310', '15');
+              case 61: return new AI013x0x1xDecoder(information, '320', '15');
+              case 62: return new AI013x0x1xDecoder(information, '310', '17');
+              case 63: return new AI013x0x1xDecoder(information, '320', '17');
+          }
+      }
+      catch (e) {
+          console.log(e);
+          throw new IllegalStateException('unknown decoder: ' + information);
+      }
+  }
+
+  class ExpandedPair {
+      constructor(leftChar, rightChar, finderPatter, mayBeLast) {
+          this.leftchar = leftChar;
+          this.rightchar = rightChar;
+          this.finderpattern = finderPatter;
+          this.maybeLast = mayBeLast;
+      }
+      mayBeLast() {
+          return this.maybeLast;
+      }
+      getLeftChar() {
+          return this.leftchar;
+      }
+      getRightChar() {
+          return this.rightchar;
+      }
+      getFinderPattern() {
+          return this.finderpattern;
+      }
+      mustBeLast() {
+          return this.rightchar == null;
+      }
+      toString() {
+          return '[ ' + this.leftchar + ', ' + this.rightchar + ' : ' + (this.finderpattern == null ? "null" : this.finderpattern.getValue()) + " ]";
+      }
+      static equals(o1, o2) {
+          if (!(o1 instanceof ExpandedPair)) {
+              return false;
+          }
+          return ExpandedPair.equalsOrNull(o1.leftchar, o2.leftchar) &&
+              ExpandedPair.equalsOrNull(o1.rightchar, o2.rightchar) &&
+              ExpandedPair.equalsOrNull(o1.finderpattern, o2.finderpattern);
+      }
+      static equalsOrNull(o1, o2) {
+          return o1 === null ? o2 === null : ExpandedPair.equals(o1, o2);
+      }
+      hashCode() {
+          //return ExpandedPair.hashNotNull(leftChar) ^ hashNotNull(rightChar) ^ hashNotNull(finderPattern);
+          let value = this.leftchar.getValue() ^ this.rightchar.getValue() ^ this.finderpattern.getValue();
+          return value;
+      }
+      // To do - Re check the implementation
+      static hashNotNull(o) {
+          return o === null ? 0 : o.hashCode();
+      }
+  }
+
+  class ExpandedRow {
+      constructor(pairs, rowNumber, wasReversed) {
+          this.pairs = pairs;
+          this.rowNumber = rowNumber;
+          this.wasReversed = wasReversed;
+      }
+      getPairs() {
+          return this.pairs;
+      }
+      getRowNumber() {
+          return this.rowNumber;
+      }
+      isReversed() {
+          return this.wasReversed;
+      }
+      // check implementation
+      isEquivalent(otherPairs) {
+          return this.checkEqualitity(this, otherPairs);
+      }
+      //@Override
+      toString() {
+          return "{ " + this.pairs + " }";
+      }
+      /**
+       * Two rows are equal if they contain the same pairs in the same order.
+       */
+      //@Override
+      // check implementation
+      equals(o1, o2) {
+          if (!(o1 instanceof ExpandedRow)) {
+              return false;
+          }
+          return this.checkEqualitity(o1, o2) && o1.wasReversed === o2.wasReversed;
+      }
+      checkEqualitity(pair1, pair2) {
+          if (!pair1 || !pair2)
+              return;
+          let result;
+          pair1.forEach((e1, i) => {
+              pair2.forEach(e2 => {
+                  if (e1.getLeftChar().getValue() === e2.getLeftChar().getValue() && e1.getRightChar().getValue() === e2.getRightChar().getValue() && e1.getFinderPatter().getValue() === e2.getFinderPatter().getValue()) {
+                      result = true;
+                  }
+              });
+          });
+          return result;
+      }
+  }
+
+  class BitArrayBuilder {
+      constructor() {
+      }
+      static buildBitArray(pairs) {
+          let charNumber = (pairs.length * 2) - 1;
+          if (pairs[pairs.length - 1].getRightChar() == null) {
+              charNumber -= 1;
+          }
+          let size = 12 * charNumber;
+          let binary = new BitArray(size);
+          let accPos = 0;
+          let firstPair = pairs[0];
+          let firstValue = firstPair.getRightChar().getValue();
+          for (let i = 11; i >= 0; --i) {
+              if ((firstValue & (1 << i)) != 0) {
+                  binary.set(accPos);
+              }
+              accPos++;
+          }
+          for (let i = 1; i < pairs.length; ++i) {
+              let currentPair = pairs[i];
+              let leftValue = currentPair.getLeftChar().getValue();
+              for (let j = 11; j >= 0; --j) {
+                  if ((leftValue & (1 << j)) != 0) {
+                      binary.set(accPos);
+                  }
+                  accPos++;
+              }
+              if (currentPair.getRightChar() != null) {
+                  let rightValue = currentPair.getRightChar().getValue();
+                  for (let j = 11; j >= 0; --j) {
+                      if ((rightValue & (1 << j)) != 0) {
+                          binary.set(accPos);
+                      }
+                      accPos++;
+                  }
+              }
+          }
+          return binary;
+      }
+  }
+
+  // import java.util.ArrayList;
+  // import java.util.Iterator;
+  // import java.util.List;
+  // import java.util.Map;
+  // import java.util.Collections;
+  class RSSExpandedReader extends AbstractRSSReader {
+      constructor() {
+          super(...arguments);
+          this.pairs = new Array(RSSExpandedReader.MAX_PAIRS);
+          this.rows = new Array();
+          this.startEnd = [2];
+      }
+      decodeRow(rowNumber, row, hints) {
+          // Rows can start with even pattern in case in prev rows there where odd number of patters.
+          // So lets try twice
+          //this.pairs.clear();
+          this.pairs.length = 0;
+          this.startFromEven = false;
+          try {
+              return RSSExpandedReader.constructResult(this.decodeRow2pairs(rowNumber, row));
+          }
+          catch (e) {
+              // OK
+              console.log(e);
+          }
+          this.pairs.length = 0;
+          this.startFromEven = true;
+          return RSSExpandedReader.constructResult(this.decodeRow2pairs(rowNumber, row));
+      }
+      reset() {
+          this.pairs.length = 0;
+          this.rows.length = 0;
+      }
+      // Not private for testing
+      decodeRow2pairs(rowNumber, row) {
+          let done = false;
+          while (!done) {
+              try {
+                  this.pairs.push(this.retrieveNextPair(row, this.pairs, rowNumber));
+              }
+              catch (NotFoundException) {
+                  if (!this.pairs.length) {
+                      throw new NotFoundException();
+                  }
+                  // exit this loop when retrieveNextPair() fails and throws
+                  done = true;
+              }
+          }
+          // TODO: verify sequence of finder patterns as in checkPairSequence()
+          if (this.checkChecksum()) {
+              return this.pairs;
+          }
+          let tryStackedDecode;
+          if (this.rows.length) {
+              tryStackedDecode = true;
+          }
+          else {
+              tryStackedDecode = false;
+          }
+          //let tryStackedDecode = !this.rows.isEmpty();
+          this.storeRow(rowNumber, false); // TODO: deal with reversed rows
+          if (tryStackedDecode) {
+              // When the image is 180-rotated, then rows are sorted in wrong direction.
+              // Try twice with both the directions.
+              let ps = this.checkRowsBoolean(false);
+              if (ps != null) {
+                  return ps;
+              }
+              ps = this.checkRowsBoolean(true);
+              if (ps != null) {
+                  return ps;
+              }
+          }
+          throw new NotFoundException();
+      }
+      //Need to Verify
+      checkRowsBoolean(reverse) {
+          // Limit number of rows we are checking
+          // We use recursive algorithm with pure complexity and don't want it to take forever
+          // Stacked barcode can have up to 11 rows, so 25 seems reasonable enough
+          if (this.rows.length > 25) {
+              this.rows.length = 0; // We will never have a chance to get result, so clear it
+              return null;
+          }
+          this.pairs.length = 0;
+          if (reverse) {
+              this.rows = this.rows.reverse();
+              //Collections.reverse(this.rows);
+          }
+          let ps = null;
+          try {
+              ps = this.checkRows(new Array(), 0);
+          }
+          catch (e) {
+              // OK
+              console.log(e);
+          }
+          if (reverse) {
+              this.rows = this.rows.reverse();
+              //Collections.reverse(this.rows);
+          }
+          return ps;
+      }
+      // Try to construct a valid rows sequence
+      // Recursion is used to implement backtracking
+      checkRows(collectedRows, currentRow) {
+          for (let i = currentRow; i < this.rows.length; i++) {
+              let row = this.rows[i];
+              this.pairs.length = 0;
+              for (let collectedRow of collectedRows) {
+                  this.pairs.push(collectedRow.getPairs());
+              }
+              this.pairs.push(row.getPairs());
+              if (!RSSExpandedReader.isValidSequence(this.pairs)) {
+                  continue;
+              }
+              if (this.checkChecksum()) {
+                  return this.pairs;
+              }
+              let rs = new Array(collectedRows);
+              rs.push(row);
+              try {
+                  // Recursion: try to add more rows
+                  return this.checkRows(rs, i + 1);
+              }
+              catch (e) {
+                  // We failed, try the next candidate
+                  console.log(e);
+              }
+          }
+          throw new NotFoundException();
+      }
+      // Whether the pairs form a valid find pattern sequence,
+      // either complete or a prefix
+      static isValidSequence(pairs) {
+          for (let sequence of RSSExpandedReader.FINDER_PATTERN_SEQUENCES) {
+              if (pairs.length > sequence.length) {
+                  continue;
+              }
+              let stop = true;
+              for (let j = 0; j < pairs.length; j++) {
+                  if (pairs[j].getFinderPattern().getValue() != sequence[j]) {
+                      stop = false;
+                      break;
+                  }
+              }
+              if (stop) {
+                  return true;
+              }
+          }
+          return false;
+      }
+      storeRow(rowNumber, wasReversed) {
+          // Discard if duplicate above or below; otherwise insert in order by row number.
+          let insertPos = 0;
+          let prevIsSame = false;
+          let nextIsSame = false;
+          while (insertPos < this.rows.length) {
+              let erow = this.rows[insertPos];
+              if (erow.getRowNumber() > rowNumber) {
+                  nextIsSame = erow.isEquivalent(this.pairs);
+                  break;
+              }
+              prevIsSame = erow.isEquivalent(this.pairs);
+              insertPos++;
+          }
+          if (nextIsSame || prevIsSame) {
+              return;
+          }
+          // When the row was partially decoded (e.g. 2 pairs found instead of 3),
+          // it will prevent us from detecting the barcode.
+          // Try to merge partial rows
+          // Check whether the row is part of an allready detected row
+          if (RSSExpandedReader.isPartialRow(this.pairs, this.rows)) {
+              return;
+          }
+          this.rows.push(insertPos, new ExpandedRow(this.pairs, rowNumber, wasReversed));
+          this.removePartialRows(this.pairs, this.rows);
+      }
+      // Remove all the rows that contains only specified pairs
+      removePartialRows(pairs, rows) {
+          // for (Iterator<ExpandedRow> iterator = rows.iterator(); iterator.hasNext();) {
+          //   ExpandedRow r = iterator.next();
+          //   if (r.getPairs().size() == pairs.size()) {
+          //     continue;
+          //   }
+          //   boolean allFound = true;
+          //   for (ExpandedPair p : r.getPairs()) {
+          //     boolean found = false;
+          //     for (ExpandedPair pp : pairs) {
+          //       if (p.equals(pp)) {
+          //         found = true;
+          //         break;
+          //       }
+          //     }
+          //     if (!found) {
+          //       allFound = false;
+          //       break;
+          //     }
+          //   }
+          //   if (allFound) {
+          //     // 'pairs' contains all the pairs from the row 'r'
+          //     iterator.remove();
+          //   }
+          // }
+          for (let row of rows) {
+              if (row.getPairs().length === pairs.length) {
+                  continue;
+              }
+              for (let p of row.getPairs()) {
+                  for (let pp of pairs) {
+                      if (ExpandedPair.equals(p, pp)) {
+                          break;
+                      }
+                  }
+              }
+          }
+      }
+      // Returns true when one of the rows already contains all the pairs
+      static isPartialRow(pairs, rows) {
+          for (let r of rows) {
+              let allFound = true;
+              for (let p of pairs) {
+                  let found = false;
+                  for (let pp of r.getPairs()) {
+                      if (p.equals(pp)) {
+                          found = true;
+                          break;
+                      }
+                  }
+                  if (!found) {
+                      allFound = false;
+                      break;
+                  }
+              }
+              if (allFound) {
+                  // the row 'r' contain all the pairs from 'pairs'
+                  return true;
+              }
+          }
+          return false;
+      }
+      // Only used for unit testing
+      getRows() {
+          return this.rows;
+      }
+      // Not private for unit testing
+      static constructResult(pairs) {
+          let binary = BitArrayBuilder.buildBitArray(pairs);
+          let decoder = createDecoder(binary);
+          let resultingString = decoder.parseInformation();
+          let firstPoints = pairs[0].getFinderPattern().getResultPoints();
+          let lastPoints = pairs[pairs.length - 1].getFinderPattern().getResultPoints();
+          let points = [firstPoints[0], firstPoints[1], lastPoints[0], lastPoints[1]];
+          return new Result(resultingString, null, null, points, BarcodeFormat$1.RSS_EXPANDED, null);
+      }
+      checkChecksum() {
+          let firstPair = this.pairs.get(0);
+          let checkCharacter = firstPair.getLeftChar();
+          let firstCharacter = firstPair.getRightChar();
+          if (firstCharacter == null) {
+              return false;
+          }
+          let checksum = firstCharacter.getChecksumPortion();
+          let s = 2;
+          for (let i = 1; i < this.pairs.size(); ++i) {
+              let currentPair = this.pairs.get(i);
+              checksum += currentPair.getLeftChar().getChecksumPortion();
+              s++;
+              let currentRightChar = currentPair.getRightChar();
+              if (currentRightChar != null) {
+                  checksum += currentRightChar.getChecksumPortion();
+                  s++;
+              }
+          }
+          checksum %= 211;
+          let checkCharacterValue = 211 * (s - 4) + checksum;
+          return checkCharacterValue == checkCharacter.getValue();
+      }
+      static getNextSecondBar(row, initialPos) {
+          let currentPos;
+          if (row.get(initialPos)) {
+              currentPos = row.getNextUnset(initialPos);
+              currentPos = row.getNextSet(currentPos);
+          }
+          else {
+              currentPos = row.getNextSet(initialPos);
+              currentPos = row.getNextUnset(currentPos);
+          }
+          return currentPos;
+      }
+      // not private for testing
+      retrieveNextPair(row, previousPairs, rowNumber) {
+          let isOddPattern = previousPairs.length % 2 == 0;
+          if (this.startFromEven) {
+              isOddPattern = !isOddPattern;
+          }
+          let pattern;
+          let keepFinding = true;
+          let forcedOffset = -1;
+          do {
+              this.findNextPair(row, previousPairs, forcedOffset);
+              pattern = this.parseFoundFinderPattern(row, rowNumber, isOddPattern);
+              if (pattern == null) {
+                  forcedOffset = RSSExpandedReader.getNextSecondBar(row, this.startEnd[0]);
+              }
+              else {
+                  keepFinding = false;
+              }
+          } while (keepFinding);
+          // When stacked symbol is split over multiple rows, there's no way to guess if this pair can be last or not.
+          // boolean mayBeLast = checkPairSequence(previousPairs, pattern);
+          let leftChar = this.decodeDataCharacter(row, pattern, isOddPattern, true);
+          if (!this.isEmptyPair(previousPairs) && previousPairs[previousPairs.length - 1].mustBeLast()) {
+              throw new NotFoundException();
+          }
+          let rightChar;
+          try {
+              rightChar = this.decodeDataCharacter(row, pattern, isOddPattern, false);
+          }
+          catch (e) {
+              rightChar = null;
+              console.log(e);
+          }
+          return new ExpandedPair(leftChar, rightChar, pattern, true);
+      }
+      isEmptyPair(pairs) {
+          if (pairs.length === 0) {
+              return true;
+          }
+          return false;
+      }
+      findNextPair(row, previousPairs, forcedOffset) {
+          let counters = this.getDecodeFinderCounters();
+          counters[0] = 0;
+          counters[1] = 0;
+          counters[2] = 0;
+          counters[3] = 0;
+          let width = row.getSize();
+          let rowOffset;
+          if (forcedOffset >= 0) {
+              rowOffset = forcedOffset;
+          }
+          else if (this.isEmptyPair(previousPairs)) {
+              rowOffset = 0;
+          }
+          else {
+              let lastPair = previousPairs[previousPairs.length - 1];
+              rowOffset = lastPair.getFinderPattern().getStartEnd()[1];
+          }
+          let searchingEvenPair = previousPairs.length % 2 != 0;
+          if (this.startFromEven) {
+              searchingEvenPair = !searchingEvenPair;
+          }
+          let isWhite = false;
+          while (rowOffset < width) {
+              isWhite = !row.get(rowOffset);
+              if (!isWhite) {
+                  break;
+              }
+              rowOffset++;
+          }
+          let counterPosition = 0;
+          let patternStart = rowOffset;
+          for (let x = rowOffset; x < width; x++) {
+              if (row.get(x) != isWhite) {
+                  counters[counterPosition]++;
+              }
+              else {
+                  if (counterPosition == 3) {
+                      if (searchingEvenPair) {
+                          RSSExpandedReader.reverseCounters(counters);
+                      }
+                      if (RSSExpandedReader.isFinderPattern(counters)) {
+                          this.startEnd[0] = patternStart;
+                          this.startEnd[1] = x;
+                          return;
+                      }
+                      if (searchingEvenPair) {
+                          RSSExpandedReader.reverseCounters(counters);
+                      }
+                      patternStart += counters[0] + counters[1];
+                      counters[0] = counters[2];
+                      counters[1] = counters[3];
+                      counters[2] = 0;
+                      counters[3] = 0;
+                      counterPosition--;
+                  }
+                  else {
+                      counterPosition++;
+                  }
+                  counters[counterPosition] = 1;
+                  isWhite = !isWhite;
+              }
+          }
+          throw new NotFoundException();
+      }
+      static reverseCounters(counters) {
+          let length = counters.length;
+          for (let i = 0; i < length / 2; ++i) {
+              let tmp = counters[i];
+              counters[i] = counters[length - i - 1];
+              counters[length - i - 1] = tmp;
+          }
+      }
+      parseFoundFinderPattern(row, rowNumber, oddPattern) {
+          // Actually we found elements 2-5.
+          let firstCounter;
+          let start;
+          let end;
+          if (oddPattern) {
+              // If pattern number is odd, we need to locate element 1 *before* the current block.
+              let firstElementStart = this.startEnd[0] - 1;
+              // Locate element 1
+              while (firstElementStart >= 0 && !row.get(firstElementStart)) {
+                  firstElementStart--;
+              }
+              firstElementStart++;
+              firstCounter = this.startEnd[0] - firstElementStart;
+              start = firstElementStart;
+              end = this.startEnd[1];
+          }
+          else {
+              // If pattern number is even, the pattern is reversed, so we need to locate element 1 *after* the current block.
+              start = this.startEnd[0];
+              end = row.getNextUnset(this.startEnd[1] + 1);
+              firstCounter = end - this.startEnd[1];
+          }
+          // Make 'counters' hold 1-4
+          let counters = this.getDecodeFinderCounters();
+          System.arraycopy(counters, 0, counters, 1, counters.length - 1);
+          counters[0] = firstCounter;
+          let value;
+          try {
+              value = this.parseFinderValue(counters, RSSExpandedReader.FINDER_PATTERNS);
+          }
+          catch (e) {
+              return null;
+          }
+          //return new FinderPattern(value, new int[] { start, end }, start, end, rowNumber});
+          return new FinderPattern(value, [start, end], start, end, rowNumber);
+      }
+      decodeDataCharacter(row, pattern, isOddPattern, leftChar) {
+          let counters = this.getDataCharacterCounters();
+          for (let x = 0; x < counters.length; x++) {
+              counters[x] = 0;
+          }
+          if (leftChar) {
+              RSSExpandedReader.recordPatternInReverse(row, pattern.getStartEnd()[0], counters);
+          }
+          else {
+              RSSExpandedReader.recordPattern(row, pattern.getStartEnd()[1], counters);
+              // reverse it
+              for (let i = 0, j = counters.length - 1; i < j; i++, j--) {
+                  let temp = counters[i];
+                  counters[i] = counters[j];
+                  counters[j] = temp;
+              }
+          } //counters[] has the pixels of the module
+          let numModules = 17; //left and right data characters have all the same length
+          let elementWidth = MathUtils.sum(new Int32Array(counters)) / numModules;
+          // Sanity check: element width for pattern and the character should match
+          let expectedElementWidth = (pattern.getStartEnd()[1] - pattern.getStartEnd()[0]) / 15.0;
+          if (Math.abs(elementWidth - expectedElementWidth) / expectedElementWidth > 0.3) {
+              throw new NotFoundException();
+          }
+          let oddCounts = this.getOddCounts();
+          let evenCounts = this.getEvenCounts();
+          let oddRoundingErrors = this.getOddRoundingErrors();
+          let evenRoundingErrors = this.getEvenRoundingErrors();
+          for (let i = 0; i < counters.length; i++) {
+              let value = 1.0 * counters[i] / elementWidth;
+              let count = value + 0.5; // Round
+              if (count < 1) {
+                  if (value < 0.3) {
+                      throw new NotFoundException();
+                  }
+                  count = 1;
+              }
+              else if (count > 8) {
+                  if (value > 8.7) {
+                      throw new NotFoundException();
+                  }
+                  count = 8;
+              }
+              let offset = i / 2;
+              if ((i & 0x01) == 0) {
+                  oddCounts[offset] = count;
+                  oddRoundingErrors[offset] = value - count;
+              }
+              else {
+                  evenCounts[offset] = count;
+                  evenRoundingErrors[offset] = value - count;
+              }
+          }
+          this.adjustOddEvenCounts(numModules);
+          let weightRowNumber = 4 * pattern.getValue() + (isOddPattern ? 0 : 2) + (leftChar ? 0 : 1) - 1;
+          let oddSum = 0;
+          let oddChecksumPortion = 0;
+          for (let i = oddCounts.length - 1; i >= 0; i--) {
+              if (RSSExpandedReader.isNotA1left(pattern, isOddPattern, leftChar)) {
+                  let weight = RSSExpandedReader.WEIGHTS[weightRowNumber][2 * i];
+                  oddChecksumPortion += oddCounts[i] * weight;
+              }
+              oddSum += oddCounts[i];
+          }
+          let evenChecksumPortion = 0;
+          //int evenSum = 0;
+          for (let i = evenCounts.length - 1; i >= 0; i--) {
+              if (RSSExpandedReader.isNotA1left(pattern, isOddPattern, leftChar)) {
+                  let weight = RSSExpandedReader.WEIGHTS[weightRowNumber][2 * i + 1];
+                  evenChecksumPortion += evenCounts[i] * weight;
+              }
+              //evenSum += evenCounts[i];
+          }
+          let checksumPortion = oddChecksumPortion + evenChecksumPortion;
+          if ((oddSum & 0x01) != 0 || oddSum > 13 || oddSum < 4) {
+              throw new NotFoundException();
+          }
+          let group = (13 - oddSum) / 2;
+          let oddWidest = RSSExpandedReader.SYMBOL_WIDEST[group];
+          let evenWidest = 9 - oddWidest;
+          let vOdd = RSSUtils.getRSSvalue(oddCounts, oddWidest, true);
+          let vEven = RSSUtils.getRSSvalue(evenCounts, evenWidest, false);
+          let tEven = RSSExpandedReader.EVEN_TOTAL_SUBSET[group];
+          let gSum = RSSExpandedReader.GSUM[group];
+          let value = vOdd * tEven + vEven + gSum;
+          return new DataCharacter(value, checksumPortion);
+      }
+      static isNotA1left(pattern, isOddPattern, leftChar) {
+          // A1: pattern.getValue is 0 (A), and it's an oddPattern, and it is a left char
+          return !(pattern.getValue() == 0 && isOddPattern && leftChar);
+      }
+      adjustOddEvenCounts(numModules) {
+          let oddSum = MathUtils.sum(new Int32Array(this.getOddCounts()));
+          let evenSum = MathUtils.sum(new Int32Array(this.getEvenCounts()));
+          let incrementOdd = false;
+          let decrementOdd = false;
+          if (oddSum > 13) {
+              decrementOdd = true;
+          }
+          else if (oddSum < 4) {
+              incrementOdd = true;
+          }
+          let incrementEven = false;
+          let decrementEven = false;
+          if (evenSum > 13) {
+              decrementEven = true;
+          }
+          else if (evenSum < 4) {
+              incrementEven = true;
+          }
+          let mismatch = oddSum + evenSum - numModules;
+          let oddParityBad = (oddSum & 0x01) == 1;
+          let evenParityBad = (evenSum & 0x01) == 0;
+          if (mismatch == 1) {
+              if (oddParityBad) {
+                  if (evenParityBad) {
+                      throw new NotFoundException();
+                  }
+                  decrementOdd = true;
+              }
+              else {
+                  if (!evenParityBad) {
+                      throw new NotFoundException();
+                  }
+                  decrementEven = true;
+              }
+          }
+          else if (mismatch == -1) {
+              if (oddParityBad) {
+                  if (evenParityBad) {
+                      throw new NotFoundException();
+                  }
+                  incrementOdd = true;
+              }
+              else {
+                  if (!evenParityBad) {
+                      throw new NotFoundException();
+                  }
+                  incrementEven = true;
+              }
+          }
+          else if (mismatch == 0) {
+              if (oddParityBad) {
+                  if (!evenParityBad) {
+                      throw new NotFoundException();
+                  }
+                  // Both bad
+                  if (oddSum < evenSum) {
+                      incrementOdd = true;
+                      decrementEven = true;
+                  }
+                  else {
+                      decrementOdd = true;
+                      incrementEven = true;
+                  }
+              }
+              else {
+                  if (evenParityBad) {
+                      throw new NotFoundException();
+                  }
+                  // Nothing to do!
+              }
+          }
+          else {
+              throw new NotFoundException();
+          }
+          if (incrementOdd) {
+              if (decrementOdd) {
+                  throw new NotFoundException();
+              }
+              RSSExpandedReader.increment(this.getOddCounts(), this.getOddRoundingErrors());
+          }
+          if (decrementOdd) {
+              RSSExpandedReader.decrement(this.getOddCounts(), this.getOddRoundingErrors());
+          }
+          if (incrementEven) {
+              if (decrementEven) {
+                  throw new NotFoundException();
+              }
+              RSSExpandedReader.increment(this.getEvenCounts(), this.getOddRoundingErrors());
+          }
+          if (decrementEven) {
+              RSSExpandedReader.decrement(this.getEvenCounts(), this.getEvenRoundingErrors());
+          }
+      }
+  }
+  RSSExpandedReader.SYMBOL_WIDEST = [7, 5, 4, 3, 1];
+  RSSExpandedReader.EVEN_TOTAL_SUBSET = [4, 20, 52, 104, 204];
+  RSSExpandedReader.GSUM = [0, 348, 1388, 2948, 3988];
+  RSSExpandedReader.FINDER_PATTERNS = [
+      [1, 8, 4, 1],
+      [3, 6, 4, 1],
+      [3, 4, 6, 1],
+      [3, 2, 8, 1],
+      [2, 6, 5, 1],
+      [2, 2, 9, 1] // F
+  ];
+  RSSExpandedReader.WEIGHTS = [
+      [1, 3, 9, 27, 81, 32, 96, 77],
+      [20, 60, 180, 118, 143, 7, 21, 63],
+      [189, 145, 13, 39, 117, 140, 209, 205],
+      [193, 157, 49, 147, 19, 57, 171, 91],
+      [62, 186, 136, 197, 169, 85, 44, 132],
+      [185, 133, 188, 142, 4, 12, 36, 108],
+      [113, 128, 173, 97, 80, 29, 87, 50],
+      [150, 28, 84, 41, 123, 158, 52, 156],
+      [46, 138, 203, 187, 139, 206, 196, 166],
+      [76, 17, 51, 153, 37, 111, 122, 155],
+      [43, 129, 176, 106, 107, 110, 119, 146],
+      [16, 48, 144, 10, 30, 90, 59, 177],
+      [109, 116, 137, 200, 178, 112, 125, 164],
+      [70, 210, 208, 202, 184, 130, 179, 115],
+      [134, 191, 151, 31, 93, 68, 204, 190],
+      [148, 22, 66, 198, 172, 94, 71, 2],
+      [6, 18, 54, 162, 64, 192, 154, 40],
+      [120, 149, 25, 75, 14, 42, 126, 167],
+      [79, 26, 78, 23, 69, 207, 199, 175],
+      [103, 98, 83, 38, 114, 131, 182, 124],
+      [161, 61, 183, 127, 170, 88, 53, 159],
+      [55, 165, 73, 8, 24, 72, 5, 15],
+      [45, 135, 194, 160, 58, 174, 100, 89]
+  ];
+  RSSExpandedReader.FINDER_PAT_A = 0;
+  RSSExpandedReader.FINDER_PAT_B = 1;
+  RSSExpandedReader.FINDER_PAT_C = 2;
+  RSSExpandedReader.FINDER_PAT_D = 3;
+  RSSExpandedReader.FINDER_PAT_E = 4;
+  RSSExpandedReader.FINDER_PAT_F = 5;
+  RSSExpandedReader.FINDER_PATTERN_SEQUENCES = [
+      [RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_A],
+      [RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_B],
+      [RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_C, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_D],
+      [RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_E, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_D, RSSExpandedReader.FINDER_PAT_C],
+      [RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_E, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_D, RSSExpandedReader.FINDER_PAT_D, RSSExpandedReader.FINDER_PAT_F],
+      [RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_E, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_D, RSSExpandedReader.FINDER_PAT_E, RSSExpandedReader.FINDER_PAT_F, RSSExpandedReader.FINDER_PAT_F],
+      [RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_C, RSSExpandedReader.FINDER_PAT_C, RSSExpandedReader.FINDER_PAT_D, RSSExpandedReader.FINDER_PAT_D],
+      [RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_C, RSSExpandedReader.FINDER_PAT_C, RSSExpandedReader.FINDER_PAT_D, RSSExpandedReader.FINDER_PAT_E, RSSExpandedReader.FINDER_PAT_E],
+      [RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_C, RSSExpandedReader.FINDER_PAT_C, RSSExpandedReader.FINDER_PAT_D, RSSExpandedReader.FINDER_PAT_E, RSSExpandedReader.FINDER_PAT_F, RSSExpandedReader.FINDER_PAT_F],
+      [RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_A, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_B, RSSExpandedReader.FINDER_PAT_C, RSSExpandedReader.FINDER_PAT_D, RSSExpandedReader.FINDER_PAT_D, RSSExpandedReader.FINDER_PAT_E, RSSExpandedReader.FINDER_PAT_E, RSSExpandedReader.FINDER_PAT_F, RSSExpandedReader.FINDER_PAT_F],
+  ];
+  RSSExpandedReader.MAX_PAIRS = 11;
 
   exports.ArgumentException = ArgumentException;
   exports.ArithmeticException = ArithmeticException;
