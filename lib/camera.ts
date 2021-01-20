@@ -8,16 +8,6 @@ export function startCapture(video: HTMLVideoElement, constraints: any, onError:
       video.srcObject = stream;
       // video.playsInline = true;
       video.setAttribute("playsinline", "true");
-
-      // 如果刚开始有控制器
-      // if (video.controls) {
-      //   setTimeout(() => {
-      //     video.controls = false;
-      //     requestAnimationFrame(() => {
-      //       video.style.opacity = "1";
-      //     });
-      //   });
-      // }
     })
     .catch(function (err) {
       console.log("Error occurred ", err);
@@ -82,6 +72,7 @@ export function startCamera(video: HTMLVideoElement, onError: Function) {
 }
 
 export interface CameraOpt {
+  objectFit?: 'cover'|'fill'|'contain';
   format?: "any" | "qrcode" | "barcode" | "none";
   onError?: (error: string) => void;
   size?: number;
@@ -96,7 +87,7 @@ const getVideoWH = (video: HTMLVideoElement) => {
 
 const VanillaCamera = (
   target: string | HTMLElement,
-  { format, onError = () => {}, direction, size = 1, area = 1, square }: CameraOpt = {}
+  { objectFit='cover', format, onError = () => {}, direction, size = 1, area = 1, square }: CameraOpt = {}
 ) => {
   let box: HTMLElement;
   if (typeof target === "string") {
@@ -113,6 +104,7 @@ const VanillaCamera = (
   video.height = box.clientHeight;
   video.controls = false;
   video.style.background = "#000";
+  video.style.objectFit = objectFit;
   video.muted = true;
   box.append(video);
   video.autoplay = true;

@@ -15755,15 +15755,6 @@ function startCapture(video, constraints, onError) {
         video.srcObject = stream;
         // video.playsInline = true;
         video.setAttribute("playsinline", "true");
-        // 如果刚开始有控制器
-        // if (video.controls) {
-        //   setTimeout(() => {
-        //     video.controls = false;
-        //     requestAnimationFrame(() => {
-        //       video.style.opacity = "1";
-        //     });
-        //   });
-        // }
     })
         .catch(function (err) {
         console.log("Error occurred ", err);
@@ -15828,7 +15819,7 @@ var getVideoWH = function (video) {
     return [video.videoWidth || video.width, video.videoHeight || video.height];
 };
 var VanillaCamera = function (target, _a) {
-    var _b = _a === void 0 ? {} : _a, format = _b.format, _c = _b.onError, onError = _c === void 0 ? function () { } : _c, direction = _b.direction, _d = _b.size, size = _d === void 0 ? 1 : _d, _e = _b.area, area = _e === void 0 ? 1 : _e, square = _b.square;
+    var _b = _a === void 0 ? {} : _a, _c = _b.objectFit, objectFit = _c === void 0 ? 'cover' : _c, format = _b.format, _d = _b.onError, onError = _d === void 0 ? function () { } : _d, direction = _b.direction, _e = _b.size, size = _e === void 0 ? 1 : _e, _f = _b.area, area = _f === void 0 ? 1 : _f, square = _b.square;
     var box;
     if (typeof target === "string") {
         box = document.querySelector(target);
@@ -15845,6 +15836,7 @@ var VanillaCamera = function (target, _a) {
     video.height = box.clientHeight;
     video.controls = false;
     video.style.background = "#000";
+    video.style.objectFit = objectFit;
     video.muted = true;
     box.append(video);
     video.autoplay = true;

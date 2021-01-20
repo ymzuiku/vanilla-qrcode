@@ -29,8 +29,12 @@ unpkg:
 import VanillaQRCode from 'vanilla-qrcode';
 
 // 传入一个 css 查找器，寻找一个合适大小的 Div 标签
+// 使用默认配置创建 camera
+VanillaQRCode('#div')
+
+
+// 自定义配置，以下是默认配置
 VanillaQRCode('#div', {
-  // 以下是默认配置
   // format: any, barcode, qrcode, none; 默认为 any，any速度慢于指定类型
   format: 'any'
   // 默认 300ms， 摄像头开启会有黑屏时间，这个时候暂时不进行画面解析
@@ -38,6 +42,7 @@ VanillaQRCode('#div', {
   size: 1, // 解析图像缩放
   area: 1, // 解析裁切剩余比例
   square: true, // 解析保持正方形
+  objectFit: 'cover', // 视频内容填充方式
   onResult: (code, close) => {
     alert(JSON.stringify(code));
     // 可选，关闭摄像头
