@@ -23934,14 +23934,25 @@ var VanillaQRCode = function (target, onResult) {
         video.muted = true;
         video.autoplay = false;
         box.appendChild(video);
+        var lastText = "";
         codeReader.decodeFromVideoDevice(selectedDeviceId, video, function (result, err) {
-            if (result && onResult) {
-                onResult(result, function () {
-                    codeReader.reset();
-                });
+            if (result) {
                 console.log(result);
+                if (onResult) {
+                    if (result.format == 11) {
+                        onResult(result, function () {
+                            codeReader.reset();
+                        });
+                    }
+                    else if (result.text === lastText) {
+                        onResult(result, function () {
+                            codeReader.reset();
+                        });
+                    }
+                    lastText = result.text;
+                }
             }
-            if (err && !(err instanceof ZXing.NotFoundException)) ;
+            else if (err && !(err instanceof ZXing.NotFoundException)) ;
         });
     });
     return codeReader;

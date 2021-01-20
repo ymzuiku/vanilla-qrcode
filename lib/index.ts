@@ -42,14 +42,23 @@ const VanillaQRCode = (target: string | HTMLElement, onResult?: (result: QrCodeR
     video.autoplay = false;
     box.appendChild(video);
 
+    let lastText = "";
     codeReader.decodeFromVideoDevice(selectedDeviceId, video, (result: any, err: any) => {
-      if (result && onResult) {
-        onResult(result, () => {
-          codeReader.reset();
-        });
+      if (result) {
         console.log(result);
-      }
-      if (err && !(err instanceof ZXing.NotFoundException)) {
+        if (onResult) {
+          if (result.format == 11) {
+            onResult(result, () => {
+              codeReader.reset();
+            });
+          } else if (result.text === lastText) {
+            onResult(result, () => {
+              codeReader.reset();
+            });
+          }
+          lastText = result.text;
+        }
+      } else if (err && !(err instanceof ZXing.NotFoundException)) {
         // console.error(err);
       }
     });

@@ -12,6 +12,7 @@
       background-color: #000;
       padding: 0px;
       margin: 0px;
+      overflow: hidden;
     }
 
     #camera {
@@ -75,6 +76,17 @@
       z-index: 1500;
     }
 
+    #res {
+      font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+      font-size: 12px;
+      width: 95vw;
+      left: 4px;
+      top: 4px;
+      color: #fff;
+      z-index: 3000;
+      position: fixed;
+    }
+
     #mask {
       pointer-events: none;
       position: fixed;
@@ -88,17 +100,11 @@
     }
 
     #qrcode-mask {
+      position: absolute;
       object-fit: cover;
       place-self: center;
       width: 140%;
       height: 140%;
-    }
-
-    #barcode-mask {
-      object-fit: cover;
-      place-self: center;
-      width: 150%;
-      height: 150%;
     }
 
 
@@ -128,9 +134,9 @@
   <div id="btns">
     <div id="close">Close</div>
   </div>
+  <p id="res">扫码中...</p>
   <div id="mask">
     <img id="qrcode-mask" src="./qrcode-mask.svg" />
-    <img id="barcode-mask" style="display:none" src="./barcode-mask.svg" />
   </div>
 
   <script type="module">
@@ -150,9 +156,11 @@
       document.getElementById('camera').append(p);
     }
 
+    const res = document.getElementById('res');
+
     const start = () => {
       return VanillaQRCode('#camera', (code, close) => {
-        alert(JSON.stringify(code));
+        res.textContent = JSON.stringify(code);
       })
     }
 
