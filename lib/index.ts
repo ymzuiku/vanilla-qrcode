@@ -7,6 +7,8 @@ interface QrCodeResult {
 }
 
 export interface QrcodeOpt extends CameraOpt {
+  // 扫码间隔，默认 20ms
+  scanInterval?: number;
   waitSreenshot?: number;
   onScreenshot?: (imgData?: string) => any;
   onResult?: (result: QrCodeResult, close: Function) => any;
@@ -14,9 +16,9 @@ export interface QrcodeOpt extends CameraOpt {
 
 const VanillaQRCode = (
   ele: string | HTMLElement,
-  { format = "any", waitSreenshot = 300, onScreenshot, onResult, ...opt }: QrcodeOpt = {}
+  { scanInterval, format = "any", waitSreenshot = 300, onScreenshot, onResult, ...opt }: QrcodeOpt = {}
 ) => {
-  const camera = Camera(ele, { size: 0.5, area: 1, square: true, ...opt });
+  const camera = Camera(ele, opt);
 
   if (!camera) {
     return;
@@ -30,7 +32,7 @@ const VanillaQRCode = (
     const imgData = camera.screenshot();
 
     if (!imgData || camera.format === "none") {
-      requestAnimationFrame(screenshot);
+      setTimeout(screenshot, scanInterval)
       return;
     }
 
@@ -42,7 +44,7 @@ const VanillaQRCode = (
       if (code && onResult) {
         onResult(code, camera.remove);
       }
-      requestAnimationFrame(screenshot);
+      setTimeout(screenshot, scanInterval)
     });
   };
 

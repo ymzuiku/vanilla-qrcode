@@ -40,8 +40,7 @@ VanillaQRCode('#div', {
   // 默认 300ms， 摄像头开启会有黑屏时间，这个时候暂时不进行画面解析
   waitSreenshot: 300,
   size: 1, // 解析图像缩放
-  area: 1, // 解析裁切剩余比例
-  square: true, // 解析保持正方形
+  scanInterval: 20, // 每次扫码的间隔，默认 20ms
   objectFit: 'cover', // 视频内容填充方式
   onResult: (code, close) => {
     alert(JSON.stringify(code));

@@ -72,12 +72,10 @@ export function startCamera(video: HTMLVideoElement, onError: Function) {
 }
 
 export interface CameraOpt {
-  objectFit?: 'cover'|'fill'|'contain';
+  objectFit?: "cover" | "fill" | "contain";
   format?: "any" | "qrcode" | "barcode" | "none";
   onError?: (error: string) => void;
   size?: number;
-  area?: number;
-  square?: number | boolean;
   direction?: "horizontal" | "vertical";
 }
 
@@ -87,7 +85,7 @@ const getVideoWH = (video: HTMLVideoElement) => {
 
 const VanillaCamera = (
   target: string | HTMLElement,
-  { objectFit='cover', format, onError = () => {}, direction, size = 1, area = 1, square }: CameraOpt = {}
+  { objectFit = "cover", format, onError = () => {}, direction, size = 1 }: CameraOpt = {}
 ) => {
   let box: HTMLElement;
   if (typeof target === "string") {
@@ -99,47 +97,43 @@ const VanillaCamera = (
     onError("document.contains no found target");
     return;
   }
+  box.style.overflow = "hidden";
+  box.style.display = "flex";
+  box.style.flexDirection = "row";
+  box.style.justifyContent = "center";
+  box.style.alignItems = "center";
   const video = document.createElement("video");
+  video.style.objectFit = objectFit;
+  video.setAttribute("object-fit", objectFit);
   video.width = box.clientWidth;
   video.height = box.clientHeight;
   video.controls = false;
   video.style.background = "#000";
-  video.style.objectFit = objectFit;
   video.muted = true;
   box.appendChild(video);
   video.autoplay = true;
   startCamera(video, onError);
 
   const canvas = document.createElement("canvas");
-  canvas.width = window.innerWidth * size;
-  canvas.height = window.innerHeight * size;
+  canvas.width = video.width * size;
+  canvas.height = video.height * size;
 
   const context = canvas.getContext("2d")!;
 
-  let w = 100;
-  let h = 100;
-  let cw = 200;
-  let ch = 200;
-
-  video.addEventListener("canplay", function () {
-    const [_w, _h] = getVideoWH(video);
-    cw = _w * size;
-    ch = _h * size;
-    canvas.width = cw;
-    canvas.height = ch;
-    if (square) {
-      let min = _w;
-      if (_w > _h) {
-        min = _h;
-      }
-      w = min;
-      h = min;
-    } else {
-      w = _w;
-      h = _h;
-    }
-  });
-
+  // video.addEventListener("canplay", function () {
+  //   if (full) {
+  //     const [_w, _h] = getVideoWH(video);
+  //     const fix = _h / _w;
+  //     const old = bh / bw;
+  //     const scale =  (old - fix) * 0.7 +1 ;
+  //     if (box.clientHeight > _h) {
+  //       video.style.transformOrigin = "0.5, 0,5";
+  //       if (scale > 1) {
+  //         video.style.transform = `scale(${scale})`;
+  //       }
+  //     }
+  //   }
+  // });
 
   const out = {
     playing: true,
@@ -150,7 +144,7 @@ const VanillaCamera = (
     remove: () => {
       video.pause();
       out.playing = false;
-      box.innerText = ""
+      box.innerText = "";
     },
     playPause: () => {
       if (video.paused) {
@@ -162,9 +156,7 @@ const VanillaCamera = (
     // 绘制canvas画布、获取data
     screenshot: () => {
       if (out.playing) {
-        const a = (1 - area) * w;
-        const b = (1 - area) * h;
-        context.drawImage(video, a ? a / 2 : 0, b ? b / 2 : 0, w * area, h * area, 0, 0, canvas.width, canvas.height);
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
         return canvas.toDataURL("image/png");
       }
     },

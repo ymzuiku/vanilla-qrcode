@@ -13,17 +13,6 @@ See the Apache Version 2.0 License for specific language governing permissions
 and limitations under the License.
 ***************************************************************************** */
 
-var __assign = function() {
-    __assign = Object.assign || function __assign(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
-};
-
 function __rest(s, e) {
     var t = {};
     for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
@@ -15815,11 +15804,8 @@ function startCamera(video, onError) {
         });
     }
 }
-var getVideoWH = function (video) {
-    return [video.videoWidth || video.width, video.videoHeight || video.height];
-};
 var VanillaCamera = function (target, _a) {
-    var _b = _a === void 0 ? {} : _a, _c = _b.objectFit, objectFit = _c === void 0 ? 'cover' : _c, format = _b.format, _d = _b.onError, onError = _d === void 0 ? function () { } : _d, direction = _b.direction, _e = _b.size, size = _e === void 0 ? 1 : _e, _f = _b.area, area = _f === void 0 ? 1 : _f, square = _b.square;
+    var _b = _a === void 0 ? {} : _a, _c = _b.objectFit, objectFit = _c === void 0 ? "cover" : _c, format = _b.format, _d = _b.onError, onError = _d === void 0 ? function () { } : _d, direction = _b.direction, _e = _b.size, size = _e === void 0 ? 1 : _e;
     var box;
     if (typeof target === "string") {
         box = document.querySelector(target);
@@ -15831,43 +15817,40 @@ var VanillaCamera = function (target, _a) {
         onError("document.contains no found target");
         return;
     }
+    box.style.overflow = "hidden";
+    box.style.display = "flex";
+    box.style.flexDirection = "row";
+    box.style.justifyContent = "center";
+    box.style.alignItems = "center";
     var video = document.createElement("video");
+    video.style.objectFit = objectFit;
+    video.setAttribute("object-fit", objectFit);
     video.width = box.clientWidth;
     video.height = box.clientHeight;
     video.controls = false;
     video.style.background = "#000";
-    video.style.objectFit = objectFit;
     video.muted = true;
     box.appendChild(video);
     video.autoplay = true;
     startCamera(video, onError);
     var canvas = document.createElement("canvas");
-    canvas.width = window.innerWidth * size;
-    canvas.height = window.innerHeight * size;
+    canvas.width = video.width * size;
+    canvas.height = video.height * size;
     var context = canvas.getContext("2d");
-    var w = 100;
-    var h = 100;
-    var cw = 200;
-    var ch = 200;
-    video.addEventListener("canplay", function () {
-        var _a = getVideoWH(video), _w = _a[0], _h = _a[1];
-        cw = _w * size;
-        ch = _h * size;
-        canvas.width = cw;
-        canvas.height = ch;
-        if (square) {
-            var min = _w;
-            if (_w > _h) {
-                min = _h;
-            }
-            w = min;
-            h = min;
-        }
-        else {
-            w = _w;
-            h = _h;
-        }
-    });
+    // video.addEventListener("canplay", function () {
+    //   if (full) {
+    //     const [_w, _h] = getVideoWH(video);
+    //     const fix = _h / _w;
+    //     const old = bh / bw;
+    //     const scale =  (old - fix) * 0.7 +1 ;
+    //     if (box.clientHeight > _h) {
+    //       video.style.transformOrigin = "0.5, 0,5";
+    //       if (scale > 1) {
+    //         video.style.transform = `scale(${scale})`;
+    //       }
+    //     }
+    //   }
+    // });
     var out = {
         playing: true,
         format: format,
@@ -15890,9 +15873,7 @@ var VanillaCamera = function (target, _a) {
         // 绘制canvas画布、获取data
         screenshot: function () {
             if (out.playing) {
-                var a = (1 - area) * w;
-                var b = (1 - area) * h;
-                context.drawImage(video, a ? a / 2 : 0, b ? b / 2 : 0, w * area, h * area, 0, 0, canvas.width, canvas.height);
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
                 return canvas.toDataURL("image/png");
             }
         },
@@ -15903,8 +15884,8 @@ window.VanillaCamera = VanillaCamera;
 
 var VanillaQRCode = function (ele, _a) {
     if (_a === void 0) { _a = {}; }
-    var _b = _a.format, format = _b === void 0 ? "any" : _b, _c = _a.waitSreenshot, waitSreenshot = _c === void 0 ? 300 : _c, onScreenshot = _a.onScreenshot, onResult = _a.onResult, opt = __rest(_a, ["format", "waitSreenshot", "onScreenshot", "onResult"]);
-    var camera = VanillaCamera(ele, __assign({ size: 0.5, area: 1, square: true }, opt));
+    var scanInterval = _a.scanInterval, _b = _a.format, format = _b === void 0 ? "any" : _b, _c = _a.waitSreenshot, waitSreenshot = _c === void 0 ? 300 : _c, onScreenshot = _a.onScreenshot, onResult = _a.onResult, opt = __rest(_a, ["scanInterval", "format", "waitSreenshot", "onScreenshot", "onResult"]);
+    var camera = VanillaCamera(ele, opt);
     if (!camera) {
         return;
     }
@@ -15915,7 +15896,7 @@ var VanillaQRCode = function (ele, _a) {
         }
         var imgData = camera.screenshot();
         if (!imgData || camera.format === "none") {
-            requestAnimationFrame(screenshot);
+            setTimeout(screenshot, scanInterval);
             return;
         }
         if (onScreenshot) {
@@ -15925,7 +15906,7 @@ var VanillaQRCode = function (ele, _a) {
             if (code && onResult) {
                 onResult(code, camera.remove);
             }
-            requestAnimationFrame(screenshot);
+            setTimeout(screenshot, scanInterval);
         });
     };
     setTimeout(screenshot, waitSreenshot);
