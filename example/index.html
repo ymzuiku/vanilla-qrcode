@@ -37,6 +37,7 @@
       left: 0px;
       bottom: 0px;
       width: 100vw;
+      z-index: 2000;
       height: var(--bar-height);
       /* grid-area: b; */
       display: grid;
@@ -47,7 +48,7 @@
 
     #btns>div {
       -webkit-user-select: none;
-      background-color: #444;
+      background-color: #222;
       cursor: pointer;
       display: grid;
       place-items: center;
@@ -56,24 +57,7 @@
     }
 
     #btns>div:active {
-      background-color: #666;
-    }
-
-    #btns>div[selected] {
-      background-color: #555;
-      font-weight: 700;
-    }
-
-
-    #shot {
-      border: none;
-      outline: none;
-      position: fixed;
-      left: 0px;
-      top: 0px;
-      width: 200px;
-      height: 200px;
-      z-index: 1500;
+      background-color: #444;
     }
 
     #res {
@@ -134,7 +118,7 @@
   <div id="btns">
     <div id="close">Close</div>
   </div>
-  <p id="res">扫码中...</p>
+  <div id="res">扫码中...</div>
   <div id="mask">
     <img id="qrcode-mask" src="./qrcode-mask.svg" />
   </div>
