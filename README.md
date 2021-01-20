@@ -34,19 +34,10 @@ VanillaQRCode('#div')
 
 
 // 自定义配置，以下是默认配置
-VanillaQRCode('#div', {
-  // format: any, barcode, qrcode, none; 默认为 any，any速度慢于指定类型
-  format: 'any'
-  // 默认 300ms， 摄像头开启会有黑屏时间，这个时候暂时不进行画面解析
-  waitSreenshot: 300,
-  size: 1, // 解析图像缩放
-  scanInterval: 20, // 每次扫码的间隔，默认 20ms
-  objectFit: 'cover', // 视频内容填充方式
-  onResult: (code, close) => {
-    alert(JSON.stringify(code));
-    // 可选，关闭摄像头
-    close();
-  }
+VanillaQRCode('#div', (code, close) => {
+  alert(JSON.stringify(code));
+  // 可选，关闭摄像头
+  close();
 });
 ```
 

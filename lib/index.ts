@@ -1,59 +1,57 @@
-import { decode } from "./decode";
-import Camera, { CameraOpt } from "./camera";
+import { ZXing } from "./decode";
 
 interface QrCodeResult {
-  data: string;
-  center: { x: number; y: number };
+  text: string;
+  format: number;
+  numBits: number;
+  resultPoints: number;
+  timestamp: number;
 }
 
-export interface QrcodeOpt extends CameraOpt {
-  // 扫码间隔，默认 20ms
-  scanInterval?: number;
-  waitSreenshot?: number;
-  onScreenshot?: (imgData?: string) => any;
-  onResult?: (result: QrCodeResult, close: Function) => any;
-}
+const VanillaQRCode = (target: string | HTMLElement, onResult?: (result: QrCodeResult, close: Function) => any) => {
+  const codeReader = new ZXing.BrowserMultiFormatReader();
 
-const VanillaQRCode = (
-  ele: string | HTMLElement,
-  { scanInterval, format = "any", waitSreenshot = 300, onScreenshot, onResult, ...opt }: QrcodeOpt = {}
-) => {
-  const camera = Camera(ele, opt);
+  codeReader.listVideoInputDevices().then((videoInputDevices: any) => {
+    let selectedDeviceId = videoInputDevices[videoInputDevices.length - 1].deviceId;
 
-  if (!camera) {
-    return;
-  }
-  camera.format = format;
-  const screenshot = () => {
-    if (!camera || !camera.playing) {
+    let box: HTMLElement;
+    if (typeof target === "string") {
+      box = document.querySelector(target) as any;
+    } else {
+      box = target as HTMLElement;
+    }
+    if (!document.contains(box)) {
       return;
     }
+    box.style.overflow = "hidden";
+    box.style.display = "flex";
+    box.style.flexDirection = "row";
+    box.style.justifyContent = "center";
+    box.style.alignItems = "center";
+    const video = document.createElement("video");
 
-    const imgData = camera.screenshot();
+    video.width = box.clientWidth;
+    video.height = box.clientHeight;
+    video.controls = false;
+    video.style.background = "#000";
+    video.muted = true;
+    box.appendChild(video);
 
-    if (!imgData || camera.format === "none") {
-      setTimeout(screenshot, scanInterval)
-      return;
-    }
-
-    if (onScreenshot) {
-      onScreenshot(imgData);
-    }
-
-    decode(camera.format as any, imgData).then((code: any) => {
-      if (code && onResult) {
-        onResult(code, camera.remove);
+    codeReader.decodeFromVideoDevice(selectedDeviceId, video, (result: any, err: any) => {
+      if (result && onResult) {
+        onResult(result, () => {
+          codeReader.reset();
+        });
+        console.log(result);
       }
-      setTimeout(screenshot, scanInterval)
+      if (err && !(err instanceof ZXing.NotFoundException)) {
+        // console.error(err);
+      }
     });
-  };
-
-  setTimeout(screenshot, waitSreenshot)
-
-  return camera;
+  });
+  return codeReader;
 };
 
-VanillaQRCode.RanderCamera = Camera;
-VanillaQRCode.decode = decode;
+export { ZXing };
 
 export default VanillaQRCode;

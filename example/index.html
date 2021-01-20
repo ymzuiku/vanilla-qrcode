@@ -40,7 +40,7 @@
       /* grid-area: b; */
       display: grid;
       grid-template-rows: 1fr;
-      grid-template-columns: 1fr 1fr 1fr 1fr;
+      grid-template-columns: 1fr;
       grid-gap: 1px;
     }
 
@@ -126,9 +126,6 @@
   <!-- <img id="shot" /> -->
   <div id="camera"></div>
   <div id="btns">
-    <div id="any" selected>Any</div>
-    <div id="qrcode">QRCode</div>
-    <div id="barcode">BarCode</div>
     <div id="close">Close</div>
   </div>
   <div id="mask">
@@ -153,62 +150,25 @@
       document.getElementById('camera').append(p);
     }
 
-    const start = ()=> {
-      return VanillaQRCode('#camera', {
-      size: 1, // 解析图像缩放
-      onResult: (code, close) => {
+    const start = () => {
+      return VanillaQRCode('#camera', (code, close) => {
         alert(JSON.stringify(code));
-      }
-    })
+      })
     }
 
     let camera = start();
-
-    const list = [
-      document.getElementById('any'),
-      document.getElementById('qrcode'),
-      document.getElementById('barcode'),
-      document.getElementById('close')
-    ];
-
-    const barcodeMask = document.getElementById('barcode-mask')
-    const qrcodeMask = document.getElementById('qrcode-mask')
-
     let close = false;
-    const setOnClick = (ele) => {
-      const fn = () => {
-        if (ele.id === 'close') {
-          if (close) {
-            camera = start();
-            close = false;
-          } else {
-            camera.remove();
-            close = true;
-          }
-          
-          return;
-        }
-        if (ele.id === 'barcode') {
-          barcodeMask.style.display = 'grid'
-          qrcodeMask.style.display = 'none'
-        } else {
-          barcodeMask.style.display = 'none'
-          qrcodeMask.style.display = 'grid'
-        }
-
-        camera.format = ele.id;
-        console.log(camera.format)
-        list.forEach(e => e.removeAttribute('selected'))
-        ele.setAttribute('selected', '');
-      }
-      if (isIos || isAndroid) {
-        ele.ontouchend = fn;
+    const closeEl = document.getElementById('close')
+    closeEl.onclick = () => {
+      if (close) {
+        camera = start();
+        close = false;
       } else {
-        ele.onclick = fn;
+        camera.close();
+        close = true;
       }
-
     }
-    list.forEach(setOnClick)
+
   </script>
   <script>
     const mateEle = document.createElement("meta");

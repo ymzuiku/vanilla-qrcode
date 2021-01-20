@@ -1,39 +1,11 @@
-import { decode } from "./decode";
-import { CameraOpt } from "./camera";
+import { ZXing } from "./decode";
 interface QrCodeResult {
-    data: string;
-    center: {
-        x: number;
-        y: number;
-    };
+    text: string;
+    format: number;
+    numBits: number;
+    resultPoints: number;
+    timestamp: number;
 }
-export interface QrcodeOpt extends CameraOpt {
-    scanInterval?: number;
-    waitSreenshot?: number;
-    onScreenshot?: (imgData?: string) => any;
-    onResult?: (result: QrCodeResult, close: Function) => any;
-}
-declare const VanillaQRCode: {
-    (ele: string | HTMLElement, { scanInterval, format, waitSreenshot, onScreenshot, onResult, ...opt }?: QrcodeOpt): {
-        playing: boolean;
-        format: "any" | "qrcode" | "barcode" | "none" | undefined;
-        video: HTMLVideoElement;
-        canvas: HTMLCanvasElement;
-        context: CanvasRenderingContext2D;
-        remove: () => void;
-        playPause: () => void;
-        screenshot: () => string | undefined;
-    } | undefined;
-    RanderCamera: (target: string | HTMLElement, { full, format, onError, direction, size }?: CameraOpt) => {
-        playing: boolean;
-        format: "any" | "qrcode" | "barcode" | "none" | undefined;
-        video: HTMLVideoElement;
-        canvas: HTMLCanvasElement;
-        context: CanvasRenderingContext2D;
-        remove: () => void;
-        playPause: () => void;
-        screenshot: () => string | undefined;
-    } | undefined;
-    decode: typeof decode;
-};
+declare const VanillaQRCode: (target: string | HTMLElement, onResult?: ((result: QrCodeResult, close: Function) => any) | undefined) => any;
+export { ZXing };
 export default VanillaQRCode;
