@@ -29,7 +29,7 @@ esm:
 ```ts
 import VanillaQRCode from 'vanilla-qrcode';
 
-// 传入一个 css 查找器，寻找一个合适大小的 video 标签
+// 传入一个 css 查找器，需要是一个 video 标签
 VanillaQRCode('#video', (code, close) => {
   alert(JSON.stringify(code));
   // 可选，关闭摄像头
