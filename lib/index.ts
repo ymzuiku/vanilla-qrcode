@@ -76,6 +76,10 @@ const VanillaQRCode = (
   target: string | HTMLVideoElement,
   onResult?: (result: QrCodeResult, close: Function) => any
 ) => {
+  if (!navigator || !navigator.mediaDevices) {
+    console.error("Can not find navigator.mediaDevices, use https");
+    return {};
+  }
   getConstrants().then((opt) => {
     let video: HTMLVideoElement;
     if (typeof target === "string") {

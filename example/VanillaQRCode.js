@@ -23968,6 +23968,10 @@ var getConstrants = function () {
     });
 };
 var VanillaQRCode = function (target, onResult) {
+    if (!navigator || !navigator.mediaDevices) {
+        console.error("Can not find navigator.mediaDevices, use https");
+        return {};
+    }
     getConstrants().then(function (opt) {
         var video;
         if (typeof target === "string") {
