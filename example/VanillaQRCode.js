@@ -23904,12 +23904,32 @@
 var ZXing = window.ZXing;
 
 var codeReader = new ZXing.BrowserMultiFormatReader();
+var getBackDevice = function (videoInputDevices) {
+    if (!videoInputDevices || !videoInputDevices.length) {
+        return null;
+    }
+    var out;
+    videoInputDevices.forEach(function (item) {
+        if (item.label && /后置/.test(item.label)) {
+            out = item;
+        }
+    });
+    if (!out) {
+        out = videoInputDevices[videoInputDevices.length - 1];
+    }
+    return out;
+};
 var VanillaQRCode = function (target, onResult) {
     codeReader.listVideoInputDevices().then(function (videoInputDevices) {
-        var selectedDeviceId;
-        if (videoInputDevices.length > 0) {
-            selectedDeviceId = videoInputDevices[videoInputDevices.length - 1].deviceId;
+        var args = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            args[_i - 1] = arguments[_i];
         }
+        var device = getBackDevice(videoInputDevices);
+        if (!device) {
+            return;
+        }
+        var selectedDeviceId = device.deviceId;
         var video;
         if (typeof target === "string") {
             video = document.querySelector(target);

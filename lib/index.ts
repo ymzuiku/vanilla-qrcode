@@ -10,15 +10,32 @@ interface QrCodeResult {
 
 let codeReader = new ZXing.BrowserMultiFormatReader();
 
+const getBackDevice = (videoInputDevices: any[]) => {
+  if (!videoInputDevices || !videoInputDevices.length) {
+    return null;
+  }
+  let out: any;
+  videoInputDevices.forEach((item) => {
+    if (item.label && /后置/.test(item.label)) {
+      out = item;
+    }
+  });
+  if (!out) {
+    out = videoInputDevices[videoInputDevices.length - 1];
+  }
+  return out;
+};
+
 const VanillaQRCode = (
   target: string | HTMLVideoElement,
   onResult?: (result: QrCodeResult, close: Function) => any
 ) => {
-  codeReader.listVideoInputDevices().then((videoInputDevices: any) => {
-    let selectedDeviceId: any;
-    if (videoInputDevices.length > 0) {
-      selectedDeviceId = videoInputDevices[videoInputDevices.length - 1].deviceId;
+  codeReader.listVideoInputDevices().then((videoInputDevices: any, ...args: any[]) => {
+    const device = getBackDevice(videoInputDevices);
+    if (!device) {
+      return;
     }
+    const selectedDeviceId = device.deviceId;
 
     let video: HTMLVideoElement;
     if (typeof target === "string") {
