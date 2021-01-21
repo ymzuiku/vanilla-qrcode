@@ -1,9 +1,10 @@
 import { ZXing } from "./decode";
 
 const ua = window.navigator.userAgent.toLowerCase();
+
 const isIos = /(?:iphone|ipad)/.test(ua);
-const isAndroid = () => /(?:android)/.test(ua);
-const isMobile = isIos || isAndroid;
+const isLocal = /(127.0.0.1|localhost)/.test(window.location.origin);
+const isIosMobile = isIos && !isLocal;
 
 interface QrCodeResult {
   text: string;
@@ -14,6 +15,22 @@ interface QrCodeResult {
 }
 
 let codeReader = new ZXing.BrowserMultiFormatReader();
+
+const getBackDevice = (videoInputDevices: any[]) => {
+  if (!videoInputDevices || !videoInputDevices.length) {
+    return null;
+  }
+  let out: any;
+  videoInputDevices.forEach((item) => {
+    if (item.label && /后置/.test(item.label)) {
+      out = item;
+    }
+  });
+  if (!out) {
+    out = videoInputDevices[videoInputDevices.length - 1];
+  }
+  return out;
+};
 
 let getConstrants = () => {
   return new Promise((res, rej) => {
@@ -56,7 +73,7 @@ let getConstrants = () => {
             constraints.video.facingMode = "environment";
           }
 
-          if (!constraints.video.mandatory.sourceId && !isMobile) {
+          if (!constraints.video.mandatory.sourceId && !isIos) {
             res({ video: true });
           } else {
             res(constraints);
@@ -80,7 +97,7 @@ const VanillaQRCode = (
     console.error("Can not find navigator.mediaDevices, use https");
     return {};
   }
-  getConstrants().then((opt) => {
+  const startReader = (opt: any) => {
     let video: HTMLVideoElement;
     if (typeof target === "string") {
       video = document.querySelector(target) as any;
@@ -117,7 +134,20 @@ const VanillaQRCode = (
         console.error(err);
       }
     });
-  });
+  };
+
+  if (isIosMobile) {
+    getConstrants().then(startReader);
+  } else {
+    codeReader.listVideoInputDevices().then((videoInputDevices: any, ...args: any[]) => {
+      const device = getBackDevice(videoInputDevices);
+      if (!device) {
+        return;
+      }
+      startReader(device.deviceId);
+    });
+  }
+
   return codeReader;
 };
 

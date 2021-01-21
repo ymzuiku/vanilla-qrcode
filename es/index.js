@@ -23909,9 +23909,24 @@ var ZXing = window.ZXing;
 
 var ua = window.navigator.userAgent.toLowerCase();
 var isIos = /(?:iphone|ipad)/.test(ua);
-var isAndroid = function () { return /(?:android)/.test(ua); };
-var isMobile = isIos || isAndroid;
+var isLocal = /(127.0.0.1|localhost)/.test(window.location.origin);
+var isIosMobile = isIos && !isLocal;
 var codeReader = new ZXing.BrowserMultiFormatReader();
+var getBackDevice = function (videoInputDevices) {
+    if (!videoInputDevices || !videoInputDevices.length) {
+        return null;
+    }
+    var out;
+    videoInputDevices.forEach(function (item) {
+        if (item.label && /后置/.test(item.label)) {
+            out = item;
+        }
+    });
+    if (!out) {
+        out = videoInputDevices[videoInputDevices.length - 1];
+    }
+    return out;
+};
 var getConstrants = function () {
     return new Promise(function (res, rej) {
         navigator.mediaDevices
@@ -23950,7 +23965,7 @@ var getConstrants = function () {
                 if (isIos) {
                     constraints.video.facingMode = "environment";
                 }
-                if (!constraints.video.mandatory.sourceId && !isMobile) {
+                if (!constraints.video.mandatory.sourceId && !isIos) {
                     res({ video: true });
                 }
                 else {
@@ -23972,7 +23987,7 @@ var VanillaQRCode = function (target, onResult) {
         console.error("Can not find navigator.mediaDevices, use https");
         return {};
     }
-    getConstrants().then(function (opt) {
+    var startReader = function (opt) {
         var video;
         if (typeof target === "string") {
             video = document.querySelector(target);
@@ -24010,7 +24025,23 @@ var VanillaQRCode = function (target, onResult) {
                 console.error(err);
             }
         });
-    });
+    };
+    if (isIosMobile) {
+        getConstrants().then(startReader);
+    }
+    else {
+        codeReader.listVideoInputDevices().then(function (videoInputDevices) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
+            var device = getBackDevice(videoInputDevices);
+            if (!device) {
+                return;
+            }
+            startReader(device.deviceId);
+        });
+    }
     return codeReader;
 };
 
