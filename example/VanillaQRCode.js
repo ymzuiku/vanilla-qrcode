@@ -3044,6 +3044,10 @@
        */
       decodeFromVideoDevice(deviceId, videoSource, callbackFn) {
           return __awaiter(this, void 0, void 0, function* () {
+              if (typeof deviceId !== 'string') {
+                return yield this.decodeFromConstraints(deviceId, videoSource, callbackFn);
+              }
+            
               let videoConstraints;
               if (!deviceId) {
                   videoConstraints = { facingMode: 'environment' };
@@ -23903,33 +23907,68 @@
 
 var ZXing = window.ZXing;
 
+var ua = window.navigator.userAgent.toLowerCase();
+var isIos = /(?:iphone|ipad)/.test(ua);
+var isAndroid = function () { return /(?:android)/.test(ua); };
+var isMobile = isIos || isAndroid;
 var codeReader = new ZXing.BrowserMultiFormatReader();
-var getBackDevice = function (videoInputDevices) {
-    if (!videoInputDevices || !videoInputDevices.length) {
-        return null;
-    }
-    var out;
-    videoInputDevices.forEach(function (item) {
-        if (item.label && /后置/.test(item.label)) {
-            out = item;
-        }
+var getConstrants = function () {
+    return new Promise(function (res, rej) {
+        navigator.mediaDevices
+            .enumerateDevices()
+            .then(function (devices) {
+            var device = devices.filter(function (device) {
+                // const deviceLabel = device.label.split(",")[1];
+                if (device.kind == "videoinput") {
+                    return device;
+                }
+            });
+            var constraints;
+            if (device.length > 1) {
+                constraints = {
+                    video: {
+                        mandatory: {
+                            sourceId: device[device.length - 1].deviceId ? device[device.length - 1].deviceId : null,
+                        },
+                    },
+                    audio: false,
+                };
+                if (isIos) {
+                    constraints.video.facingMode = "environment";
+                }
+                res(constraints);
+            }
+            else if (device.length) {
+                constraints = {
+                    video: {
+                        mandatory: {
+                            sourceId: device[0].deviceId ? device[0].deviceId : null,
+                        },
+                    },
+                    audio: false,
+                };
+                if (isIos) {
+                    constraints.video.facingMode = "environment";
+                }
+                if (!constraints.video.mandatory.sourceId && !isMobile) {
+                    res({ video: true });
+                }
+                else {
+                    res(constraints);
+                }
+            }
+            else {
+                res({ video: true });
+            }
+        })
+            .catch(function (error) {
+            console.error("Error occurred : ", error);
+            rej(error);
+        });
     });
-    if (!out) {
-        out = videoInputDevices[videoInputDevices.length - 1];
-    }
-    return out;
 };
 var VanillaQRCode = function (target, onResult) {
-    codeReader.listVideoInputDevices().then(function (videoInputDevices) {
-        var args = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            args[_i - 1] = arguments[_i];
-        }
-        var device = getBackDevice(videoInputDevices);
-        if (!device) {
-            return;
-        }
-        var selectedDeviceId = device.deviceId;
+    getConstrants().then(function (opt) {
         var video;
         if (typeof target === "string") {
             video = document.querySelector(target);
@@ -23950,7 +23989,7 @@ var VanillaQRCode = function (target, onResult) {
         video.muted = true;
         video.autoplay = false;
         var lastText = "";
-        codeReader.decodeFromVideoDevice(selectedDeviceId, video, function (result, err) {
+        codeReader.decodeFromVideoDevice(opt, video, function (result, err) {
             if (result) {
                 console.log(result);
                 if (onResult) {

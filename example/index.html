@@ -129,8 +129,8 @@
 
     const ua = window.navigator.userAgent.toLowerCase();
     const isIos = /(?:iphone|ipad)/.test(ua);
-    const isWechat = ua.match(/MicroMessenger/i) == 'micromessenger';
     const isAndroid = () => /(?:android)/.test(ua);
+    const isWechat = ua.match(/MicroMessenger/i) == 'micromessenger';
 
     if (isIos && isWechat) {
       const label = "iOS 微信不支持读取摄像头, 请点击右上角，选择在 Safari 中打开";

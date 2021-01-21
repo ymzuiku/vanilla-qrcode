@@ -1,5 +1,10 @@
 import { ZXing } from "./decode";
 
+const ua = window.navigator.userAgent.toLowerCase();
+const isIos = /(?:iphone|ipad)/.test(ua);
+const isAndroid = () => /(?:android)/.test(ua);
+const isMobile = isIos || isAndroid;
+
 interface QrCodeResult {
   text: string;
   format: number;
@@ -10,33 +15,68 @@ interface QrCodeResult {
 
 let codeReader = new ZXing.BrowserMultiFormatReader();
 
-const getBackDevice = (videoInputDevices: any[]) => {
-  if (!videoInputDevices || !videoInputDevices.length) {
-    return null;
-  }
-  let out: any;
-  videoInputDevices.forEach((item) => {
-    if (item.label && /后置/.test(item.label)) {
-      out = item;
-    }
+let getConstrants = () => {
+  return new Promise((res, rej) => {
+    navigator.mediaDevices
+      .enumerateDevices()
+      .then(function (devices) {
+        const device = devices.filter(function (device) {
+          // const deviceLabel = device.label.split(",")[1];
+          if (device.kind == "videoinput") {
+            return device;
+          }
+        });
+
+        let constraints;
+        if (device.length > 1) {
+          constraints = {
+            video: {
+              mandatory: {
+                sourceId: device[device.length - 1].deviceId ? device[device.length - 1].deviceId : null,
+              },
+            },
+            audio: false,
+          } as any;
+
+          if (isIos) {
+            constraints.video.facingMode = "environment";
+          }
+          res(constraints);
+        } else if (device.length) {
+          constraints = {
+            video: {
+              mandatory: {
+                sourceId: device[0].deviceId ? device[0].deviceId : null,
+              },
+            },
+            audio: false,
+          } as any;
+
+          if (isIos) {
+            constraints.video.facingMode = "environment";
+          }
+
+          if (!constraints.video.mandatory.sourceId && !isMobile) {
+            res({ video: true });
+          } else {
+            res(constraints);
+          }
+        } else {
+          res({ video: true });
+        }
+      })
+      .catch(function (error) {
+        console.error("Error occurred : ", error);
+        rej(error);
+      });
   });
-  if (!out) {
-    out = videoInputDevices[videoInputDevices.length - 1];
-  }
-  return out;
 };
 
 const VanillaQRCode = (
   target: string | HTMLVideoElement,
   onResult?: (result: QrCodeResult, close: Function) => any
 ) => {
-  codeReader.listVideoInputDevices().then((videoInputDevices: any, ...args: any[]) => {
-    const device = getBackDevice(videoInputDevices);
-    if (!device) {
-      return;
-    }
-    const selectedDeviceId = device.deviceId;
-
+  getConstrants().then((opt) => {
     let video: HTMLVideoElement;
     if (typeof target === "string") {
       video = document.querySelector(target) as any;
@@ -58,7 +98,7 @@ const VanillaQRCode = (
     video.autoplay = false;
 
     let lastText = "";
-    codeReader.decodeFromVideoDevice(selectedDeviceId, video, (result: any, err: any) => {
+    codeReader.decodeFromVideoDevice(opt, video, (result: any, err: any) => {
       if (result) {
         console.log(result);
         if (onResult) {
